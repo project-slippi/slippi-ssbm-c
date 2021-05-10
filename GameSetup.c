@@ -54,7 +54,7 @@ void Minor_Load(void *minor_data) {
   InitSelector(xPosStart + 2 * gap, yPos, 4);
   InitSelector(xPosStart + 3 * gap, yPos, 5);
   InitSelector(xPosStart + 4 * gap, yPos, 6);
-  InitSelector(xPosStart + 5 * gap, yPos, 7);
+  InitSelector(xPosStart + 5 * gap, yPos, 8);
 
   // Load confirm/change buttons
   stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
@@ -81,10 +81,10 @@ GOBJ *InitSelector(float x, float y, int matIdx) {
   JOBJ_AnimAll(jobj_item);
 
   jobj_item->trans.X = x - 0.7;
-  jobj_item->trans.Y = y + 7.2;
-  jobj_item->scale.X = 0.8;
-  jobj_item->scale.Y = 0.8;
-  jobj_item->scale.Z = 0.8;
+  jobj_item->trans.Y = y + 7.65;
+  jobj_item->scale.X = 0.9;
+  jobj_item->scale.Y = 0.9;
+  jobj_item->scale.Z = 0.9;
 }
 
 void Minor_Think() {
