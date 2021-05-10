@@ -38,6 +38,9 @@ void Minor_Load(void *minor_data) {
   GObj_AddObject(light_gobj, 2, lobj);
   GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
+  // create background
+  JOBJ_LoadSet(0, gui_assets->jobjs[5], 0, 0, 3, 1, 1, GObj_Anim);
+
   // Load panel and frame
   JOBJ_LoadSet(0, gui_assets->jobjs[4], 0, 0, 3, 1, 1, GObj_Anim);
 
@@ -46,21 +49,18 @@ void Minor_Load(void *minor_data) {
   float xPosStart = -19.5;
   float yPos = -2;
 
-  InitSelector(xPosStart, yPos);
-  InitSelector(xPosStart + gap, yPos);
-  InitSelector(xPosStart + 2 * gap, yPos);
-  InitSelector(xPosStart + 3 * gap, yPos);
-  InitSelector(xPosStart + 4 * gap, yPos);
-  InitSelector(xPosStart + 5 * gap, yPos);
+  InitSelector(xPosStart, yPos, 2);
+  InitSelector(xPosStart + gap, yPos, 3);
+  InitSelector(xPosStart + 2 * gap, yPos, 4);
+  InitSelector(xPosStart + 3 * gap, yPos, 5);
+  InitSelector(xPosStart + 4 * gap, yPos, 6);
+  InitSelector(xPosStart + 5 * gap, yPos, 7);
 
   // Load confirm/change buttons
   stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
-
-  // create background
-  JOBJ_LoadSet(0, gui_assets->jobjs[5], 0, 0, 3, 1, 1, GObj_Anim);
 }
 
-GOBJ *InitSelector(float x, float y) {
+GOBJ *InitSelector(float x, float y, int matIdx) {
   // Show cursor
   GOBJ *item = JOBJ_LoadSet(0, gui_assets->jobjs[6], 0, 0, 3, 1, 1, GObj_Anim);
   JOBJ *jobj_item = item->hsd_object;
@@ -75,11 +75,16 @@ GOBJ *InitSelector(float x, float y) {
   // OSReport(foo);
 
   // Create content material
-  // item = JOBJ_LoadSet(0, gui_assets->jobjs[7], 0, 0, 3, 1, 0, 0);
-  // jobj_item = item->hsd_object;
+  item = JOBJ_LoadSet(0, gui_assets->jobjs[7], 0, 0, 3, 1, 1, 0);
+  jobj_item = item->hsd_object;
+  JOBJ_ReqAnimAll(jobj_item, matIdx);
+  JOBJ_AnimAll(jobj_item);
 
-  // jobj_item->trans.X = x;
-  // jobj_item->trans.Y = y;
+  jobj_item->trans.X = x - 0.7;
+  jobj_item->trans.Y = y + 7.2;
+  jobj_item->scale.X = 0.8;
+  jobj_item->scale.Y = 0.8;
+  jobj_item->scale.Z = 0.8;
 }
 
 void Minor_Think() {

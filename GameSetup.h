@@ -11,4 +11,4 @@ typedef struct GuiData {
 
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
-GOBJ *InitSelector(float x, float y);
+GOBJ *InitSelector(float x, float y, int stageIdx);
