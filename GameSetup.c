@@ -1,9 +1,14 @@
 #include "GameSetup.h"
 
+#include "./Components/CharStageBoxSelector.h"
+#include "./Components/CharStageIcon.h"
 #include "./m-ex/MexTK/mex.h"
+#include "Files.h"
+
+#define MAX_SELECTORS 10
 
 static ArchiveInfo *gui_archive;
-static GuiData *gui_assets;
+static GUI_GameSetup *gui_assets;
 static GOBJ *stc_buttons;
 
 void Minor_Load(void *minor_data) {
@@ -44,47 +49,55 @@ void Minor_Load(void *minor_data) {
   // Load panel and frame
   JOBJ_LoadSet(0, gui_assets->jobjs[4], 0, 0, 3, 1, 1, GObj_Anim);
 
-  // Load stage selectors
-  float gap = 8;
-  float xPosStart = -19.5;
-  float yPos = -2;
-
-  InitSelector(xPosStart, yPos, 2);
-  InitSelector(xPosStart + gap, yPos, 3);
-  InitSelector(xPosStart + 2 * gap, yPos, 4);
-  InitSelector(xPosStart + 3 * gap, yPos, 5);
-  InitSelector(xPosStart + 4 * gap, yPos, 6);
-  InitSelector(xPosStart + 5 * gap, yPos, 8);
+  // Init selectors
+  InitSelectors();
 
   // Load confirm/change buttons
   stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
 }
 
-GOBJ *InitSelector(float x, float y, int matIdx) {
-  // Show cursor
-  GOBJ *item = JOBJ_LoadSet(0, gui_assets->jobjs[6], 0, 0, 3, 1, 1, GObj_Anim);
-  JOBJ *jobj_item = item->hsd_object;
+void InitSelectors() {
+  int count = 6;
+  CSIcon_Material iconMats[] = {
+      CSIcon_Material_Battlefield,
+      CSIcon_Material_Yoshis,
+      CSIcon_Material_Dreamland,
+      CSIcon_Material_FinalDestination,
+      CSIcon_Material_Fountain,
+      CSIcon_Material_Pokemon,
+      CSIcon_Material_Falcon,
+  };
 
-  jobj_item->trans.X = x;
-  jobj_item->trans.Y = y;
-  jobj_item->scale.X = 0.727;
-  jobj_item->scale.Y = 0.727;
-  jobj_item->scale.Z = 0.727;
-  // char foo[50];
-  // sprintf(foo, "PosX: %f PosY: %f\n", jobj_item->trans.X, jobj_item->trans.Y);
-  // OSReport(foo);
+  // Do nothing if there are no selectors
+  if (count == 0 || count > MAX_SELECTORS) {
+    return;
+  }
 
-  // Create content material
-  item = JOBJ_LoadSet(0, gui_assets->jobjs[7], 0, 0, 3, 1, 1, 0);
-  jobj_item = item->hsd_object;
-  JOBJ_ReqAnimAll(jobj_item, matIdx);
-  JOBJ_AnimAll(jobj_item);
+  float gap = 8;
+  float yPos = 5.5;
+  float xPos = 0;
 
-  jobj_item->trans.X = x - 0.7;
-  jobj_item->trans.Y = y + 7.65;
-  jobj_item->scale.X = 0.9;
-  jobj_item->scale.Y = 0.9;
-  jobj_item->scale.Z = 0.9;
+  // If odd number of items, the middle point should be in between two items
+  if (count % 2 == 0) {
+    xPos += gap / 2;
+  }
+
+  // Move to x pos for first item
+  xPos -= gap * (int)(count / 2);
+
+  // Initialize the box selectors
+  CSBoxSelector *selectors[MAX_SELECTORS];
+  for (int i = 0; i < count; i++) {
+    CSBoxSelector *csbs = CSBoxSelector_Init(gui_assets);
+    CSIcon_SetMaterial(csbs->icon, iconMats[i]);
+    CSBoxSelector_SetPos(csbs, (Vec3){xPos, yPos, 0});
+
+    selectors[i] = csbs;
+    xPos += gap;
+  }
+
+  // Hover the first item
+  CSBoxSelector_SetHover(selectors[0]);
 }
 
 void Minor_Think() {
