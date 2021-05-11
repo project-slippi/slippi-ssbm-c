@@ -27,9 +27,14 @@ void Minor_Load(void *minor_data) {
   COBJ *cam_cobj = COBJ_LoadDesc(gui_assets->cobjs[0]);
   GObj_AddObject(cam_gobj, 1, cam_cobj);
   GOBJ_InitCamera(cam_gobj, CObjThink, 0);
+  GObj_AddProc(cam_gobj, MainMenu_CamRotateThink, 5);
 
   // Indicates which gx_links to render
-  cam_gobj->cobj_links = (1 << 0) + (1 << 1) + (1 << 2);
+  cam_gobj->cobj_links = (1 << 0) + (1 << 1) + (1 << 2) + (1 << 3) + (1 << 4);
+
+  // store cobj to static pointer, needed for MainMenu_CamRotateThink
+  void **stc_cam_cobj = (R13 + (-0x4ADC));
+  *stc_cam_cobj = gui_assets->cobjs[0];
 
   // create fog
   GOBJ *fog_gobj = GObj_Create(14, 2, 0);
