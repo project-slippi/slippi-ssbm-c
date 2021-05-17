@@ -5,14 +5,15 @@
 #include "./m-ex/MexTK/mex.h"
 #include "Files.h"
 
-#define MAX_SELECTORS 10
-
 static ArchiveInfo *gui_archive;
 static GUI_GameSetup *gui_assets;
-static GOBJ *stc_buttons;
+static GameSetup_Data *data;
 
 void Minor_Load(void *minor_data) {
   OSReport("minor load\n");
+
+  // Init location to store data
+  data = calloc(sizeof(GameSetup_Data));
 
   // Set up input handler. Initialize at top to make sure it runs before anything else
   GOBJ *input_handler_gobj = GObj_Create(4, 0, 128);
@@ -63,28 +64,26 @@ void Minor_Load(void *minor_data) {
   txt->align = 0;  // align left
   txt->scale = (Vec2){0.01, 0.01};
 
-  int id = Text_AddSubtext(txt, -2000, 0, "OTest");
-  Text_SetScale(txt, id, 6, 6);
+  // int id = Text_AddSubtext(txt, -2000, 0, "OTest");
+  // Text_SetScale(txt, id, 6, 6);
 
   // Load confirm/change buttons
-  stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
+  data->stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
+}
 
-  // Test x
-  // GOBJ *x_gobj = JOBJ_LoadSet(0, gui_assets->jobjs[8], 0, 0, 3, 1, 1, GObj_Anim);
-  // JOBJ *x_jobj = x_gobj->hsd_object;
-  // x_jobj->trans.Z = 5;
+void InitState() {
+  data->state.selector_idx = 0;  // TODO: Set differently if first or second striker
+  data->state.selected_values_count = 0;
 }
 
 void InitSelectors() {
-  int count = 6;
+  int count = 5;
   CSIcon_Material iconMats[] = {
       CSIcon_Material_Battlefield,
       CSIcon_Material_Yoshis,
       CSIcon_Material_Dreamland,
-      CSIcon_Material_FinalDestination,
       CSIcon_Material_Fountain,
       CSIcon_Material_Pokemon,
-      CSIcon_Material_Falcon,
   };
 
   // Do nothing if there are no selectors
@@ -105,19 +104,19 @@ void InitSelectors() {
   xPos -= gap * (int)(count / 2);
 
   // Initialize the box selectors
-  CSBoxSelector *selectors[MAX_SELECTORS];
   for (int i = 0; i < count; i++) {
     CSBoxSelector *csbs = CSBoxSelector_Init(gui_assets);
     CSIcon_SetMaterial(csbs->icon, iconMats[i]);
     CSBoxSelector_SetPos(csbs, (Vec3){xPos, yPos, 0});
 
-    selectors[i] = csbs;
+    data->selectors[i] = csbs;
     xPos += gap;
   }
 
+  data->selector_count = count;
+
   // Hover the first item
-  CSBoxSelector_SetHover(selectors[0]);
-  CSBoxSelector_SetSelectState(selectors[1], CSBoxSelector_Select_State_X);
+  CSBoxSelector_SetHover(data->selectors[0]);
 }
 
 void Minor_Think() {
@@ -156,7 +155,7 @@ void InputsThink(GOBJ *gobj) {
     OSReport(prnt);
   }
 
-  JOBJ *btns_jobj = stc_buttons->hsd_object;
+  JOBJ *btns_jobj = data->stc_buttons->hsd_object;
 
   // TODO: Use looping animation and only run this when switching to a new button selection
   if (frame_counter % 20 == 0) {
@@ -172,12 +171,73 @@ void InputsThink(GOBJ *gobj) {
     OSReport(prnt);
   }
 
-  if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
-    // Handle a right input
-    SFX_PlayCommon(2);  // Play move SFX
-  } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_RIGHT)) {
-    // Handle a left input
-    SFX_PlayCommon(2);  // Play move SFX
+  int selected_idx = data->state.selector_idx;
+
+  if (selected_idx >= 0) {
+    ////////////////////////////////
+    // Adjust scroll position
+    ////////////////////////////////
+    if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+      // Handle a right input
+      selected_idx++;
+      SFX_PlayCommon(2);  // Play move SFX
+    } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+      // Handle a left input
+      selected_idx--;
+      SFX_PlayCommon(2);  // Play move SFX
+    }
+
+    if (selected_idx < 0) {
+      selected_idx += data->selector_count;
+    } else if (selected_idx >= data->selector_count) {
+      selected_idx -= data->selector_count;
+    }
+
+    ////////////////////////////////
+    // Handle confirmation button press
+    ////////////////////////////////
+    if (downInputs & HSD_BUTTON_A) {
+      u8 isSelected = data->selectors[selected_idx]->state.select_state != CSBoxSelector_Select_State_NotSelected;
+
+      if (isSelected) {
+        CSBoxSelector_SetSelectState(data->selectors[selected_idx], CSBoxSelector_Select_State_NotSelected);
+        data->state.selected_values_count--;
+      } else {
+        CSBoxSelector_SetSelectState(data->selectors[selected_idx], CSBoxSelector_Select_State_X);
+        data->state.selected_values_count++;
+      }
+
+      // TODO: Pick better sound?
+      SFX_PlayCommon(2);
+    }
+
+    if (data->state.selected_values_count >= 1) {
+      data->state.prev_selector_idx = selected_idx;
+      selected_idx = -1;
+    }
+  } else {
+    if (downInputs & HSD_BUTTON_B) {
+      selected_idx = data->state.prev_selector_idx;
+      data->state.selected_values_count = 0;
+      for (int i = 0; i < data->selector_count; i++) {
+        CSBoxSelector_SetSelectState(data->selectors[i], CSBoxSelector_Select_State_NotSelected);
+      }
+    }
+  }
+
+  // Update selector position
+  if (selected_idx != data->state.selector_idx) {
+    // Clear all previous selections
+    for (int i = 0; i < data->selector_count; i++) {
+      CSBoxSelector_ClearHover(data->selectors[i]);
+    }
+
+    // selected_idx can be -1 to have nothing selected
+    if (selected_idx >= 0) {
+      CSBoxSelector_SetHover(data->selectors[selected_idx]);
+    }
+
+    data->state.selector_idx = selected_idx;
   }
 
   frame_counter++;

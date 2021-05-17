@@ -38,14 +38,14 @@ void CSBoxSelector_SetHover(CSBoxSelector *bs) {
   // Reset animation to start in the same place
   JOBJ_ReqAnimAll(bs->root_jobj, 0);
 
-  bs->state->is_hover = true;
+  bs->state.is_hover = true;
 }
 
 void CSBoxSelector_ClearHover(CSBoxSelector *bs) {
   JOBJ *jobj = bs->root_jobj->child;
   jobj->flags = jobj->flags | JOBJ_HIDDEN;  // Set hidden flag
 
-  bs->state->is_hover = false;
+  bs->state.is_hover = false;
 }
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {
@@ -60,7 +60,8 @@ void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State 
 
   if (state == CSBoxSelector_Select_State_X) {
     bs->x_jobj->flags = bs->x_jobj->flags & ~JOBJ_HIDDEN;
+    JOBJ_ReqAnimAll(bs->x_jobj, 0);
   }
 
-  bs->state->select_state = state;
+  bs->state.select_state = state;
 }
