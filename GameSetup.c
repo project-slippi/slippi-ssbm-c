@@ -57,8 +57,22 @@ void Minor_Load(void *minor_data) {
   // Init selectors
   InitSelectors();
 
+  // Prepare text
+  Text *txt = Text_CreateText(0, 0);
+  txt->kerning = 1;
+  txt->align = 0;  // align left
+  txt->scale = (Vec2){0.01, 0.01};
+
+  int id = Text_AddSubtext(txt, -2000, 0, "OTest");
+  Text_SetScale(txt, id, 6, 6);
+
   // Load confirm/change buttons
   stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
+
+  // Test x
+  // GOBJ *x_gobj = JOBJ_LoadSet(0, gui_assets->jobjs[8], 0, 0, 3, 1, 1, GObj_Anim);
+  // JOBJ *x_jobj = x_gobj->hsd_object;
+  // x_jobj->trans.Z = 5;
 }
 
 void InitSelectors() {
@@ -103,6 +117,7 @@ void InitSelectors() {
 
   // Hover the first item
   CSBoxSelector_SetHover(selectors[0]);
+  CSBoxSelector_SetSelectState(selectors[1], CSBoxSelector_Select_State_X);
 }
 
 void Minor_Think() {

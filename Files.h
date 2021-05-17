@@ -18,6 +18,7 @@ typedef enum GUI_GameSetup_JOBJ {
   GUI_GameSetup_JOBJ_Background = 5,
   GUI_GameSetup_JOBJ_CSBoxSelector = 6,
   GUI_GameSetup_JOBJ_CSIcon = 7,
+  GUI_GameSetup_JOBJ_X = 8,
 } GUI_GameSetup_JOBJ;
 
 #endif
