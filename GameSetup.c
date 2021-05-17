@@ -1,5 +1,6 @@
 #include "GameSetup.h"
 
+#include "./Components/Button.h"
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
 #include "./m-ex/MexTK/mex.h"
@@ -68,7 +69,15 @@ void Minor_Load(void *minor_data) {
   // Text_SetScale(txt, id, 6, 6);
 
   // Load confirm/change buttons
-  data->stc_buttons = JOBJ_LoadSet(0, gui_assets->jobjs[2], 0, 0, 3, 1, 1, GObj_Anim);
+  data->buttons[0] = Button_Init(gui_assets, GUI_GameSetup_JOBJ_BUTTON_OK);
+  data->buttons[1] = Button_Init(gui_assets, GUI_GameSetup_JOBJ_BUTTON_REDO);
+  Button_SetPos(data->buttons[0], (Vec3){-4.8, -2.5, 0});
+  Button_SetPos(data->buttons[1], (Vec3){4.8, -2.5, 0});
+  // Button_SetMaterial(data->buttons[0], Button_Material_Ok);
+  // Button_SetMaterial(data->buttons[1], Button_Material_Redo);
+  data->button_count = 2;
+
+  ResetButtonState();
 }
 
 void InitState() {
@@ -116,7 +125,16 @@ void InitSelectors() {
   data->selector_count = count;
 
   // Hover the first item
-  CSBoxSelector_SetHover(data->selectors[0]);
+  CSBoxSelector_SetHover(data->selectors[0], true);
+}
+
+void ResetButtonState() {
+  for (int i = 0; i < data->button_count; i++) {
+    Button_SetHover(data->buttons[i], false);
+    Button_SetVisibility(data->buttons[i], false);
+  }
+
+  data->state.btn_hover_idx = 0;
 }
 
 void Minor_Think() {
@@ -155,23 +173,24 @@ void InputsThink(GOBJ *gobj) {
     OSReport(prnt);
   }
 
-  JOBJ *btns_jobj = data->stc_buttons->hsd_object;
+  // JOBJ *btns_jobj = data->stc_buttons->hsd_object;
 
-  // TODO: Use looping animation and only run this when switching to a new button selection
-  if (frame_counter % 20 == 0) {
-    // JOBJ_RemoveAnimAll(btns_jobj);
-    JOBJ_AddSetAnim(btns_jobj, gui_assets->jobjs[2], 0);
-    // JOBJ_RemoveAnimAll(btns_jobj->child->sibling->sibling->sibling->child);
-    JOBJ_ReqAnimAll(btns_jobj->child->sibling->sibling->sibling, 0);
-  }
+  // // TODO: Use looping animation and only run this when switching to a new button selection
+  // if (frame_counter % 20 == 0) {
+  //   // JOBJ_RemoveAnimAll(btns_jobj);
+  //   JOBJ_AddSetAnim(btns_jobj, gui_assets->jobjs[2], 0);
+  //   // JOBJ_RemoveAnimAll(btns_jobj->child->sibling->sibling->sibling->child);
+  //   JOBJ_ReqAnimAll(btns_jobj->child->sibling->sibling->sibling, 0);
+  // }
 
-  if (downInputs != 0) {
-    char prnt[50];
-    sprintf(prnt, "[%d] %d: 0x%llx\n", frame_counter, port, downInputs);
-    OSReport(prnt);
-  }
+  // if (downInputs != 0) {
+  //   char prnt[50];
+  //   sprintf(prnt, "[%d] %d: 0x%llx\n", frame_counter, port, downInputs);
+  //   OSReport(prnt);
+  // }
 
   int selected_idx = data->state.selector_idx;
+  int btn_hover_idx = data->state.btn_hover_idx;
 
   if (selected_idx >= 0) {
     ////////////////////////////////
@@ -196,6 +215,7 @@ void InputsThink(GOBJ *gobj) {
     ////////////////////////////////
     // Handle confirmation button press
     ////////////////////////////////
+    // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_A) {
       u8 isSelected = data->selectors[selected_idx]->state.select_state != CSBoxSelector_Select_State_NotSelected;
 
@@ -211,17 +231,53 @@ void InputsThink(GOBJ *gobj) {
       SFX_PlayCommon(2);
     }
 
+    // Check condition to see if selections are complete
     if (data->state.selected_values_count >= 1) {
+      // Clear selection index
       data->state.prev_selector_idx = selected_idx;
       selected_idx = -1;
+
+      // Display and prepare buttons
+      for (int i = 0; i < data->button_count; i++) {
+        Button_SetVisibility(data->buttons[i], true);
+      }
+
+      btn_hover_idx = 0;
+      data->state.btn_hover_idx = 0;
+      Button_SetHover(data->buttons[0], true);
     }
   } else {
-    if (downInputs & HSD_BUTTON_B) {
+    ////////////////////////////////
+    // Adjust button hover
+    ////////////////////////////////
+    if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+      // Handle a right input
+      btn_hover_idx++;
+      SFX_PlayCommon(2);  // Play move SFX
+    } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+      // Handle a left input
+      btn_hover_idx--;
+      SFX_PlayCommon(2);  // Play move SFX
+    }
+
+    if (btn_hover_idx < 0) {
+      btn_hover_idx += data->button_count;
+    } else if (btn_hover_idx >= data->button_count) {
+      btn_hover_idx -= data->button_count;
+    }
+
+    // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
+    if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && btn_hover_idx == 1)) {
       selected_idx = data->state.prev_selector_idx;
       data->state.selected_values_count = 0;
       for (int i = 0; i < data->selector_count; i++) {
         CSBoxSelector_SetSelectState(data->selectors[i], CSBoxSelector_Select_State_NotSelected);
       }
+
+      // Hide buttons
+      ResetButtonState();
+
+      SFX_PlayCommon(2);
     }
   }
 
@@ -229,15 +285,27 @@ void InputsThink(GOBJ *gobj) {
   if (selected_idx != data->state.selector_idx) {
     // Clear all previous selections
     for (int i = 0; i < data->selector_count; i++) {
-      CSBoxSelector_ClearHover(data->selectors[i]);
+      CSBoxSelector_SetHover(data->selectors[i], false);
     }
 
     // selected_idx can be -1 to have nothing selected
     if (selected_idx >= 0) {
-      CSBoxSelector_SetHover(data->selectors[selected_idx]);
+      CSBoxSelector_SetHover(data->selectors[selected_idx], true);
     }
 
     data->state.selector_idx = selected_idx;
+  }
+
+  // Update button hover position
+  if (btn_hover_idx != data->state.btn_hover_idx) {
+    // Clear all previous selections
+    for (int i = 0; i < data->button_count; i++) {
+      Button_SetHover(data->buttons[i], false);
+    }
+
+    Button_SetHover(data->buttons[btn_hover_idx], true);
+
+    data->state.btn_hover_idx = btn_hover_idx;
   }
 
   frame_counter++;

@@ -21,7 +21,7 @@ CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   csbs->x_jobj = csbs->x_gobj->hsd_object;
 
   // Init state
-  CSBoxSelector_ClearHover(csbs);
+  CSBoxSelector_SetHover(csbs, false);
   CSBoxSelector_SetSelectState(csbs, CSBoxSelector_Select_State_NotSelected);
 
   return csbs;
@@ -31,21 +31,19 @@ void CSBoxSelector_Free(CSBoxSelector *bs) {
   // Not implemented because we only initialize a very limited amount of these
 }
 
-void CSBoxSelector_SetHover(CSBoxSelector *bs) {
+void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover) {
   JOBJ *jobj = bs->root_jobj->child;
-  jobj->flags = jobj->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
 
-  // Reset animation to start in the same place
-  JOBJ_ReqAnimAll(bs->root_jobj, 0);
+  if (is_hover) {
+    jobj->flags = jobj->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
 
-  bs->state.is_hover = true;
-}
+    // Reset animation to start in the same place
+    JOBJ_ReqAnimAll(bs->root_jobj, 0);
+  } else {
+    jobj->flags = jobj->flags | JOBJ_HIDDEN;  // Set hidden flag
+  }
 
-void CSBoxSelector_ClearHover(CSBoxSelector *bs) {
-  JOBJ *jobj = bs->root_jobj->child;
-  jobj->flags = jobj->flags | JOBJ_HIDDEN;  // Set hidden flag
-
-  bs->state.is_hover = false;
+  bs->state.is_hover = is_hover;
 }
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {

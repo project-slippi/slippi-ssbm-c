@@ -30,8 +30,7 @@ typedef struct CSBoxSelector {
 CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui);
 void CSBoxSelector_Free(CSBoxSelector *bs);
 
-void CSBoxSelector_SetHover(CSBoxSelector *bs);
-void CSBoxSelector_ClearHover(CSBoxSelector *bs);
+void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover);
 void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state);
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p);
