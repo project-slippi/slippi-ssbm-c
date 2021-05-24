@@ -21,6 +21,7 @@ void CSIcon_Free(CSIcon *icon) {
 void CSIcon_SetMaterial(CSIcon *icon, CSIcon_Material matIdx) {
   JOBJ_ReqAnimAll(icon->root_jobj, matIdx);
   JOBJ_AnimAll(icon->root_jobj);
+  icon->state.material = matIdx;
 }
 
 CSIcon_Material CSIcon_GetCharMaterial(int charId) {

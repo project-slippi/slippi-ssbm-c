@@ -15,6 +15,7 @@ void Minor_Load(void *minor_data) {
 
   // Init location to store data
   data = calloc(sizeof(GameSetup_Data));
+  data->process_type = GameSetup_Process_Type_STAGE_STRIKING;
 
   // Set up input handler. Initialize at top to make sure it runs before anything else
   GOBJ *input_handler_gobj = GObj_Create(4, 0, 128);
@@ -77,12 +78,47 @@ void Minor_Load(void *minor_data) {
   // Button_SetMaterial(data->buttons[1], Button_Material_Redo);
   data->button_count = 2;
 
-  ResetButtonState();
+  // Initialize state, init steps, and prepare current step
+  InitState();
+  InitSteps();
+  PepareCurrentStep();
 }
 
 void InitState() {
   data->state.selector_idx = 0;  // TODO: Set differently if first or second striker
   data->state.selected_values_count = 0;
+}
+
+void InitSteps() {
+  data->step_count = 5;
+  data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
+  data->state.step_idx = 0;
+
+  data->steps[0].player_idx = 0;
+  data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[0].char_selection = 0;
+  data->steps[0].char_color_selection = 0;
+
+  data->steps[1].player_idx = 0;
+  data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[1].char_selection = 0;
+  data->steps[1].char_color_selection = 0;
+
+  data->steps[2].player_idx = 0;
+  data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
+  data->steps[2].required_selection_count = 1;
+
+  data->steps[3].player_idx = 0;
+  data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
+  data->steps[3].required_selection_count = 2;
+
+  data->steps[4].player_idx = 0;
+  data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
+  data->steps[4].required_selection_count = 1;
+
+  // Start with the first two steps completed
+  CompleteCurrentStep();
+  CompleteCurrentStep();
 }
 
 void InitSelectors() {
@@ -285,12 +321,10 @@ void InputsThink(GOBJ *gobj) {
   if (selected_idx != data->state.selector_idx) {
     // Clear all previous selections
     for (int i = 0; i < data->selector_count; i++) {
-      CSBoxSelector_SetHover(data->selectors[i], false);
-    }
+      CSBoxSelector *s = data->selectors[i];
 
-    // selected_idx can be -1 to have nothing selected
-    if (selected_idx >= 0) {
-      CSBoxSelector_SetHover(data->selectors[selected_idx], true);
+      // Set hover state. Won't do anything if already set to that state
+      CSBoxSelector_SetHover(s, selected_idx == i);
     }
 
     data->state.selector_idx = selected_idx;
@@ -309,4 +343,58 @@ void InputsThink(GOBJ *gobj) {
   }
 
   frame_counter++;
+}
+
+void CompleteCurrentStep() {
+  // Get and complete current step
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+  step->state = GameSetup_Step_State_COMPLETE;
+
+  // Increment step idx
+  data->state.step_idx++;
+  if (data->state.step_idx >= data->step_count) {
+    // TODO: Complete process
+    return;
+  }
+
+  // Activate next step
+  step = &data->steps[data->state.step_idx];
+  step->state = GameSetup_Step_State_ACTIVE;
+}
+
+void PepareCurrentStep() {
+  // Do nothing if step outside of bounds
+  if (data->state.step_idx >= data->step_count) {
+    return;
+  }
+
+  // TODO: Show/Hide the selectors used for this step and adjust number
+
+  // Disable stages that cannot be selected and move selector index
+  // Pokemon is the last stage, make array large enough to fit a bool for all of them
+  u8 shouldDisableMat[CSIcon_LAST_STAGE_MAT_IDX + 1] = {false};
+  for (int i = 0; i < data->state.step_idx; i++) {
+    GameSetup_Step *s = &data->steps[i];
+    if (s->type != GameSetup_Step_Type_REMOVE_STAGE) {
+      continue;
+    }
+
+    // This is a remove stage step, grab the result and mark those stages as removed
+    for (int j = 0; j < s->required_selection_count; j++) {
+      u8 matIdx = CSIcon_GetStageMaterial(s->stage_selections[j]);  // TODO: Make this work
+      shouldDisableMat[matIdx] = true;
+    }
+  }
+
+  // Go through selectors and mark the proper state
+  for (int i = 0; i < data->selector_count; i++) {
+    CSBoxSelector *csbs = data->selectors[i];
+
+    CSBoxSelector_Select_State newSelectState = CSBoxSelector_Select_State_NotSelected;
+    if (shouldDisableMat[csbs->icon->state.material]) {
+      newSelectState = CSBoxSelector_Select_State_Disabled;
+    }
+
+    CSBoxSelector_SetSelectState(csbs, newSelectState);
+  }
 }

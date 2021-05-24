@@ -11,6 +11,7 @@ typedef enum CSBoxSelector_Select_State {
   CSBoxSelector_Select_State_NotSelected = 0,
   CSBoxSelector_Select_State_X = 1,
   CSBoxSelector_Select_State_Selected = 2,
+  CSBoxSelector_Select_State_Disabled = 3,
 } CSBoxSelector_Select_State;
 
 typedef struct CSBoxSelector_State {

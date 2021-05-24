@@ -3,6 +3,33 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
+void _SetHover(CSBoxSelector *bs, u8 is_hover) {
+  JOBJ *jobj = bs->root_jobj->child;
+
+  if (is_hover) {
+    jobj->flags = jobj->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
+
+    // Reset animation to start in the same place
+    JOBJ_ReqAnimAll(bs->root_jobj, 0);
+  } else {
+    jobj->flags = jobj->flags | JOBJ_HIDDEN;  // Set hidden flag
+  }
+
+  bs->state.is_hover = is_hover;
+}
+
+void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
+  // Reset state on all state JOBJs
+  bs->x_jobj->flags = bs->x_jobj->flags | JOBJ_HIDDEN;  // Hide X
+
+  if (state == CSBoxSelector_Select_State_X) {
+    bs->x_jobj->flags = bs->x_jobj->flags & ~JOBJ_HIDDEN;
+    JOBJ_ReqAnimAll(bs->x_jobj, 0);
+  }
+
+  bs->state.select_state = state;
+}
+
 // Public functions
 CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   CSBoxSelector *csbs = calloc(sizeof(CSBoxSelector));
@@ -21,8 +48,8 @@ CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   csbs->x_jobj = csbs->x_gobj->hsd_object;
 
   // Init state
-  CSBoxSelector_SetHover(csbs, false);
-  CSBoxSelector_SetSelectState(csbs, CSBoxSelector_Select_State_NotSelected);
+  _SetHover(csbs, false);
+  _SetSelectState(csbs, CSBoxSelector_Select_State_NotSelected);
 
   return csbs;
 }
@@ -32,18 +59,11 @@ void CSBoxSelector_Free(CSBoxSelector *bs) {
 }
 
 void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover) {
-  JOBJ *jobj = bs->root_jobj->child;
-
-  if (is_hover) {
-    jobj->flags = jobj->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
-
-    // Reset animation to start in the same place
-    JOBJ_ReqAnimAll(bs->root_jobj, 0);
-  } else {
-    jobj->flags = jobj->flags | JOBJ_HIDDEN;  // Set hidden flag
+  if (is_hover == bs->state.is_hover) {
+    return;
   }
 
-  bs->state.is_hover = is_hover;
+  _SetHover(bs, is_hover);
 }
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {
@@ -53,13 +73,9 @@ void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {
 }
 
 void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
-  // Reset state on all state JOBJs
-  bs->x_jobj->flags = bs->x_jobj->flags | JOBJ_HIDDEN;  // Hide X
-
-  if (state == CSBoxSelector_Select_State_X) {
-    bs->x_jobj->flags = bs->x_jobj->flags & ~JOBJ_HIDDEN;
-    JOBJ_ReqAnimAll(bs->x_jobj, 0);
+  if (state == bs->state.select_state) {
+    return;
   }
 
-  bs->state.select_state = state;
+  _SetSelectState(bs, state);
 }

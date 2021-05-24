@@ -18,9 +18,16 @@ typedef enum CSIcon_Material {
   CSIcon_Material_Falcon = 8,
 } CSIcon_Material;
 
+#define CSIcon_LAST_STAGE_MAT_IDX CSIcon_Material_Pokemon
+
+typedef struct CSIcon_State {
+  CSIcon_Material material;
+} CSIcon_State;
+
 typedef struct CSIcon {
   GOBJ *gobj;
   JOBJ *root_jobj;
+  CSIcon_State state;
 } CSIcon;
 
 CSIcon *CSIcon_Init(GUI_GameSetup *gui);
