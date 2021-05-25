@@ -33,6 +33,7 @@ typedef struct GameSetup_Step {
   int char_color_selection;
 
   int stage_selections[2];
+  CSIcon *display_icons[2];
 
   GameSetup_Step_State state;
 } GameSetup_Step;
@@ -69,3 +70,5 @@ void PrepareCurrentStep();
 void IncrementSelectorIndex();
 void DecrementSelectorIndex();
 void ResetSelectorIndex();
+
+void UpdateTimeline();

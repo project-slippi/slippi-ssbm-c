@@ -82,6 +82,7 @@ void Minor_Load(void *minor_data) {
   InitState();
   InitSteps();
   PrepareCurrentStep();
+  UpdateTimeline();
 }
 
 void InitState() {
@@ -98,23 +99,29 @@ void InitSteps() {
   data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[0].char_selection = 0;
   data->steps[0].char_color_selection = 0;
+  data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[1].char_selection = 0;
   data->steps[1].char_color_selection = 0;
+  data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
+  data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[3].player_idx = 0;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
+  data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
 
   data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
+  data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
 
   // Start with the first two steps completed
   CompleteCurrentStep();
@@ -300,6 +307,7 @@ void InputsThink(GOBJ *gobj) {
       SFX_PlayCommon(1);
       CompleteCurrentStep();
       PrepareCurrentStep();
+      UpdateTimeline();
     }
   }
 
@@ -390,6 +398,45 @@ void PrepareCurrentStep() {
 
   // Clear button state
   ResetButtonState();
+}
+
+void UpdateTimeline() {
+  float xPos = -26;
+  float yPos = -17.5;
+
+  float gap = 10;
+  float double_inc = 3;
+
+  // Iterate through all the steps
+  for (int i = 0; i < data->step_count; i++) {
+    GameSetup_Step *step = &data->steps[i];
+
+    float width = gap;
+    if (step->required_selection_count == 2) {
+      // Maybe do some math here... technically the position of the left-most icon should be
+      // where the original position would be?
+      xPos += double_inc;  // TODO: Tweak
+      CSIcon_SetPos(step->display_icons[0], (Vec3){xPos - double_inc, yPos, 0});
+      CSIcon_SetPos(step->display_icons[1], (Vec3){xPos + double_inc, yPos, 0});
+      width = gap + double_inc;
+    } else {
+      CSIcon_SetPos(step->display_icons[0], (Vec3){xPos, yPos, 0});
+    }
+
+    // TODO: Position text?
+
+    for (int j = 0; j < step->required_selection_count; j++) {
+      // Show question if not complete, result if complete
+      CSIcon_Material mat = CSIcon_Material_Question;
+      if (step->state == GameSetup_Step_State_COMPLETE) {
+        mat = CSIcon_ConvertStageToMat(step->stage_selections[j]);
+      }
+
+      CSIcon_SetMaterial(step->display_icons[j], mat);
+    }
+
+    xPos += width;
+  }
 }
 
 static void ModifySelectorIndex(int change) {
