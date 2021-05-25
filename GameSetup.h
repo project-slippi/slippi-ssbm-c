@@ -59,10 +59,9 @@ typedef struct GameSetup_Data {
 
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
-GOBJ *InitSelector(float x, float y, int stageIdx);
-void InitSelectors();
+void InitSelectorJobjs();
 void InitState();
 void InitSteps();
 void ResetButtonState();
 void CompleteCurrentStep();
-void PepareCurrentStep();
+void PrepareCurrentStep();

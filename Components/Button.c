@@ -3,6 +3,42 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
+static void _SetVisibility(Button *btn, u8 is_visible) {
+  JOBJ *jobj = btn->root_jobj;
+
+  if (is_visible) {
+    jobj->child->flags = jobj->child->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
+  } else {
+    // TODO: Figure out why setting child flag hidden works but it doesn't work on root
+    jobj->child->flags = jobj->child->flags | JOBJ_HIDDEN;  // Set hidden flag
+  }
+
+  btn->state.is_visible = is_visible;
+}
+
+static void _SetHover(Button *btn, u8 is_hover) {
+  if (!btn->state.is_visible) {
+    // TODO: This is a hack to deal with the bug where hitting the redo button or pressing b while
+    // TODO: hovering the redo button would cause the btn hover outline to continue animating
+    is_hover = false;
+  }
+
+  JOBJ *jobj = btn->root_jobj;
+
+  if (is_hover) {
+    // Reset animation to start in the same place
+    JOBJ_AddSetAnim(jobj, btn->jobj_set, 0);
+    JOBJ_ReqAnimAll(btn->root_jobj, 10);
+    // JOBJ_Anim
+  } else {
+    JOBJ_ReqAnimAll(btn->root_jobj, 0);
+    JOBJ_AnimAll(btn->root_jobj);
+    JOBJ_RemoveAnimAll(jobj);
+  }
+
+  btn->state.is_hover = is_hover;
+}
+
 Button *Button_Init(GUI_GameSetup *gui, GUI_GameSetup_JOBJ type) {
   Button *btn = calloc(sizeof(Button));
 
@@ -12,8 +48,8 @@ Button *Button_Init(GUI_GameSetup *gui, GUI_GameSetup_JOBJ type) {
   btn->root_jobj = btn->gobj->hsd_object;
 
   // Init state
-  Button_SetVisibility(btn, true);
-  Button_SetHover(btn, false);
+  _SetVisibility(btn, true);
+  _SetHover(btn, false);
 
   return btn;
 }
@@ -42,39 +78,19 @@ void Button_SetMaterial(Button *btn, Button_Material matIdx) {
 }
 
 void Button_SetHover(Button *btn, u8 is_hover) {
-  if (!btn->state.is_visible) {
-    // TODO: This is a hack to deal with the bug where hitting the redo button or pressing b while
-    // TODO: hovering the redo button would cause the btn hover outline to continue animating
-    is_hover = false;
+  if (btn->state.is_hover == is_hover) {
+    return;
   }
 
-  JOBJ *jobj = btn->root_jobj;
-
-  if (is_hover) {
-    // Reset animation to start in the same place
-    JOBJ_AddSetAnim(jobj, btn->jobj_set, 0);
-    JOBJ_ReqAnimAll(btn->root_jobj, 10);
-    // JOBJ_Anim
-  } else {
-    JOBJ_ReqAnimAll(btn->root_jobj, 0);
-    JOBJ_AnimAll(btn->root_jobj);
-    JOBJ_RemoveAnimAll(jobj);
-  }
-
-  btn->state.is_hover = is_hover;
+  _SetHover(btn, is_hover);
 }
 
 void Button_SetVisibility(Button *btn, u8 is_visible) {
-  JOBJ *jobj = btn->root_jobj;
-
-  if (is_visible) {
-    jobj->child->flags = jobj->child->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
-  } else {
-    // TODO: Figure out why setting child flag hidden works but it doesn't work on root
-    jobj->child->flags = jobj->child->flags | JOBJ_HIDDEN;  // Set hidden flag
+  if (btn->state.is_visible == is_visible) {
+    return;
   }
 
-  btn->state.is_visible = is_visible;
+  _SetVisibility(btn, is_visible);
 }
 
 void Button_SetPos(Button *btn, Vec3 p) {

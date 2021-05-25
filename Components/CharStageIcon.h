@@ -34,8 +34,10 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui);
 void CSIcon_Free(CSIcon *icon);
 
 void CSIcon_SetMaterial(CSIcon *icon, CSIcon_Material matIdx);
-CSIcon_Material CSIcon_GetCharMaterial(int charId);
-CSIcon_Material CSIcon_GetStageMaterial(int stageId);
+CSIcon_Material CSIcon_ConvertCharToMat(int charId);
+CSIcon_Material CSIcon_ConvertStageToMat(int stageId);
+int CSIcon_ConvertMatToChar(CSIcon_Material mat);
+int CSIcon_ConvertMatToStage(CSIcon_Material mat);
 
 void CSIcon_SetPos(CSIcon *icon, Vec3 p);
 

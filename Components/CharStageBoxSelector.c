@@ -3,7 +3,7 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
-void _SetHover(CSBoxSelector *bs, u8 is_hover) {
+static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
   JOBJ *jobj = bs->root_jobj->child;
 
   if (is_hover) {
@@ -18,7 +18,7 @@ void _SetHover(CSBoxSelector *bs, u8 is_hover) {
   bs->state.is_hover = is_hover;
 }
 
-void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
+static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
   // Reset state on all state JOBJs
   bs->x_jobj->flags = bs->x_jobj->flags | JOBJ_HIDDEN;  // Hide X
 

@@ -58,7 +58,7 @@ void Minor_Load(void *minor_data) {
   JOBJ_LoadSet(0, gui_assets->jobjs[4], 0, 0, 3, 1, 1, GObj_Anim);
 
   // Init selectors
-  InitSelectors();
+  InitSelectorJobjs();
 
   // Prepare text
   Text *txt = Text_CreateText(0, 0);
@@ -81,7 +81,7 @@ void Minor_Load(void *minor_data) {
   // Initialize state, init steps, and prepare current step
   InitState();
   InitSteps();
-  PepareCurrentStep();
+  PrepareCurrentStep();
 }
 
 void InitState() {
@@ -121,14 +121,14 @@ void InitSteps() {
   CompleteCurrentStep();
 }
 
-void InitSelectors() {
+void InitSelectorJobjs() {
   int count = 5;
   CSIcon_Material iconMats[] = {
-      CSIcon_Material_Battlefield,
-      CSIcon_Material_Yoshis,
-      CSIcon_Material_Dreamland,
       CSIcon_Material_Fountain,
+      CSIcon_Material_Dreamland,
+      CSIcon_Material_Yoshis,
       CSIcon_Material_Pokemon,
+      CSIcon_Material_Battlefield,
   };
 
   // Do nothing if there are no selectors
@@ -209,43 +209,26 @@ void InputsThink(GOBJ *gobj) {
     OSReport(prnt);
   }
 
-  // JOBJ *btns_jobj = data->stc_buttons->hsd_object;
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
 
-  // // TODO: Use looping animation and only run this when switching to a new button selection
-  // if (frame_counter % 20 == 0) {
-  //   // JOBJ_RemoveAnimAll(btns_jobj);
-  //   JOBJ_AddSetAnim(btns_jobj, gui_assets->jobjs[2], 0);
-  //   // JOBJ_RemoveAnimAll(btns_jobj->child->sibling->sibling->sibling->child);
-  //   JOBJ_ReqAnimAll(btns_jobj->child->sibling->sibling->sibling, 0);
-  // }
-
-  // if (downInputs != 0) {
-  //   char prnt[50];
-  //   sprintf(prnt, "[%d] %d: 0x%llx\n", frame_counter, port, downInputs);
-  //   OSReport(prnt);
-  // }
-
-  int selected_idx = data->state.selector_idx;
-  int btn_hover_idx = data->state.btn_hover_idx;
-
-  if (selected_idx >= 0) {
+  if (data->state.selector_idx >= 0) {
     ////////////////////////////////
     // Adjust scroll position
     ////////////////////////////////
     if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
       // Handle a right input
-      selected_idx++;
+      data->state.selector_idx++;
       SFX_PlayCommon(2);  // Play move SFX
     } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
       // Handle a left input
-      selected_idx--;
+      data->state.selector_idx--;
       SFX_PlayCommon(2);  // Play move SFX
     }
 
-    if (selected_idx < 0) {
-      selected_idx += data->selector_count;
-    } else if (selected_idx >= data->selector_count) {
-      selected_idx -= data->selector_count;
+    if (data->state.selector_idx < 0) {
+      data->state.selector_idx += data->selector_count;
+    } else if (data->state.selector_idx >= data->selector_count) {
+      data->state.selector_idx -= data->selector_count;
     }
 
     ////////////////////////////////
@@ -253,13 +236,14 @@ void InputsThink(GOBJ *gobj) {
     ////////////////////////////////
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_A) {
-      u8 isSelected = data->selectors[selected_idx]->state.select_state != CSBoxSelector_Select_State_NotSelected;
+      int idx = data->state.selector_idx;
+      u8 isSelected = data->selectors[idx]->state.select_state != CSBoxSelector_Select_State_NotSelected;
 
       if (isSelected) {
-        CSBoxSelector_SetSelectState(data->selectors[selected_idx], CSBoxSelector_Select_State_NotSelected);
+        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_NotSelected);
         data->state.selected_values_count--;
       } else {
-        CSBoxSelector_SetSelectState(data->selectors[selected_idx], CSBoxSelector_Select_State_X);
+        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_X);
         data->state.selected_values_count++;
       }
 
@@ -268,17 +252,16 @@ void InputsThink(GOBJ *gobj) {
     }
 
     // Check condition to see if selections are complete
-    if (data->state.selected_values_count >= 1) {
+    if (data->state.selected_values_count >= step->required_selection_count) {
       // Clear selection index
-      data->state.prev_selector_idx = selected_idx;
-      selected_idx = -1;
+      data->state.prev_selector_idx = data->state.selector_idx;
+      data->state.selector_idx = -1;
 
       // Display and prepare buttons
       for (int i = 0; i < data->button_count; i++) {
         Button_SetVisibility(data->buttons[i], true);
       }
 
-      btn_hover_idx = 0;
       data->state.btn_hover_idx = 0;
       Button_SetHover(data->buttons[0], true);
     }
@@ -288,23 +271,23 @@ void InputsThink(GOBJ *gobj) {
     ////////////////////////////////
     if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
       // Handle a right input
-      btn_hover_idx++;
+      data->state.btn_hover_idx++;
       SFX_PlayCommon(2);  // Play move SFX
     } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
       // Handle a left input
-      btn_hover_idx--;
+      data->state.btn_hover_idx--;
       SFX_PlayCommon(2);  // Play move SFX
     }
 
-    if (btn_hover_idx < 0) {
-      btn_hover_idx += data->button_count;
-    } else if (btn_hover_idx >= data->button_count) {
-      btn_hover_idx -= data->button_count;
+    if (data->state.btn_hover_idx < 0) {
+      data->state.btn_hover_idx += data->button_count;
+    } else if (data->state.btn_hover_idx >= data->button_count) {
+      data->state.btn_hover_idx -= data->button_count;
     }
 
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
-    if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && btn_hover_idx == 1)) {
-      selected_idx = data->state.prev_selector_idx;
+    if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
+      data->state.selector_idx = data->state.prev_selector_idx;
       data->state.selected_values_count = 0;
       for (int i = 0; i < data->selector_count; i++) {
         CSBoxSelector_SetSelectState(data->selectors[i], CSBoxSelector_Select_State_NotSelected);
@@ -314,32 +297,23 @@ void InputsThink(GOBJ *gobj) {
       ResetButtonState();
 
       SFX_PlayCommon(2);
+    } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
+      SFX_PlayCommon(1);
+      CompleteCurrentStep();
+      PrepareCurrentStep();
     }
   }
 
   // Update selector position
-  if (selected_idx != data->state.selector_idx) {
-    // Clear all previous selections
-    for (int i = 0; i < data->selector_count; i++) {
-      CSBoxSelector *s = data->selectors[i];
-
-      // Set hover state. Won't do anything if already set to that state
-      CSBoxSelector_SetHover(s, selected_idx == i);
-    }
-
-    data->state.selector_idx = selected_idx;
+  for (int i = 0; i < data->selector_count; i++) {
+    // Set hover state. Won't do anything if already set to that state
+    CSBoxSelector_SetHover(data->selectors[i], data->state.selector_idx == i);
   }
 
   // Update button hover position
-  if (btn_hover_idx != data->state.btn_hover_idx) {
-    // Clear all previous selections
-    for (int i = 0; i < data->button_count; i++) {
-      Button_SetHover(data->buttons[i], false);
-    }
-
-    Button_SetHover(data->buttons[btn_hover_idx], true);
-
-    data->state.btn_hover_idx = btn_hover_idx;
+  for (int i = 0; i < data->button_count; i++) {
+    // Set hover state. Won't do anything if already set to that state
+    Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
   }
 
   frame_counter++;
@@ -350,10 +324,23 @@ void CompleteCurrentStep() {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
   step->state = GameSetup_Step_State_COMPLETE;
 
+  // Commit selections to selected values
+  int commit_index = 0;
+  for (int i = 0; i < step->required_selection_count; i++) {
+    CSBoxSelector *bs = data->selectors[i];
+
+    // If this selector is selected, indicate that stage as the one selected
+    if (bs->state.select_state == CSBoxSelector_Select_State_Selected) {
+      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
+      step->stage_selections[commit_index] = stageId;
+      commit_index++;
+    }
+  }
+
   // Increment step idx
   data->state.step_idx++;
   if (data->state.step_idx >= data->step_count) {
-    // TODO: Complete process
+    // TODO: Complete full process and end scene
     return;
   }
 
@@ -362,7 +349,7 @@ void CompleteCurrentStep() {
   step->state = GameSetup_Step_State_ACTIVE;
 }
 
-void PepareCurrentStep() {
+void PrepareCurrentStep() {
   // Do nothing if step outside of bounds
   if (data->state.step_idx >= data->step_count) {
     return;
@@ -381,7 +368,7 @@ void PepareCurrentStep() {
 
     // This is a remove stage step, grab the result and mark those stages as removed
     for (int j = 0; j < s->required_selection_count; j++) {
-      u8 matIdx = CSIcon_GetStageMaterial(s->stage_selections[j]);  // TODO: Make this work
+      u8 matIdx = CSIcon_ConvertStageToMat(s->stage_selections[j]);
       shouldDisableMat[matIdx] = true;
     }
   }
@@ -397,4 +384,7 @@ void PepareCurrentStep() {
 
     CSBoxSelector_SetSelectState(csbs, newSelectState);
   }
+
+  // Clear button state
+  ResetButtonState();
 }
