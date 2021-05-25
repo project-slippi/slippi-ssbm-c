@@ -47,6 +47,10 @@ CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   csbs->x_gobj = JOBJ_LoadSet(0, x_set, 0, 0, 3, 1, 1, GObj_Anim);
   csbs->x_jobj = csbs->x_gobj->hsd_object;
 
+  // Attach positions of dependent JOBJs
+  JOBJ_AttachPosition(csbs->icon->root_jobj, csbs->root_jobj);
+  JOBJ_AttachPosition(csbs->x_jobj, csbs->root_jobj);
+
   // Init state
   _SetHover(csbs, false);
   _SetSelectState(csbs, CSBoxSelector_Select_State_NotSelected);
@@ -68,8 +72,10 @@ void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover) {
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {
   bs->root_jobj->trans = p;
-  bs->x_jobj->trans = p;
-  CSIcon_SetPos(bs->icon, p);
+
+  // Don't think the logic below is needed anymore since we are attaching positions in constructor
+  // bs->x_jobj->trans = p;
+  // CSIcon_SetPos(bs->icon, p);
 }
 
 void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
