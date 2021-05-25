@@ -16,7 +16,7 @@ typedef enum CSBoxSelector_Select_State {
 
 typedef struct CSBoxSelector_State {
   u8 is_hover;
-  u8 select_state;
+  CSBoxSelector_Select_State select_state;
 } CSBoxSelector_State;
 
 typedef struct CSBoxSelector {

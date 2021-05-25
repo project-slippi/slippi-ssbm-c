@@ -217,18 +217,12 @@ void InputsThink(GOBJ *gobj) {
     ////////////////////////////////
     if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
       // Handle a right input
-      data->state.selector_idx++;
+      IncrementSelectorIndex();
       SFX_PlayCommon(2);  // Play move SFX
     } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
       // Handle a left input
-      data->state.selector_idx--;
+      DecrementSelectorIndex();
       SFX_PlayCommon(2);  // Play move SFX
-    }
-
-    if (data->state.selector_idx < 0) {
-      data->state.selector_idx += data->selector_count;
-    } else if (data->state.selector_idx >= data->selector_count) {
-      data->state.selector_idx -= data->selector_count;
     }
 
     ////////////////////////////////
@@ -290,6 +284,11 @@ void InputsThink(GOBJ *gobj) {
       data->state.selector_idx = data->state.prev_selector_idx;
       data->state.selected_values_count = 0;
       for (int i = 0; i < data->selector_count; i++) {
+        // Only reset selectors that are currently selected
+        if (data->selectors[i]->state.select_state != CSBoxSelector_Select_State_X) {
+          continue;
+        }
+
         CSBoxSelector_SetSelectState(data->selectors[i], CSBoxSelector_Select_State_NotSelected);
       }
 
@@ -326,11 +325,11 @@ void CompleteCurrentStep() {
 
   // Commit selections to selected values
   int commit_index = 0;
-  for (int i = 0; i < step->required_selection_count; i++) {
+  for (int i = 0; i < data->selector_count; i++) {
     CSBoxSelector *bs = data->selectors[i];
 
     // If this selector is selected, indicate that stage as the one selected
-    if (bs->state.select_state == CSBoxSelector_Select_State_Selected) {
+    if (bs->state.select_state == CSBoxSelector_Select_State_X) {
       int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
       step->stage_selections[commit_index] = stageId;
       commit_index++;
@@ -385,6 +384,42 @@ void PrepareCurrentStep() {
     CSBoxSelector_SetSelectState(csbs, newSelectState);
   }
 
+  // Reset selector index to choose first non-disabled icon
+  data->state.selected_values_count = 0;
+  ResetSelectorIndex();
+
   // Clear button state
   ResetButtonState();
+}
+
+static void ModifySelectorIndex(int change) {
+  // Iterate through and try to find an available selector
+  int iter_count = 0;
+  for (iter_count = 0; iter_count < data->selector_count; iter_count++) {
+    // Edit selector index. We increment by count to handle negative numbers, causing them to loop
+    data->state.selector_idx = (data->state.selector_idx + change + data->selector_count) % data->selector_count;
+
+    CSBoxSelector_Select_State curState = data->selectors[data->state.selector_idx]->state.select_state;
+    if (curState != CSBoxSelector_Select_State_Disabled) {
+      return;
+    }
+  }
+
+  // If we didn't find an available selector, don't select any
+  if (iter_count >= data->selector_count) {
+    data->state.selector_idx = -1;
+  }
+}
+
+void IncrementSelectorIndex() {
+  ModifySelectorIndex(1);
+}
+
+void DecrementSelectorIndex() {
+  ModifySelectorIndex(-1);
+}
+
+void ResetSelectorIndex() {
+  data->state.selector_idx = -1;
+  ModifySelectorIndex(1);
 }

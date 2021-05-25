@@ -65,3 +65,7 @@ void InitSteps();
 void ResetButtonState();
 void CompleteCurrentStep();
 void PrepareCurrentStep();
+
+void IncrementSelectorIndex();
+void DecrementSelectorIndex();
+void ResetSelectorIndex();
