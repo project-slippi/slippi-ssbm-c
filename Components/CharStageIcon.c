@@ -34,17 +34,17 @@ int CSIcon_ConvertMatToChar(CSIcon_Material mat) {
 
 CSIcon_Material CSIcon_ConvertStageToMat(int stageId) {
   switch (stageId) {
-    case 0x2:
+    case GRKINDEXT_IZUMI:
       return CSIcon_Material_Fountain;
-    case 0x3:
+    case GRKINDEXT_PSTAD:
       return CSIcon_Material_Pokemon;
-    case 0x8:
+    case GRKINDEXT_STORY:
       return CSIcon_Material_Yoshis;
-    case 0x1C:
+    case GRKINDEXT_OLDPU:
       return CSIcon_Material_Dreamland;
-    case 0x1F:
+    case GRKINDEXT_BATTLE:
       return CSIcon_Material_Battlefield;
-    case 0x20:
+    case GRKINDEXT_FD:
       return CSIcon_Material_FinalDestination;
   }
 
@@ -54,17 +54,17 @@ CSIcon_Material CSIcon_ConvertStageToMat(int stageId) {
 int CSIcon_ConvertMatToStage(CSIcon_Material mat) {
   switch (mat) {
     case CSIcon_Material_Fountain:
-      return 0x2;
+      return GRKINDEXT_IZUMI;
     case CSIcon_Material_Pokemon:
-      return 0x3;
+      return GRKINDEXT_PSTAD;
     case CSIcon_Material_Yoshis:
-      return 0x8;
+      return GRKINDEXT_STORY;
     case CSIcon_Material_Dreamland:
-      return 0x1C;
+      return GRKINDEXT_OLDPU;
     case CSIcon_Material_Battlefield:
-      return 0x1F;
+      return GRKINDEXT_BATTLE;
     case CSIcon_Material_FinalDestination:
-      return 0x20;
+      return GRKINDEXT_FD;
   }
 
   return 0;
