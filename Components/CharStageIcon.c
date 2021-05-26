@@ -25,11 +25,21 @@ void CSIcon_SetMaterial(CSIcon *icon, CSIcon_Material matIdx) {
 }
 
 CSIcon_Material CSIcon_ConvertCharToMat(int charId) {
-  // TODO: Implement if we need
+  switch (charId) {
+    case CKIND_FALCON:
+      return CSIcon_Material_Falcon;
+  }
+
+  return CSIcon_Material_Empty;
 }
 
 int CSIcon_ConvertMatToChar(CSIcon_Material mat) {
-  // TODO: Implement if we need
+  switch (mat) {
+    case CSIcon_Material_Falcon:
+      return CKIND_FALCON;
+  }
+
+  return 0;
 }
 
 CSIcon_Material CSIcon_ConvertStageToMat(int stageId) {

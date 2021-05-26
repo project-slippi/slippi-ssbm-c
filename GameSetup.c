@@ -97,12 +97,14 @@ void InitSteps() {
 
   data->steps[0].player_idx = 0;
   data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[0].required_selection_count = 1;
   data->steps[0].char_selection = 0;
   data->steps[0].char_color_selection = 0;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[1].required_selection_count = 1;
   data->steps[1].char_selection = 0;
   data->steps[1].char_color_selection = 0;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
@@ -405,7 +407,7 @@ void UpdateTimeline() {
   float yPos = -17.5;
 
   float gap = 10;
-  float double_inc = 3;
+  float double_inc = 2.6;
 
   // Iterate through all the steps
   for (int i = 0; i < data->step_count; i++) {
@@ -413,9 +415,7 @@ void UpdateTimeline() {
 
     float width = gap;
     if (step->required_selection_count == 2) {
-      // Maybe do some math here... technically the position of the left-most icon should be
-      // where the original position would be?
-      xPos += double_inc;  // TODO: Tweak
+      xPos += double_inc;
       CSIcon_SetPos(step->display_icons[0], (Vec3){xPos - double_inc, yPos, 0});
       CSIcon_SetPos(step->display_icons[1], (Vec3){xPos + double_inc, yPos, 0});
       width = gap + double_inc;
@@ -429,7 +429,11 @@ void UpdateTimeline() {
       // Show question if not complete, result if complete
       CSIcon_Material mat = CSIcon_Material_Question;
       if (step->state == GameSetup_Step_State_COMPLETE) {
-        mat = CSIcon_ConvertStageToMat(step->stage_selections[j]);
+        if (step->type == GameSetup_Step_Type_CHOOSE_CHAR) {
+          mat = CSIcon_ConvertCharToMat(step->char_selection);
+        } else {
+          mat = CSIcon_ConvertStageToMat(step->stage_selections[j]);
+        }
       }
 
       CSIcon_SetMaterial(step->display_icons[j], mat);
