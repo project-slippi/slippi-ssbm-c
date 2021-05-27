@@ -61,13 +61,13 @@ void Minor_Load(void *minor_data) {
   InitSelectorJobjs();
 
   // Prepare text
-  Text *txt = Text_CreateText(0, 0);
-  txt->kerning = 1;
-  txt->align = 0;  // align left
-  txt->scale = (Vec2){0.01, 0.01};
+  data->text = Text_CreateText(0, 0);
+  data->text->kerning = 1;
+  data->text->align = 0;  // align left
+  data->text->scale = (Vec2){0.01, 0.01};
 
-  // int id = Text_AddSubtext(txt, -2000, 0, "OTest");
-  // Text_SetScale(txt, id, 6, 6);
+  data->timer_subtext_id = Text_AddSubtext(data->text, -2300, -1300, "0:30");
+  Text_SetScale(data->text, data->timer_subtext_id, 5, 5);
 
   // Load confirm/change buttons
   data->buttons[0] = Button_Init(gui_assets, GUI_GameSetup_JOBJ_BUTTON_OK);
@@ -100,6 +100,7 @@ void InitSteps() {
   data->steps[0].required_selection_count = 1;
   data->steps[0].char_selection = CKIND_FALCON;
   data->steps[0].char_color_selection = 0;
+  data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[1].player_idx = 0;
@@ -107,22 +108,26 @@ void InitSteps() {
   data->steps[1].required_selection_count = 1;
   data->steps[1].char_selection = CKIND_SHEIK;
   data->steps[1].char_color_selection = 0;
+  data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
+  data->steps[2].timer_seconds = 10;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[3].player_idx = 0;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
+  data->steps[3].timer_seconds = 20;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
 
   data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
+  data->steps[4].timer_seconds = 10;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
 
   // Start with the first two steps completed
@@ -219,6 +224,14 @@ void InputsThink(GOBJ *gobj) {
   }
 
   GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  u8 is_time_elapsed = UpdateTimer();
+  if (is_time_elapsed) {
+    CompleteCurrentStep();
+    PrepareCurrentStep();
+    UpdateTimeline();
+    return;
+  }
 
   if (data->state.selector_idx >= 0) {
     ////////////////////////////////
@@ -346,16 +359,34 @@ void CompleteCurrentStep() {
     }
   }
 
+  // In the case of a timeout, the selections may not have been made. Select non-disabled
+  // stages
+  for (int i = 0; i < data->selector_count; i++) {
+    if (commit_index >= step->required_selection_count) {
+      break;  // If enough selections have been made, exit loop
+    }
+
+    CSBoxSelector *bs = data->selectors[i];
+
+    // If this selector is selected, indicate that stage as the one selected
+    if (!bs->state.is_disabled) {
+      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
+      step->stage_selections[commit_index] = stageId;
+      commit_index++;
+    }
+  }
+
   // Increment step idx
   data->state.step_idx++;
   if (data->state.step_idx >= data->step_count) {
     // TODO: Complete full process and end scene
+    data->state.step_idx = data->step_count - 1;
     return;
+  } else {
+    // Activate next step
+    step = &data->steps[data->state.step_idx];
+    step->state = GameSetup_Step_State_ACTIVE;
   }
-
-  // Activate next step
-  step = &data->steps[data->state.step_idx];
-  step->state = GameSetup_Step_State_ACTIVE;
 }
 
 void PrepareCurrentStep() {
@@ -363,6 +394,9 @@ void PrepareCurrentStep() {
   if (data->state.step_idx >= data->step_count) {
     return;
   }
+
+  // Initialize current timer to 0
+  data->timer_frames = 0;
 
   // TODO: Show/Hide the selectors used for this step and adjust number
 
@@ -447,6 +481,25 @@ void UpdateTimeline() {
 
     xPos += width;
   }
+}
+
+u8 UpdateTimer() {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  int seconds_elapsed = data->timer_frames / 60;
+  int seconds_remaining = step->timer_seconds - seconds_elapsed;
+  if (seconds_remaining < 0) {
+    seconds_remaining = 0;
+  }
+
+  int minutes_remaining = seconds_remaining / 60;
+  Text_SetText(data->text, data->timer_subtext_id, "%d:%02d", minutes_remaining, seconds_remaining % 60);
+
+  // Increment frame timer
+  data->timer_frames++;
+
+  // Return that we have run out of time 3 seconds after time runs out
+  return data->timer_frames > 60 * (step->timer_seconds + 3);
 }
 
 static void ModifySelectorIndex(int change) {

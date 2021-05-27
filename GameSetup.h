@@ -28,12 +28,13 @@ typedef struct GameSetup_Step {
   u8 player_idx;
   GameSetup_Step_Type type;
   int required_selection_count;
+  u32 timer_seconds;
+
+  CSIcon *display_icons[2];
 
   int char_selection;
   int char_color_selection;
-
   int stage_selections[2];
-  CSIcon *display_icons[2];
 
   GameSetup_Step_State state;
 } GameSetup_Step;
@@ -55,6 +56,9 @@ typedef struct GameSetup_Data {
   CSBoxSelector *selectors[MAX_SELECTORS];
   int selector_count;
   int button_count;
+  Text *text;
+  int timer_subtext_id;
+  int timer_frames;
   GameSetup_Step_Type initialized_step_type;
 } GameSetup_Data;
 
@@ -71,4 +75,5 @@ void IncrementSelectorIndex();
 void DecrementSelectorIndex();
 void ResetSelectorIndex();
 
+u8 UpdateTimer();  // Returns bool indicating if time is elapsed
 void UpdateTimeline();
