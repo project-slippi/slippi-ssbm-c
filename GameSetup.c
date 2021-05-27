@@ -98,14 +98,14 @@ void InitSteps() {
   data->steps[0].player_idx = 0;
   data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[0].required_selection_count = 1;
-  data->steps[0].char_selection = 0;
+  data->steps[0].char_selection = CKIND_FALCON;
   data->steps[0].char_color_selection = 0;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[1].required_selection_count = 1;
-  data->steps[1].char_selection = 0;
+  data->steps[1].char_selection = CKIND_SHEIK;
   data->steps[1].char_color_selection = 0;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
 

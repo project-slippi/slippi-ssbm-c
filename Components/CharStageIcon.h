@@ -16,6 +16,7 @@ typedef enum CSIcon_Material {
   CSIcon_Material_Fountain,
   CSIcon_Material_Pokemon,
   CSIcon_Material_Falcon,
+  CSIcon_Material_Sheik,
 } CSIcon_Material;
 
 #define CSIcon_LAST_STAGE_MAT_IDX CSIcon_Material_Pokemon

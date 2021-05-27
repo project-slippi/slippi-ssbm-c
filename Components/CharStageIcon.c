@@ -43,6 +43,8 @@ CSIcon_Material CSIcon_ConvertCharToMat(int charId) {
   switch (charId) {
     case CKIND_FALCON:
       return CSIcon_Material_Falcon;
+    case CKIND_SHEIK:
+      return CSIcon_Material_Sheik;
   }
 
   return CSIcon_Material_Empty;
@@ -52,6 +54,8 @@ int CSIcon_ConvertMatToChar(CSIcon_Material mat) {
   switch (mat) {
     case CSIcon_Material_Falcon:
       return CKIND_FALCON;
+    case CSIcon_Material_Sheik:
+      return CKIND_SHEIK;
   }
 
   return 0;
