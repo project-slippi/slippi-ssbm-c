@@ -225,6 +225,12 @@ void InputsThink(GOBJ *gobj) {
 
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
+  // If current step is completed (process finished, don't allow any inputs)
+  if (step->state == GameSetup_Step_State_COMPLETE) {
+    // TODO: Play an animation on selected stage and play a sound
+    return;
+  }
+
   u8 is_time_elapsed = UpdateTimer();
   if (is_time_elapsed) {
     CompleteCurrentStep();
@@ -403,8 +409,13 @@ void PrepareCurrentStep() {
   // Disable stages that cannot be selected and move selector index
   // Pokemon is the last stage, make array large enough to fit a bool for all of them
   u8 shouldDisableMat[CSIcon_LAST_STAGE_MAT_IDX + 1] = {false};
-  for (int i = 0; i < data->state.step_idx; i++) {
+  for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *s = &data->steps[i];
+    if (s->state != GameSetup_Step_State_COMPLETE) {
+      // If we reach a step that is not complete, stop looking for disabled mats
+      break;
+    }
+
     if (s->type != GameSetup_Step_Type_REMOVE_STAGE) {
       continue;
     }
