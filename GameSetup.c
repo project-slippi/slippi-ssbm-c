@@ -240,13 +240,13 @@ void InputsThink(GOBJ *gobj) {
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_A) {
       int idx = data->state.selector_idx;
-      u8 isSelected = data->selectors[idx]->state.select_state != CSBoxSelector_Select_State_NotSelected;
+      u8 isSelected = data->selectors[idx]->state.is_selected;
 
       if (isSelected) {
         CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_NotSelected);
         data->state.selected_values_count--;
       } else {
-        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_X);
+        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_Selected_X);
         data->state.selected_values_count++;
       }
 
@@ -294,7 +294,7 @@ void InputsThink(GOBJ *gobj) {
       data->state.selected_values_count = 0;
       for (int i = 0; i < data->selector_count; i++) {
         // Only reset selectors that are currently selected
-        if (data->selectors[i]->state.select_state != CSBoxSelector_Select_State_X) {
+        if (!data->selectors[i]->state.is_selected) {
           continue;
         }
 
@@ -339,7 +339,7 @@ void CompleteCurrentStep() {
     CSBoxSelector *bs = data->selectors[i];
 
     // If this selector is selected, indicate that stage as the one selected
-    if (bs->state.select_state == CSBoxSelector_Select_State_X) {
+    if (bs->state.is_selected) {
       int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
       step->stage_selections[commit_index] = stageId;
       commit_index++;
@@ -388,7 +388,7 @@ void PrepareCurrentStep() {
 
     CSBoxSelector_Select_State newSelectState = CSBoxSelector_Select_State_NotSelected;
     if (shouldDisableMat[csbs->icon->state.material]) {
-      newSelectState = CSBoxSelector_Select_State_Disabled;
+      newSelectState = CSBoxSelector_Select_State_Disabled_X;
     }
 
     CSBoxSelector_SetSelectState(csbs, newSelectState);
@@ -425,6 +425,11 @@ void UpdateTimeline() {
 
     // TODO: Position text?
 
+    CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
+    if (i > data->state.step_idx) {
+      icon_ss = CSIcon_Select_State_Disabled;
+    }
+
     for (int j = 0; j < step->required_selection_count; j++) {
       // Show question if not complete, result if complete
       CSIcon_Material mat = CSIcon_Material_Question;
@@ -436,6 +441,7 @@ void UpdateTimeline() {
         }
       }
 
+      CSIcon_SetSelectState(step->display_icons[j], icon_ss);
       CSIcon_SetMaterial(step->display_icons[j], mat);
     }
 
@@ -450,8 +456,8 @@ static void ModifySelectorIndex(int change) {
     // Edit selector index. We increment by count to handle negative numbers, causing them to loop
     data->state.selector_idx = (data->state.selector_idx + change + data->selector_count) % data->selector_count;
 
-    CSBoxSelector_Select_State curState = data->selectors[data->state.selector_idx]->state.select_state;
-    if (curState != CSBoxSelector_Select_State_Disabled) {
+    // Once we are hovering over a selector that is not disabled, stop editing selector idx
+    if (!data->selectors[data->state.selector_idx]->state.is_disabled) {
       return;
     }
   }

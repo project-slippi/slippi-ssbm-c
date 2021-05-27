@@ -3,6 +3,18 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
+static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
+  // Set alpha for both mobjs
+  float alpha = 1;
+  if (state == CSIcon_Select_State_Disabled) {
+    alpha = 0.3;
+  }
+  icon->root_jobj->child->dobj->mobj->mat->alpha = alpha;        // bg
+  icon->root_jobj->child->dobj->next->mobj->mat->alpha = alpha;  // material
+
+  icon->state.select_state = state;
+}
+
 CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   CSIcon *icon = calloc(sizeof(CSIcon));
 
@@ -10,6 +22,9 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   JOBJSet *set = gui->jobjs[GUI_GameSetup_JOBJ_CSIcon];
   icon->gobj = JOBJ_LoadSet(0, set, 0, 0, 3, 1, 1, 0);
   icon->root_jobj = icon->gobj->hsd_object;
+
+  // Init state
+  _SetSelectState(icon, CSIcon_Select_State_NotSelected);
 
   return icon;
 }
@@ -82,4 +97,12 @@ int CSIcon_ConvertMatToStage(CSIcon_Material mat) {
 
 void CSIcon_SetPos(CSIcon *icon, Vec3 p) {
   icon->root_jobj->trans = p;
+}
+
+void CSIcon_SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
+  if (icon->state.select_state == state) {
+    return;
+  }
+
+  _SetSelectState(icon, state);
 }

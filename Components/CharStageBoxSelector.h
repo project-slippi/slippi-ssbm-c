@@ -8,14 +8,17 @@
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
 typedef enum CSBoxSelector_Select_State {
-  CSBoxSelector_Select_State_NotSelected = 0,
-  CSBoxSelector_Select_State_X = 1,
-  CSBoxSelector_Select_State_Selected = 2,
-  CSBoxSelector_Select_State_Disabled = 3,
+  CSBoxSelector_Select_State_NotSelected,
+  CSBoxSelector_Select_State_Selected_X,
+  CSBoxSelector_Select_State_Selected,
+  CSBoxSelector_Select_State_Disabled,
+  CSBoxSelector_Select_State_Disabled_X,
 } CSBoxSelector_Select_State;
 
 typedef struct CSBoxSelector_State {
   u8 is_hover;
+  u8 is_selected;
+  u8 is_disabled;
   CSBoxSelector_Select_State select_state;
 } CSBoxSelector_State;
 

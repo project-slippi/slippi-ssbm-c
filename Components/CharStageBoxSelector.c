@@ -19,14 +19,37 @@ static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
 }
 
 static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
-  // Reset state on all state JOBJs
-  bs->x_jobj->flags = bs->x_jobj->flags | JOBJ_HIDDEN;  // Hide X
+  // Init flags that may be changed depending on state
+  CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
 
-  if (state == CSBoxSelector_Select_State_X) {
-    bs->x_jobj->flags = bs->x_jobj->flags & ~JOBJ_HIDDEN;
+  // Reset state on all state JOBJs
+  bs->x_jobj->flags |= JOBJ_HIDDEN;                      // Hide X
+  bs->root_jobj->child->sibling->flags &= ~JOBJ_HIDDEN;  // Show border
+
+  // Show X for the X states
+  if (state == CSBoxSelector_Select_State_Selected_X) {
+    bs->x_jobj->flags &= ~JOBJ_HIDDEN;
     JOBJ_ReqAnimAll(bs->x_jobj, 0);
+    bs->x_jobj->dobj->mobj->mat->diffuse = (GXColor){0xFF, 0x0, 0x0, 0xFF};
+  } else if (state == CSBoxSelector_Select_State_Disabled_X) {
+    bs->x_jobj->flags &= ~JOBJ_HIDDEN;
+    JOBJ_ReqAnimAll(bs->x_jobj, 4);
+    bs->x_jobj->dobj->mobj->mat->diffuse = (GXColor){0x87, 0x87, 0x87, 0xFF};
   }
 
+  bs->state.is_selected = state == CSBoxSelector_Select_State_Selected ||
+                          state == CSBoxSelector_Select_State_Selected_X;
+  bs->state.is_disabled = state == CSBoxSelector_Select_State_Disabled ||
+                          state == CSBoxSelector_Select_State_Disabled_X;
+
+  // If disabled, hide border and set transparency
+  if (bs->state.is_disabled) {
+    bs->root_jobj->child->sibling->flags |= JOBJ_HIDDEN;  // Hide border
+    icon_ss = CSIcon_Select_State_Disabled;
+  }
+  CSIcon_SetSelectState(bs->icon, icon_ss);
+
+  // Commit new state
   bs->state.select_state = state;
 }
 
