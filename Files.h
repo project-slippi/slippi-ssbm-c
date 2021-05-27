@@ -13,14 +13,14 @@ typedef struct GUI_GameSetup {
 } GUI_GameSetup;
 
 typedef enum GUI_GameSetup_JOBJ {
-  GUI_GameSetup_JOBJ_Button = 2,
-  GUI_GameSetup_JOBJ_Panels = 4,
-  GUI_GameSetup_JOBJ_Background = 5,
-  GUI_GameSetup_JOBJ_CSBoxSelector = 6,
-  GUI_GameSetup_JOBJ_CSIcon = 7,
-  GUI_GameSetup_JOBJ_X = 8,
-  GUI_GameSetup_JOBJ_BUTTON_OK = 9,
-  GUI_GameSetup_JOBJ_BUTTON_REDO = 10,
+  GUI_GameSetup_JOBJ_Background,
+  GUI_GameSetup_JOBJ_Panels,
+  GUI_GameSetup_JOBJ_Button,
+  GUI_GameSetup_JOBJ_CSBoxSelector,
+  GUI_GameSetup_JOBJ_CSIcon,
+  GUI_GameSetup_JOBJ_X,
+  GUI_GameSetup_JOBJ_BUTTON_OK,
+  GUI_GameSetup_JOBJ_BUTTON_REDO,
 } GUI_GameSetup_JOBJ;
 
 #endif

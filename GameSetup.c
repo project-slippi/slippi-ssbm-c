@@ -52,10 +52,10 @@ void Minor_Load(void *minor_data) {
   GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
   // create background
-  JOBJ_LoadSet(0, gui_assets->jobjs[5], 0, 0, 3, 1, 1, GObj_Anim);
+  JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
 
   // Load panel and frame
-  JOBJ_LoadSet(0, gui_assets->jobjs[4], 0, 0, 3, 1, 1, GObj_Anim);
+  JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Panels], 0, 0, 3, 1, 1, GObj_Anim);
 
   // Init selectors
   InitSelectorJobjs();
@@ -233,6 +233,7 @@ void InputsThink(GOBJ *gobj) {
 
   u8 is_time_elapsed = UpdateTimer();
   if (is_time_elapsed) {
+    SFX_PlayCommon(1);
     CompleteCurrentStep();
     PrepareCurrentStep();
     UpdateTimeline();
