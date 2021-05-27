@@ -43,8 +43,56 @@ CSIcon_Material CSIcon_ConvertCharToMat(int charId) {
   switch (charId) {
     case CKIND_FALCON:
       return CSIcon_Material_Falcon;
+    case CKIND_DK:
+      return CSIcon_Material_DK;
+    case CKIND_FOX:
+      return CSIcon_Material_Fox;
+    case CKIND_GAW:
+      return CSIcon_Material_GW;
+    case CKIND_KIRBY:
+      return CSIcon_Material_Kirby;
+    case CKIND_BOWSER:
+      return CSIcon_Material_Bowser;
+    case CKIND_LINK:
+      return CSIcon_Material_Link;
+    case CKIND_LUIGI:
+      return CSIcon_Material_Luigi;
+    case CKIND_MARIO:
+      return CSIcon_Material_Mario;
+    case CKIND_MARTH:
+      return CSIcon_Material_Marth;
+    case CKIND_MEWTWO:
+      return CSIcon_Material_Mewtwo;
+    case CKIND_NESS:
+      return CSIcon_Material_Ness;
+    case CKIND_PEACH:
+      return CSIcon_Material_Peach;
+    case CKIND_PIKACHU:
+      return CSIcon_Material_Pikachu;
+    case CKIND_ICECLIMBERS:
+      return CSIcon_Material_ICs;
+    case CKIND_JIGGLYPUFF:
+      return CSIcon_Material_Puff;
+    case CKIND_SAMUS:
+      return CSIcon_Material_Samus;
+    case CKIND_YOSHI:
+      return CSIcon_Material_Yoshi;
+    case CKIND_ZELDA:
+      return CSIcon_Material_Zelda;
     case CKIND_SHEIK:
       return CSIcon_Material_Sheik;
+    case CKIND_FALCO:
+      return CSIcon_Material_Falco;
+    case CKIND_YOUNGLINK:
+      return CSIcon_Material_YLink;
+    case CKIND_DRMARIO:
+      return CSIcon_Material_Doc;
+    case CKIND_ROY:
+      return CSIcon_Material_Roy;
+    case CKIND_PICHU:
+      return CSIcon_Material_Pichu;
+    case CKIND_GANONDORF:
+      return CSIcon_Material_Ganon;
   }
 
   return CSIcon_Material_Empty;
@@ -54,8 +102,56 @@ int CSIcon_ConvertMatToChar(CSIcon_Material mat) {
   switch (mat) {
     case CSIcon_Material_Falcon:
       return CKIND_FALCON;
+    case CSIcon_Material_DK:
+      return CKIND_DK;
+    case CSIcon_Material_Fox:
+      return CKIND_FOX;
+    case CSIcon_Material_GW:
+      return CKIND_GAW;
+    case CSIcon_Material_Kirby:
+      return CKIND_KIRBY;
+    case CSIcon_Material_Bowser:
+      return CKIND_BOWSER;
+    case CSIcon_Material_Link:
+      return CKIND_LINK;
+    case CSIcon_Material_Luigi:
+      return CKIND_LUIGI;
+    case CSIcon_Material_Mario:
+      return CKIND_MARIO;
+    case CSIcon_Material_Marth:
+      return CKIND_MARTH;
+    case CSIcon_Material_Mewtwo:
+      return CKIND_MEWTWO;
+    case CSIcon_Material_Ness:
+      return CKIND_NESS;
+    case CSIcon_Material_Peach:
+      return CKIND_PEACH;
+    case CSIcon_Material_Pikachu:
+      return CKIND_PIKACHU;
+    case CSIcon_Material_ICs:
+      return CKIND_ICECLIMBERS;
+    case CSIcon_Material_Puff:
+      return CKIND_JIGGLYPUFF;
+    case CSIcon_Material_Samus:
+      return CKIND_SAMUS;
+    case CSIcon_Material_Yoshi:
+      return CKIND_YOSHI;
+    case CSIcon_Material_Zelda:
+      return CKIND_ZELDA;
     case CSIcon_Material_Sheik:
       return CKIND_SHEIK;
+    case CSIcon_Material_Falco:
+      return CKIND_FALCO;
+    case CSIcon_Material_YLink:
+      return CKIND_YOUNGLINK;
+    case CSIcon_Material_Doc:
+      return CKIND_DRMARIO;
+    case CSIcon_Material_Roy:
+      return CKIND_ROY;
+    case CSIcon_Material_Pichu:
+      return CKIND_PICHU;
+    case CSIcon_Material_Ganon:
+      return CKIND_GANONDORF;
   }
 
   return 0;
