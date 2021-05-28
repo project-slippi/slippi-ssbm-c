@@ -476,6 +476,8 @@ void UpdateTimeline() {
     CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
     if (i > data->state.step_idx) {
       icon_ss = CSIcon_Select_State_Disabled;
+    } else if (step->state == GameSetup_Step_State_ACTIVE) {
+      icon_ss = CSIcon_Select_State_Blink;
     }
 
     for (int j = 0; j < step->required_selection_count; j++) {
@@ -489,8 +491,8 @@ void UpdateTimeline() {
         }
       }
 
-      CSIcon_SetSelectState(step->display_icons[j], icon_ss);
       CSIcon_SetMaterial(step->display_icons[j], mat);
+      CSIcon_SetSelectState(step->display_icons[j], icon_ss);
     }
 
     xPos += width;

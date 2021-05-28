@@ -49,6 +49,7 @@ typedef enum CSIcon_Select_State {
   CSIcon_Select_State_NotSelected,
   CSIcon_Select_State_Selected,
   CSIcon_Select_State_Disabled,
+  CSIcon_Select_State_Blink,
 } CSIcon_Select_State;
 
 typedef struct CSIcon_State {
@@ -59,6 +60,7 @@ typedef struct CSIcon_State {
 typedef struct CSIcon {
   GOBJ *gobj;
   JOBJ *root_jobj;
+  JOBJSet *jobj_set;
   CSIcon_State state;
 } CSIcon;
 

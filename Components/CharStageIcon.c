@@ -4,13 +4,27 @@
 #include "../m-ex/MexTK/mex.h"
 
 static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
+  JOBJ_RemoveAnimAll(icon->root_jobj);
+
   // Set alpha for both mobjs
   float alpha = 1;
   if (state == CSIcon_Select_State_Disabled) {
     alpha = 0.3;
   }
-  icon->root_jobj->child->dobj->mobj->mat->alpha = alpha;        // bg
-  icon->root_jobj->child->dobj->next->mobj->mat->alpha = alpha;  // material
+
+  HSD_Material *bg_mat = icon->root_jobj->child->dobj->mobj->mat;
+  HSD_Material *fg_mat = icon->root_jobj->child->dobj->next->mobj->mat;
+
+  bg_mat->alpha = alpha;  // background
+  fg_mat->alpha = alpha;  // foreground
+
+  // Reset the colors of the background. Is there a way to reset to the file configuration?
+  bg_mat->diffuse = (GXColor){128, 128, 128, 0};
+
+  if (state == CSIcon_Select_State_Blink) {
+    JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 0);
+    JOBJ_ReqAnimAll(icon->root_jobj, 0);
+  }
 
   icon->state.select_state = state;
 }
@@ -19,8 +33,8 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   CSIcon *icon = calloc(sizeof(CSIcon));
 
   // Init icon jobj
-  JOBJSet *set = gui->jobjs[GUI_GameSetup_JOBJ_CSIcon];
-  icon->gobj = JOBJ_LoadSet(0, set, 0, 0, 3, 1, 1, 0);
+  icon->jobj_set = gui->jobjs[GUI_GameSetup_JOBJ_CSIcon];
+  icon->gobj = JOBJ_LoadSet(0, icon->jobj_set, 0, 0, 3, 1, 0, GObj_Anim);
   icon->root_jobj = icon->gobj->hsd_object;
 
   // Init state
@@ -34,8 +48,15 @@ void CSIcon_Free(CSIcon *icon) {
 }
 
 void CSIcon_SetMaterial(CSIcon *icon, CSIcon_Material matIdx) {
+  JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 1);
   JOBJ_ReqAnimAll(icon->root_jobj, matIdx);
   JOBJ_AnimAll(icon->root_jobj);
+
+  // Restore prior active animation here? This isn't strictly necessary because we usually
+  // set the material upon initializing and don't worry about it again. But without restoring,
+  // setting the material will cause the animation to end
+  JOBJ_RemoveAnimAll(icon->root_jobj);
+
   icon->state.material = matIdx;
 }
 
