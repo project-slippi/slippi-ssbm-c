@@ -23,27 +23,25 @@ static void _SetHover(Button *btn, u8 is_hover) {
     is_hover = false;
   }
 
-  JOBJ *jobj = btn->root_jobj;
-
   if (is_hover) {
     // Reset animation to start in the same place
-    JOBJ_AddSetAnim(jobj, btn->jobj_set, 0);
+    JOBJ_AddSetAnim(btn->root_jobj, btn->jobj_set, 0);
     JOBJ_ReqAnimAll(btn->root_jobj, 10);
     // JOBJ_Anim
   } else {
     JOBJ_ReqAnimAll(btn->root_jobj, 0);
     JOBJ_AnimAll(btn->root_jobj);
-    JOBJ_RemoveAnimAll(jobj);
+    JOBJ_RemoveAnimAll(btn->root_jobj);
   }
 
   btn->state.is_hover = is_hover;
 }
 
-Button *Button_Init(GUI_GameSetup *gui, GUI_GameSetup_JOBJ type) {
+Button *Button_Init(GUI_GameSetup *gui) {
   Button *btn = calloc(sizeof(Button));
 
   // Init btn jobj
-  btn->jobj_set = gui->jobjs[type];
+  btn->jobj_set = gui->jobjs[GUI_GameSetup_JOBJ_Button];
   btn->gobj = JOBJ_LoadSet(0, btn->jobj_set, 0, 0, 3, 1, 1, GObj_Anim);
   btn->root_jobj = btn->gobj->hsd_object;
 
@@ -58,23 +56,19 @@ void Button_Free(Button *btn) {
   // Not implemented because we only initialize a very limited amount of these
 }
 
-void test_aobj(AOBJ *aobj, int x, int y) {
-  char prnt[50];
-  sprintf(prnt, "Flags: %X\n", aobj->flags);
-  OSReport(prnt);
-}
-
 void Button_SetMaterial(Button *btn, Button_Material matIdx) {
   // char prnt[50];
   // sprintf(prnt, "Mat: %f\n", JOBJ_GetCurrentMatAnimFrame(btn->root_jobj->child));
   // OSReport(prnt);
 
-  // JOBJ_RunAObjCallback(btn->root_jobj->child, 6, 0x400, test_aobj, 6, 0, 0);
-  // JOBJ_ReqAnimAll(btn->root_jobj->child, matIdx);
-  // JOBJ_AnimAll(btn->root_jobj->child);
+  // Add set anim id 1 which allows us to change texture and animate
+  JOBJ_AddSetAnim(btn->root_jobj, btn->jobj_set, 1);
+  JOBJ_ReqAnimAll(btn->root_jobj->child, matIdx);
+  JOBJ_AnimAll(btn->root_jobj->child);
 
-  // JOBJ_ReqAnimAll(icon->root_jobj, matIdx);
-  // JOBJ_AnimAll(icon->root_jobj);
+  // Remove set anim id 1 and re-add anim id 0 which supports blinking
+  JOBJ_RemoveAnimAll(btn->root_jobj);
+  JOBJ_AddSetAnim(btn->root_jobj, btn->jobj_set, 0);
 }
 
 void Button_SetHover(Button *btn, u8 is_hover) {

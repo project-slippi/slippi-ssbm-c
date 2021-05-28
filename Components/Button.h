@@ -23,7 +23,7 @@ typedef struct Button {
   Button_State state;
 } Button;
 
-Button *Button_Init(GUI_GameSetup *gui, GUI_GameSetup_JOBJ type);
+Button *Button_Init(GUI_GameSetup *gui);
 void Button_Free(Button *btn);
 
 void Button_SetVisibility(Button *btn, u8 is_visible);

@@ -19,8 +19,6 @@ typedef enum GUI_GameSetup_JOBJ {
   GUI_GameSetup_JOBJ_CSBoxSelector,
   GUI_GameSetup_JOBJ_CSIcon,
   GUI_GameSetup_JOBJ_X,
-  GUI_GameSetup_JOBJ_BUTTON_OK,
-  GUI_GameSetup_JOBJ_BUTTON_REDO,
 } GUI_GameSetup_JOBJ;
 
 #endif

@@ -70,12 +70,12 @@ void Minor_Load(void *minor_data) {
   Text_SetScale(data->text, data->timer_subtext_id, 5, 5);
 
   // Load confirm/change buttons
-  data->buttons[0] = Button_Init(gui_assets, GUI_GameSetup_JOBJ_BUTTON_OK);
-  data->buttons[1] = Button_Init(gui_assets, GUI_GameSetup_JOBJ_BUTTON_REDO);
+  data->buttons[0] = Button_Init(gui_assets);
+  data->buttons[1] = Button_Init(gui_assets);
   Button_SetPos(data->buttons[0], (Vec3){-4.8, -2.5, 0});
   Button_SetPos(data->buttons[1], (Vec3){4.8, -2.5, 0});
-  // Button_SetMaterial(data->buttons[0], Button_Material_Ok);
-  // Button_SetMaterial(data->buttons[1], Button_Material_Redo);
+  Button_SetMaterial(data->buttons[0], Button_Material_Ok);
+  Button_SetMaterial(data->buttons[1], Button_Material_Redo);
   data->button_count = 2;
 
   // Initialize state, init steps, and prepare current step
@@ -222,6 +222,8 @@ void InputsThink(GOBJ *gobj) {
     sprintf(prnt, "Port: %d\n", port);
     OSReport(prnt);
   }
+
+  // Button_SetMaterial(data->buttons[0], Button_Material_Ok);
 
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
