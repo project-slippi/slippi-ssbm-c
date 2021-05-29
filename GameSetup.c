@@ -90,8 +90,9 @@ void InitState() {
   data->state.selected_values_count = 0;
 }
 
-FlatTexture *InitStepLabel(CSIcon *icon) {
+FlatTexture *InitStepLabel(CSIcon *icon, FlatTexture_Texture tex) {
   FlatTexture *label = FlatTexture_Init(gui_assets);
+  FlatTexture_SetTexture(label, tex);
   JOBJ_AttachPosition(label->root_jobj, icon->root_jobj);
   return label;
 }
@@ -108,7 +109,7 @@ void InitSteps() {
   data->steps[0].char_color_selection = 0;
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0]);
+  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], FlatTexture_Texture_YOUR_CHAR_LABEL);
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
@@ -117,14 +118,14 @@ void InitSteps() {
   data->steps[1].char_color_selection = 0;
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0]);
+  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], FlatTexture_Texture_OPP_CHAR_LABEL);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0]);
+  data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
 
   data->steps[3].player_idx = 0;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
@@ -132,14 +133,14 @@ void InitSteps() {
   data->steps[3].timer_seconds = 20;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
-  data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0]);
+  data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
 
   data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0]);
+  data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0], FlatTexture_Texture_STRIKE4_LABEL);
 
   // Start with the first two steps completed
   CompleteCurrentStep();

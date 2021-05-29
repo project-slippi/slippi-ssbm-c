@@ -7,10 +7,9 @@ static void _SetVisibility(FlatTexture *ft, u8 is_visible) {
   JOBJ *jobj = ft->root_jobj;
 
   if (is_visible) {
-    jobj->child->flags = jobj->child->flags & ~JOBJ_HIDDEN;  // Clear hidden flag
+    jobj->flags &= ~JOBJ_HIDDEN;  // Clear hidden flag
   } else {
-    // TODO: Figure out why setting child flag hidden works but it doesn't work on root
-    jobj->child->flags = jobj->child->flags | JOBJ_HIDDEN;  // Set hidden flag
+    jobj->flags |= JOBJ_HIDDEN;  // Set hidden flag
   }
 
   ft->state.is_visible = is_visible;
@@ -21,7 +20,7 @@ FlatTexture *FlatTexture_Init(GUI_GameSetup *gui) {
 
   // Init ft jobj
   JOBJSet *jobj_set = gui->jobjs[GUI_GameSetup_JOBJ_FlatTexture];
-  ft->gobj = JOBJ_LoadSet(0, jobj_set, 0, 0, 3, 1, 1, GObj_Anim);
+  ft->gobj = JOBJ_LoadSet(0, jobj_set, 0, 0, 3, 1, 1, 0);
   ft->root_jobj = ft->gobj->hsd_object;
 
   // Init state
@@ -34,9 +33,10 @@ void FlatTexture_Free(FlatTexture *ft) {
   // Not implemented because we only initialize a very limited amount of these
 }
 
-void FlatTexture_SetMaterial(FlatTexture *ft, FlatTexture_Texture tex) {
+void FlatTexture_SetTexture(FlatTexture *ft, FlatTexture_Texture tex) {
   // Add set anim id 1 which allows us to change texture and animate
-  JOBJ_ReqAnimAll(ft->root_jobj->child, tex);
+  JOBJ_ReqAnimAll(ft->root_jobj, tex);
+  JOBJ_AnimAll(ft->root_jobj);
 }
 
 void FlatTexture_SetVisibility(FlatTexture *ft, u8 is_visible) {

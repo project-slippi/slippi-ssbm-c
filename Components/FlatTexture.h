@@ -8,6 +8,12 @@
 
 typedef enum FlatTexture_Texture {
   FlatTexture_Texture_YOUR_CHAR_LABEL,
+  FlatTexture_Texture_OPP_CHAR_LABEL,
+  FlatTexture_Texture_STRIKE1_LABEL,
+  FlatTexture_Texture_STRIKE23_LABEL,
+  FlatTexture_Texture_STRIKE4_LABEL,
+  FlatTexture_Texture_BAN_LABEL,
+  FlatTexture_Texture_STAGE_LABEL,
 } FlatTexture_Texture;
 
 typedef struct FlatTexture_State {
