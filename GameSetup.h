@@ -1,6 +1,7 @@
 #include "./m-ex/MexTK/mex.h"
 #include "Components/Button.h"
 #include "Components/CharStageBoxSelector.h"
+#include "Components/FlatTexture.h"
 
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
@@ -31,6 +32,7 @@ typedef struct GameSetup_Step {
   u32 timer_seconds;
 
   CSIcon *display_icons[2];
+  FlatTexture *label;
 
   int char_selection;
   int char_color_selection;

@@ -1,4 +1,4 @@
-"m-ex/MexTK/MexTK.exe" -ff -i "GameSetup.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/Button.c" ^
+"m-ex/MexTK/MexTK.exe" -ff -i "GameSetup.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/Button.c" "Components/FlatTexture.c" ^
 -s mnFunction ^
 -o "output/GameSetup.dat" ^
 -t "m-ex/MexTK/mnFunction.txt" ^

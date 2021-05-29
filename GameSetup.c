@@ -90,6 +90,12 @@ void InitState() {
   data->state.selected_values_count = 0;
 }
 
+FlatTexture *InitStepLabel(CSIcon *icon) {
+  FlatTexture *label = FlatTexture_Init(gui_assets);
+  JOBJ_AttachPosition(label->root_jobj, icon->root_jobj);
+  return label;
+}
+
 void InitSteps() {
   data->step_count = 5;
   data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
@@ -102,6 +108,7 @@ void InitSteps() {
   data->steps[0].char_color_selection = 0;
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0]);
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
@@ -110,12 +117,14 @@ void InitSteps() {
   data->steps[1].char_color_selection = 0;
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0]);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0]);
 
   data->steps[3].player_idx = 0;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
@@ -123,12 +132,14 @@ void InitSteps() {
   data->steps[3].timer_seconds = 20;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
+  data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0]);
 
   data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0]);
 
   // Start with the first two steps completed
   CompleteCurrentStep();
@@ -457,21 +468,31 @@ void UpdateTimeline() {
   float gap = 10;
   float double_inc = 2.6;
 
+  float labelX = 6;
+  float labelY = 0.6;
+  float labelGapY = 3.2;
+
   // Iterate through all the steps
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
 
-    float width = gap;
+    // Set position of icons
+    float double_ofst = 0;
     if (step->required_selection_count == 2) {
       xPos += double_inc;
       CSIcon_SetPos(step->display_icons[0], (Vec3){xPos - double_inc, yPos, 0});
       CSIcon_SetPos(step->display_icons[1], (Vec3){xPos + double_inc, yPos, 0});
-      width = gap + double_inc;
+      double_ofst = double_inc;
     } else {
       CSIcon_SetPos(step->display_icons[0], (Vec3){xPos, yPos, 0});
     }
 
-    // TODO: Position text?
+    // Position text and set label texture
+    Vec3 tl = {-labelX + double_ofst, labelY + labelGapY, 0};
+    Vec3 tr = {labelX + double_ofst, labelY + labelGapY, 0};
+    Vec3 bl = {-labelX + double_ofst, -labelY + labelGapY, 0};
+    Vec3 br = {labelX + double_ofst, -labelY + labelGapY, 0};
+    FlatTexture_SetPosCorners(step->label, tl, tr, bl, br);
 
     CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
     if (i > data->state.step_idx) {
@@ -495,7 +516,7 @@ void UpdateTimeline() {
       CSIcon_SetSelectState(step->display_icons[j], icon_ss);
     }
 
-    xPos += width;
+    xPos += gap + double_ofst;
   }
 }
 
