@@ -20,6 +20,7 @@ typedef enum GUI_GameSetup_JOBJ {
   GUI_GameSetup_JOBJ_CSIcon,
   GUI_GameSetup_JOBJ_X,
   GUI_GameSetup_JOBJ_FlatTexture,
+  GUI_GameSetup_JOBJ_RightArrow,
 } GUI_GameSetup_JOBJ;
 
 #endif

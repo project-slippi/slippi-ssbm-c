@@ -90,11 +90,17 @@ void InitState() {
   data->state.selected_values_count = 0;
 }
 
-FlatTexture *InitStepLabel(CSIcon *icon, FlatTexture_Texture tex) {
+static FlatTexture *InitStepLabel(CSIcon *icon, FlatTexture_Texture tex) {
   FlatTexture *label = FlatTexture_Init(gui_assets);
   FlatTexture_SetTexture(label, tex);
   JOBJ_AttachPosition(label->root_jobj, icon->root_jobj);
   return label;
+}
+
+static RightArrow *InitStepArrow(CSIcon *icon) {
+  RightArrow *arrow = RightArrow_Init(gui_assets);
+  JOBJ_AttachPosition(arrow->root_jobj, icon->root_jobj);
+  return arrow;
 }
 
 void InitSteps() {
@@ -110,6 +116,7 @@ void InitSteps() {
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], FlatTexture_Texture_YOUR_CHAR_LABEL);
+  data->steps[0].arrow = 0;
 
   data->steps[1].player_idx = 0;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
@@ -119,6 +126,7 @@ void InitSteps() {
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], FlatTexture_Texture_OPP_CHAR_LABEL);
+  data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
@@ -126,6 +134,7 @@ void InitSteps() {
   data->steps[2].timer_seconds = 30;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
+  data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
   data->steps[3].player_idx = 0;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
@@ -134,6 +143,7 @@ void InitSteps() {
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
   data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
+  data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
 
   data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
@@ -141,6 +151,7 @@ void InitSteps() {
   data->steps[4].timer_seconds = 10;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0], FlatTexture_Texture_STRIKE4_LABEL);
+  data->steps[4].arrow = InitStepArrow(data->steps[4].display_icons[0]);
 
   // Start with the first two steps completed
   CompleteCurrentStep();
@@ -488,18 +499,15 @@ void UpdateTimeline() {
       CSIcon_SetPos(step->display_icons[0], (Vec3){xPos, yPos, 0});
     }
 
-    // Position text and set label texture
-    Vec3 tl = {-labelX + double_ofst, labelY + labelGapY, 0};
-    Vec3 tr = {labelX + double_ofst, labelY + labelGapY, 0};
-    Vec3 bl = {-labelX + double_ofst, -labelY + labelGapY, 0};
-    Vec3 br = {labelX + double_ofst, -labelY + labelGapY, 0};
-    FlatTexture_SetPosCorners(step->label, tl, tr, bl, br);
-
     CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
+    RightArrow_Display_State ra_ss = RightArrow_Display_State_NORMAL;
+
     if (i > data->state.step_idx) {
       icon_ss = CSIcon_Select_State_Disabled;
+      ra_ss = RightArrow_Display_State_DIM;
     } else if (step->state == GameSetup_Step_State_ACTIVE) {
       icon_ss = CSIcon_Select_State_Blink;
+      ra_ss = RightArrow_Display_State_BLINK;
     }
 
     for (int j = 0; j < step->required_selection_count; j++) {
@@ -515,6 +523,19 @@ void UpdateTimeline() {
 
       CSIcon_SetMaterial(step->display_icons[j], mat);
       CSIcon_SetSelectState(step->display_icons[j], icon_ss);
+    }
+
+    // Position text and set label texture
+    Vec3 tl = {-labelX + double_ofst, labelY + labelGapY, 0};
+    Vec3 tr = {labelX + double_ofst, labelY + labelGapY, 0};
+    Vec3 bl = {-labelX + double_ofst, -labelY + labelGapY, 0};
+    Vec3 br = {labelX + double_ofst, -labelY + labelGapY, 0};
+    FlatTexture_SetPosCorners(step->label, tl, tr, bl, br);
+
+    // Set offset position for arrow
+    if (step->arrow != 0) {
+      RightArrow_SetOffsetPos(step->arrow, (Vec3){-gap / 2, 0, 0});
+      RightArrow_SetDisplayState(step->arrow, ra_ss);
     }
 
     xPos += gap + double_ofst;

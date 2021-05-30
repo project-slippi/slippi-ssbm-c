@@ -2,6 +2,7 @@
 #include "Components/Button.h"
 #include "Components/CharStageBoxSelector.h"
 #include "Components/FlatTexture.h"
+#include "Components/RightArrow.h"
 
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
@@ -33,6 +34,7 @@ typedef struct GameSetup_Step {
 
   CSIcon *display_icons[2];
   FlatTexture *label;
+  RightArrow *arrow;
 
   int char_selection;
   int char_color_selection;

@@ -19,7 +19,7 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   fg_mat->alpha = alpha;  // foreground
 
   // Reset the colors of the background. Is there a way to reset to the file configuration?
-  bg_mat->diffuse = (GXColor){128, 128, 128, 0};
+  bg_mat->diffuse = (GXColor){128, 128, 128, 255};
 
   if (state == CSIcon_Select_State_Blink) {
     JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 0);
