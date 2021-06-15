@@ -211,12 +211,18 @@ void ResetButtonState() {
 }
 
 void Minor_Think() {
-  return;
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // If current step is completed, process finished
+  // TODO: Add some kind of delay/display to indicate which stage was selected
+  if (step->state == GameSetup_Step_State_COMPLETE) {
+    // TODO: Play an animation on selected stage and play a sound
+    Scene_ExitMinor();
+  }
 }
 
 void Minor_Exit(void *minor_data) {
   OSReport("minor exit\n");
-  return;
 }
 
 void CObjThink(GOBJ *gobj) {
