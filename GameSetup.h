@@ -36,9 +36,9 @@ typedef struct GameSetup_Step {
   FlatTexture *label;
   RightArrow *arrow;
 
-  int char_selection;
-  int char_color_selection;
-  int stage_selections[2];
+  u8 char_selection;
+  u8 char_color_selection;
+  u8 stage_selections[2];
 
   GameSetup_Step_State state;
 } GameSetup_Step;

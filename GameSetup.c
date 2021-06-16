@@ -4,6 +4,7 @@
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
 #include "./m-ex/MexTK/mex.h"
+#include "ExiSlippi.h"
 #include "Files.h"
 
 static ArchiveInfo *gui_archive;
@@ -12,6 +13,10 @@ static GameSetup_Data *data;
 
 void Minor_Load(void *minor_data) {
   OSReport("minor load\n");
+
+  // Reset selections such that we can use that as a signal to start the game
+  ExiSlippi_ResetSelections_Query rsq = {ExiSlippi_Command_RESET_SELECTIONS};
+  ExiSlippi_Transfer(&rsq, sizeof(ExiSlippi_ResetSelections_Query), ExiSlippi_TransferMode_WRITE);
 
   // Init location to store data
   data = calloc(sizeof(GameSetup_Data));
