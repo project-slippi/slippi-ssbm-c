@@ -11,12 +11,27 @@ static ArchiveInfo *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
+static ExiSlippi_MatchState_Response *match_state;
+
 void Minor_Load(void *minor_data) {
   OSReport("minor load\n");
 
   // Reset selections such that we can use that as a signal to start the game
-  ExiSlippi_ResetSelections_Query rsq = {ExiSlippi_Command_RESET_SELECTIONS};
-  ExiSlippi_Transfer(&rsq, sizeof(ExiSlippi_ResetSelections_Query), ExiSlippi_TransferMode_WRITE);
+  // TODO: We actually can't do this yet because it causes the match state function to return
+  // TODO: different values, one I noticed is the rng offset returns as zero.
+  // TODO: Perhaps I can call this after fetching match state? Need to figure out exactly what
+  // TODO: our termination condition looks like, have to make sure we get the correct stage.
+  // ExiSlippi_ResetSelections_Query *rsq = calloc(sizeof(ExiSlippi_ResetSelections_Query));
+  // rsq->command = ExiSlippi_Command_RESET_SELECTIONS;
+  // ExiSlippi_Transfer(rsq, sizeof(ExiSlippi_ResetSelections_Query), ExiSlippi_TransferMode_WRITE);
+  // HSD_Free(rsq);
+
+  // Fetch initial match state
+  match_state = ExiSlippi_LoadMatchState(0);
+  OSReport("MSRB: %08X", match_state);
+  OSReport("State: %d, RNG: %X, P1 Char: %X, Names: %s, %s",
+           match_state->connection_state, match_state->rng_offset, match_state->game_info_block[0x60],
+           match_state->local_name, match_state->p4_name);
 
   // Init location to store data
   data = calloc(sizeof(GameSetup_Data));
@@ -113,27 +128,36 @@ void InitSteps() {
   data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
   data->state.step_idx = 0;
 
+  u8 first_picker_idx = match_state->rng_offset & 0x1;
+
+  FlatTexture_Texture p1_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
+  FlatTexture_Texture p2_label = FlatTexture_Texture_OPP_CHAR_LABEL;
+  if (match_state->local_player_idx != 0) {
+    p1_label = FlatTexture_Texture_OPP_CHAR_LABEL;
+    p2_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
+  }
+
   data->steps[0].player_idx = 0;
   data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[0].required_selection_count = 1;
-  data->steps[0].char_selection = CKIND_PEACH;
-  data->steps[0].char_color_selection = 0;
+  data->steps[0].char_selection = match_state->game_info_block[0x60];
+  data->steps[0].char_color_selection = match_state->game_info_block[0x63];
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], FlatTexture_Texture_YOUR_CHAR_LABEL);
+  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], p1_label);
   data->steps[0].arrow = 0;
 
-  data->steps[1].player_idx = 0;
+  data->steps[1].player_idx = 1;
   data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[1].required_selection_count = 1;
-  data->steps[1].char_selection = CKIND_BOWSER;
-  data->steps[1].char_color_selection = 0;
+  data->steps[1].char_selection = match_state->game_info_block[0x60 + 0x24];
+  data->steps[1].char_color_selection = match_state->game_info_block[0x63 + 0x24];
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], FlatTexture_Texture_OPP_CHAR_LABEL);
+  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], p2_label);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
-  data->steps[2].player_idx = 0;
+  data->steps[2].player_idx = first_picker_idx;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
@@ -141,7 +165,7 @@ void InitSteps() {
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
   data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
-  data->steps[3].player_idx = 0;
+  data->steps[3].player_idx = !first_picker_idx;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
   data->steps[3].timer_seconds = 20;
@@ -150,7 +174,7 @@ void InitSteps() {
   data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
   data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
 
-  data->steps[4].player_idx = 0;
+  data->steps[4].player_idx = first_picker_idx;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
@@ -268,6 +292,10 @@ void InputsThink(GOBJ *gobj) {
   }
 
   u8 is_time_elapsed = UpdateTimer();
+
+  // Check if this step is player controlled or if we are waiting for the opponent
+
+  // If this step is player controlled and time is elapsed, complete the step
   if (is_time_elapsed) {
     SFX_PlayCommon(1);
     CompleteCurrentStep();
