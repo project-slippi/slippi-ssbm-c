@@ -3,10 +3,13 @@
 #include "Components/CharStageBoxSelector.h"
 #include "Components/FlatTexture.h"
 #include "Components/RightArrow.h"
+#include "ExiSlippi.h"
 
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
 #define MAX_SELECTORS 10
+#define GRACE_SECONDS 3
+#define WAIT_TIMEOUT_SECONDS 15
 
 typedef enum GameSetup_Process_Type {
   GameSetup_Process_Type_STAGE_STRIKING = 0,
@@ -64,10 +67,16 @@ typedef struct GameSetup_Data {
   int timer_subtext_id;
   int timer_frames;
   GameSetup_Step_Type initialized_step_type;
+
+  ExiSlippi_MatchState_Response *match_state;
+  ExiSlippi_FetchStep_Query *fetch_query;
+  ExiSlippi_FetchStep_Response *fetch_resp;
+  ExiSlippi_CompleteStep_Query *complete_query;
 } GameSetup_Data;
 
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
+void HandleOpponentStep();
 void InitSelectorJobjs();
 void InitState();
 void InitSteps();

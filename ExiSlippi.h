@@ -5,6 +5,8 @@
 
 typedef enum ExiSlippi_Command {
   ExiSlippi_Command_RESET_SELECTIONS = 0xBF,
+  ExiSlippi_Command_GP_COMPLETE_STEP = 0xC0,
+  ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
 } ExiSlippi_Command;
 
 typedef enum ExiSlippi_TransferMode {
@@ -34,6 +36,7 @@ typedef struct ExiSlippi_FetchStep_Query {
 } ExiSlippi_FetchStep_Query;
 
 typedef struct ExiSlippi_FetchStep_Response {
+  u8 is_found;
   u8 char_selection;
   u8 char_color_selection;
   u8 stage_selections[2];

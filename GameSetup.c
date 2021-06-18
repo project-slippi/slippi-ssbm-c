@@ -4,14 +4,11 @@
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
 #include "./m-ex/MexTK/mex.h"
-#include "ExiSlippi.h"
 #include "Files.h"
 
 static ArchiveInfo *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
-
-static ExiSlippi_MatchState_Response *match_state;
 
 void Minor_Load(void *minor_data) {
   OSReport("minor load\n");
@@ -26,16 +23,15 @@ void Minor_Load(void *minor_data) {
   // ExiSlippi_Transfer(rsq, sizeof(ExiSlippi_ResetSelections_Query), ExiSlippi_TransferMode_WRITE);
   // HSD_Free(rsq);
 
-  // Fetch initial match state
-  match_state = ExiSlippi_LoadMatchState(0);
-  OSReport("MSRB: %08X", match_state);
-  OSReport("State: %d, RNG: %X, P1 Char: %X, Names: %s, %s",
-           match_state->connection_state, match_state->rng_offset, match_state->game_info_block[0x60],
-           match_state->local_name, match_state->p4_name);
-
   // Init location to store data
   data = calloc(sizeof(GameSetup_Data));
   data->process_type = GameSetup_Process_Type_STAGE_STRIKING;
+
+  // Allocate some memory used throughout
+  data->match_state = ExiSlippi_LoadMatchState(0);  // Fetch initial match state
+  data->fetch_query = calloc(sizeof(ExiSlippi_FetchStep_Query));
+  data->fetch_resp = calloc(sizeof(ExiSlippi_FetchStep_Response));
+  data->complete_query = calloc(sizeof(ExiSlippi_CompleteStep_Query));
 
   // Set up input handler. Initialize at top to make sure it runs before anything else
   GOBJ *input_handler_gobj = GObj_Create(4, 0, 128);
@@ -124,11 +120,11 @@ static RightArrow *InitStepArrow(CSIcon *icon) {
 }
 
 void InitSteps() {
+  ExiSlippi_MatchState_Response *match_state = data->match_state;
+
   data->step_count = 5;
   data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
   data->state.step_idx = 0;
-
-  u8 first_picker_idx = match_state->rng_offset & 0x1;
 
   FlatTexture_Texture p1_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
   FlatTexture_Texture p2_label = FlatTexture_Texture_OPP_CHAR_LABEL;
@@ -157,7 +153,7 @@ void InitSteps() {
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], p2_label);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
-  data->steps[2].player_idx = first_picker_idx;
+  data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
@@ -165,7 +161,7 @@ void InitSteps() {
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
   data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
-  data->steps[3].player_idx = !first_picker_idx;
+  data->steps[3].player_idx = 1;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
   data->steps[3].timer_seconds = 20;
@@ -174,7 +170,7 @@ void InitSteps() {
   data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
   data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
 
-  data->steps[4].player_idx = first_picker_idx;
+  data->steps[4].player_idx = 0;
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
@@ -276,9 +272,7 @@ void InputsThink(GOBJ *gobj) {
   u64 downInputs = Pad_GetDown(port);
 
   if (frame_counter == 0) {
-    char prnt[50];
-    sprintf(prnt, "Port: %d\n", port);
-    OSReport(prnt);
+    OSReport("Port: %d\n", port);
   }
 
   // Button_SetMaterial(data->buttons[0], Button_Material_Ok);
@@ -294,6 +288,10 @@ void InputsThink(GOBJ *gobj) {
   u8 is_time_elapsed = UpdateTimer();
 
   // Check if this step is player controlled or if we are waiting for the opponent
+  if (step->player_idx != data->match_state->local_player_idx) {
+    HandleOpponentStep();
+    return;
+  }
 
   // If this step is player controlled and time is elapsed, complete the step
   if (is_time_elapsed) {
@@ -412,10 +410,51 @@ void InputsThink(GOBJ *gobj) {
   frame_counter++;
 }
 
+void HandleOpponentStep() {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Check if we've timed out waiting for opponent
+  if (data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS + WAIT_TIMEOUT_SECONDS)) {
+    // TODO: Abandon match
+    return;
+  }
+
+  data->fetch_query->command = ExiSlippi_Command_GP_FETCH_STEP;
+  data->fetch_query->step_idx = data->state.step_idx;
+  ExiSlippi_Transfer(data->fetch_query, sizeof(ExiSlippi_FetchStep_Query), ExiSlippi_TransferMode_WRITE);
+  ExiSlippi_Transfer(data->fetch_resp, sizeof(ExiSlippi_FetchStep_Response), ExiSlippi_TransferMode_READ);
+
+  // If no response is found, do nothing
+  if (!data->fetch_resp->is_found) {
+    return;
+  }
+
+  // If we receive a response from opponent, populate the step values
+  step->char_selection = data->fetch_resp->char_selection;
+  step->char_color_selection = data->fetch_resp->char_color_selection;
+  memcpy(step->stage_selections, data->fetch_resp->stage_selections, 2);
+
+  // Complete the step
+  SFX_PlayCommon(1);
+  CompleteCurrentStep();
+  PrepareCurrentStep();
+  UpdateTimeline();
+}
+
 void CompleteCurrentStep() {
   // Get and complete current step
   GameSetup_Step *step = &data->steps[data->state.step_idx];
   step->state = GameSetup_Step_State_COMPLETE;
+
+  // If the current player is in control of this step, send a message to opponent
+  if (step->player_idx == data->match_state->local_player_idx) {
+    data->complete_query->command = ExiSlippi_Command_GP_COMPLETE_STEP;
+    data->complete_query->step_idx = data->state.step_idx;
+    data->complete_query->char_selection = step->char_selection;
+    data->complete_query->char_color_selection = step->char_color_selection;
+    memcpy(data->complete_query->stage_selections, step->stage_selections, 2);
+    ExiSlippi_Transfer(data->complete_query, sizeof(ExiSlippi_CompleteStep_Query), ExiSlippi_TransferMode_WRITE);
+  }
 
   // Commit selections to selected values
   int commit_index = 0;
@@ -597,7 +636,7 @@ u8 UpdateTimer() {
   data->timer_frames++;
 
   // Return that we have run out of time 3 seconds after time runs out
-  return data->timer_frames > 60 * (step->timer_seconds + 3);
+  return data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS);
 }
 
 static void ModifySelectorIndex(int change) {
