@@ -179,8 +179,8 @@ void InitSteps() {
   data->steps[4].arrow = InitStepArrow(data->steps[4].display_icons[0]);
 
   // Start with the first two steps completed
-  CompleteCurrentStep();
-  CompleteCurrentStep();
+  CompleteCurrentStep(data->steps[0].required_selection_count);
+  CompleteCurrentStep(data->steps[1].required_selection_count);
 }
 
 void InitSelectorJobjs() {
@@ -296,7 +296,7 @@ void InputsThink(GOBJ *gobj) {
   // If this step is player controlled and time is elapsed, complete the step
   if (is_time_elapsed) {
     SFX_PlayCommon(1);
-    CompleteCurrentStep();
+    CompleteCurrentStep(0);
     PrepareCurrentStep();
     UpdateTimeline();
     return;
@@ -389,7 +389,7 @@ void InputsThink(GOBJ *gobj) {
       SFX_PlayCommon(2);
     } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
       SFX_PlayCommon(1);
-      CompleteCurrentStep();
+      CompleteCurrentStep(0);
       PrepareCurrentStep();
       UpdateTimeline();
     }
@@ -434,30 +434,20 @@ void HandleOpponentStep() {
   step->char_color_selection = data->fetch_resp->char_color_selection;
   memcpy(step->stage_selections, data->fetch_resp->stage_selections, 2);
 
-  // Complete the step
+  // Complete the step. Indicate that all selections are already made
   SFX_PlayCommon(1);
-  CompleteCurrentStep();
+  CompleteCurrentStep(data->fetch_resp->is_skip ? 0 : step->required_selection_count);
   PrepareCurrentStep();
   UpdateTimeline();
 }
 
-void CompleteCurrentStep() {
+void CompleteCurrentStep(int committed_count) {
   // Get and complete current step
   GameSetup_Step *step = &data->steps[data->state.step_idx];
   step->state = GameSetup_Step_State_COMPLETE;
 
-  // If the current player is in control of this step, send a message to opponent
-  if (step->player_idx == data->match_state->local_player_idx) {
-    data->complete_query->command = ExiSlippi_Command_GP_COMPLETE_STEP;
-    data->complete_query->step_idx = data->state.step_idx;
-    data->complete_query->char_selection = step->char_selection;
-    data->complete_query->char_color_selection = step->char_color_selection;
-    memcpy(data->complete_query->stage_selections, step->stage_selections, 2);
-    ExiSlippi_Transfer(data->complete_query, sizeof(ExiSlippi_CompleteStep_Query), ExiSlippi_TransferMode_WRITE);
-  }
-
   // Commit selections to selected values
-  int commit_index = 0;
+  int commit_index = committed_count;
   for (int i = 0; i < data->selector_count; i++) {
     CSBoxSelector *bs = data->selectors[i];
 
@@ -486,6 +476,16 @@ void CompleteCurrentStep() {
     }
   }
 
+  // If the current player is in control of this step, send a message to opponent
+  if (step->player_idx == data->match_state->local_player_idx) {
+    data->complete_query->command = ExiSlippi_Command_GP_COMPLETE_STEP;
+    data->complete_query->step_idx = data->state.step_idx;
+    data->complete_query->char_selection = step->char_selection;
+    data->complete_query->char_color_selection = step->char_color_selection;
+    memcpy(data->complete_query->stage_selections, step->stage_selections, 2);
+    ExiSlippi_Transfer(data->complete_query, sizeof(ExiSlippi_CompleteStep_Query), ExiSlippi_TransferMode_WRITE);
+  }
+
   // Increment step idx
   data->state.step_idx++;
   if (data->state.step_idx >= data->step_count) {
@@ -504,6 +504,8 @@ void PrepareCurrentStep() {
   if (data->state.step_idx >= data->step_count) {
     return;
   }
+
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // Initialize current timer to 0
   data->timer_frames = 0;
@@ -543,9 +545,13 @@ void PrepareCurrentStep() {
     CSBoxSelector_SetSelectState(csbs, newSelectState);
   }
 
-  // Reset selector index to choose first non-disabled icon
-  data->state.selected_values_count = 0;
-  ResetSelectorIndex();
+  if (step->player_idx == data->match_state->local_player_idx) {
+    // Reset selector index to choose first non-disabled icon
+    data->state.selected_values_count = 0;
+    ResetSelectorIndex();
+  } else {
+    data->state.selector_idx = -1;
+  }
 
   // Clear button state
   ResetButtonState();

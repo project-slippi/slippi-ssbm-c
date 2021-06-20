@@ -81,7 +81,7 @@ void InitSelectorJobjs();
 void InitState();
 void InitSteps();
 void ResetButtonState();
-void CompleteCurrentStep();
+void CompleteCurrentStep(int committed_count);
 void PrepareCurrentStep();
 
 void IncrementSelectorIndex();
