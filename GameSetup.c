@@ -236,11 +236,9 @@ void ResetButtonState() {
 }
 
 void Minor_Think() {
-  GameSetup_Step *step = &data->steps[data->state.step_idx];
-
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
-  if (step->state == GameSetup_Step_State_COMPLETE) {
+  if (data->state.should_terminate) {
     // TODO: Play an animation on selected stage and play a sound
     Scene_ExitMinor();
   }
@@ -489,7 +487,8 @@ void CompleteCurrentStep(int committed_count) {
   // Increment step idx
   data->state.step_idx++;
   if (data->state.step_idx >= data->step_count) {
-    // TODO: Complete full process and end scene
+    // Complete full process and end scene
+    CompleteGamePrep();
     data->state.step_idx = data->step_count - 1;
     return;
   } else {
@@ -497,6 +496,38 @@ void CompleteCurrentStep(int committed_count) {
     step = &data->steps[data->state.step_idx];
     step->state = GameSetup_Step_State_ACTIVE;
   }
+}
+
+void CompleteGamePrep() {
+  ExiSlippi_OverwriteSelections_Query *osq = calloc(sizeof(ExiSlippi_OverwriteSelections_Query));
+
+  // TODO: Handle stage striking
+
+  for (int i = 0; i < data->step_count; i++) {
+    GameSetup_Step *step = &data->steps[i];
+    if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
+      osq->stage_id = step->stage_selections[0];
+      break;
+    }
+  }
+
+  for (int i = 0; i < data->step_count; i++) {
+    GameSetup_Step *step = &data->steps[i];
+    if (step->type != GameSetup_Step_Type_CHOOSE_CHAR) {
+      continue;
+    }
+
+    osq->chars[step->player_idx].is_set = true;
+    osq->chars[step->player_idx].char_id = step->char_selection;
+    osq->chars[step->player_idx].char_color_id = step->char_color_selection;
+  }
+
+  osq->command = ExiSlippi_Command_OVERWRITE_SELECTIONS;
+  ExiSlippi_Transfer(osq, sizeof(ExiSlippi_OverwriteSelections_Query), ExiSlippi_TransferMode_WRITE);
+
+  // is complete and should terminate could be used to show some kind of final animation
+  data->state.is_complete = true;
+  data->state.should_terminate = true;
 }
 
 void PrepareCurrentStep() {

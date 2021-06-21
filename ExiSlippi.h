@@ -4,7 +4,7 @@
 #include "./m-ex/MexTK/mex.h"
 
 typedef enum ExiSlippi_Command {
-  ExiSlippi_Command_RESET_SELECTIONS = 0xBF,
+  ExiSlippi_Command_OVERWRITE_SELECTIONS = 0xBF,
   ExiSlippi_Command_GP_COMPLETE_STEP = 0xC0,
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
 } ExiSlippi_Command;
@@ -18,9 +18,16 @@ typedef enum ExiSlippi_TransferMode {
 // https://www.geeksforgeeks.org/how-to-avoid-structure-padding-in-c/
 #pragma pack(1)
 
-typedef struct ExiSlippi_ResetSelections_Query {
+typedef struct ExiSlippi_OverwriteCharSelections {
+  u8 is_set;
+  u8 char_id;
+  u8 char_color_id;
+} ExiSlippi_OverwriteCharSelections;
+typedef struct ExiSlippi_OverwriteSelections_Query {
   u8 command;
-} ExiSlippi_ResetSelections_Query;
+  u16 stage_id;
+  ExiSlippi_OverwriteCharSelections chars[4];
+} ExiSlippi_OverwriteSelections_Query;
 
 typedef struct ExiSlippi_CompleteStep_Query {
   u8 command;

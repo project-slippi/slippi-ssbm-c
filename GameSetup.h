@@ -52,6 +52,8 @@ typedef struct GameSetup_State {
   u8 selected_values_count;
   int btn_hover_idx;
   int step_idx;
+  u8 is_complete;
+  u8 should_terminate;
 } GameSetup_State;
 
 typedef struct GameSetup_Data {
@@ -83,6 +85,7 @@ void InitSteps();
 void ResetButtonState();
 void CompleteCurrentStep(int committed_count);
 void PrepareCurrentStep();
+void CompleteGamePrep();
 
 void IncrementSelectorIndex();
 void DecrementSelectorIndex();
