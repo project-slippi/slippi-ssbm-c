@@ -501,7 +501,30 @@ void CompleteCurrentStep(int committed_count) {
 void CompleteGamePrep() {
   ExiSlippi_OverwriteSelections_Query *osq = calloc(sizeof(ExiSlippi_OverwriteSelections_Query));
 
-  // TODO: Handle stage striking
+  int stages[] = {
+      GRKINDEXT_IZUMI,
+      GRKINDEXT_OLDPU,
+      GRKINDEXT_STORY,
+      GRKINDEXT_PSTAD,
+      GRKINDEXT_BATTLE,
+  };
+
+  for (int i = 0; i < data->step_count; i++) {
+    GameSetup_Step *step = &data->steps[i];
+    if (step->type != GameSetup_Step_Type_REMOVE_STAGE) {
+      continue;
+    }
+
+    for (int j = 0; j < 5; j++) {
+      if (step->stage_selections[0] == stages[j]) {
+        stages[j] = -1;
+      } else if (step->required_selection_count > 1 && step->stage_selections[1] == stages[j]) {
+        stages[j] = -1;
+      } else if (stages[j] >= 0) {
+        osq->stage_id = (u16)stages[j];
+      }
+    }
+  }
 
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
