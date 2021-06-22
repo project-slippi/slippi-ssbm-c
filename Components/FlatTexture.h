@@ -14,6 +14,15 @@ typedef enum FlatTexture_Texture {
   FlatTexture_Texture_STRIKE4_LABEL,
   FlatTexture_Texture_BAN_LABEL,
   FlatTexture_Texture_STAGE_LABEL,
+  FlatTexture_Texture_SELECT_STRIKE_DESC,
+  FlatTexture_Texture_SELECT_TWO_STRIKES_DESC,
+  FlatTexture_Texture_WAIT_STRIKE_DESC,
+  FlatTexture_Texture_SELECT_BAN_DESC,
+  FlatTexture_Texture_SELECT_STAGE_DESC,
+  FlatTexture_Texture_WAIT_BAN_DESC,
+  FlatTexture_Texture_WAIT_STAGE_DESC,
+  FlatTexture_Texture_SELECT_CHAR_DESC,
+  FlatTexture_Texture_WAIT_CHAR_DESC,
 } FlatTexture_Texture;
 
 typedef struct FlatTexture_State {

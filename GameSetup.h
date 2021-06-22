@@ -38,6 +38,7 @@ typedef struct GameSetup_Step {
   CSIcon *display_icons[2];
   FlatTexture *label;
   RightArrow *arrow;
+  FlatTexture_Texture desc_tex;
 
   u8 char_selection;
   u8 char_color_selection;
@@ -63,6 +64,7 @@ typedef struct GameSetup_Data {
   int step_count;
   Button *buttons[2];
   CSBoxSelector *selectors[MAX_SELECTORS];
+  FlatTexture *description;
   int selector_count;
   int button_count;
   Text *text;

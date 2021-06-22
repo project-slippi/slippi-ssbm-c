@@ -94,6 +94,17 @@ void Minor_Load(void *minor_data) {
   Button_SetMaterial(data->buttons[1], Button_Material_Redo);
   data->button_count = 2;
 
+  // Initialize description message
+  float desc_width = 36;
+  float desc_height_half = 0.9;
+  data->description = FlatTexture_Init(gui_assets);
+  Vec3 tl = {0, desc_height_half, 0};
+  Vec3 tr = {desc_width, desc_height_half, 0};
+  Vec3 bl = {0, -desc_height_half, 0};
+  Vec3 br = {desc_width, -desc_height_half, 0};
+  FlatTexture_SetPosCorners(data->description, tl, tr, bl, br);
+  FlatTexture_SetPos(data->description, (Vec3){-18, 12.2, 0});
+
   // Initialize state, init steps, and prepare current step
   InitState();
   InitSteps();
@@ -128,9 +139,15 @@ void InitSteps() {
 
   FlatTexture_Texture p1_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
   FlatTexture_Texture p2_label = FlatTexture_Texture_OPP_CHAR_LABEL;
+  FlatTexture_Texture step2_desc = FlatTexture_Texture_SELECT_STRIKE_DESC;
+  FlatTexture_Texture step3_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
+  FlatTexture_Texture step4_desc = FlatTexture_Texture_SELECT_STRIKE_DESC;
   if (match_state->local_player_idx != 0) {
     p1_label = FlatTexture_Texture_OPP_CHAR_LABEL;
     p2_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
+    step2_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
+    step3_desc = FlatTexture_Texture_SELECT_TWO_STRIKES_DESC;
+    step4_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
   }
 
   data->steps[0].player_idx = 0;
@@ -140,6 +157,7 @@ void InitSteps() {
   data->steps[0].char_color_selection = match_state->game_info_block[0x63];
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[0].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
   data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], p1_label);
   data->steps[0].arrow = 0;
 
@@ -150,6 +168,7 @@ void InitSteps() {
   data->steps[1].char_color_selection = match_state->game_info_block[0x63 + 0x24];
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[1].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], p2_label);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
@@ -158,15 +177,17 @@ void InitSteps() {
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[2].desc_tex = step2_desc;
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
   data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
   data->steps[3].player_idx = 1;
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
-  data->steps[3].timer_seconds = 20;
+  data->steps[3].timer_seconds = 30;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
+  data->steps[3].desc_tex = step3_desc;
   data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
   data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
 
@@ -175,6 +196,7 @@ void InitSteps() {
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[4].desc_tex = step4_desc;
   data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0], FlatTexture_Texture_STRIKE4_LABEL);
   data->steps[4].arrow = InitStepArrow(data->steps[4].display_icons[0]);
 
@@ -566,6 +588,9 @@ void PrepareCurrentStep() {
 
   // TODO: Show/Hide the selectors used for this step and adjust number
 
+  // Change description
+  FlatTexture_SetTexture(data->description, step->desc_tex);
+
   // Disable stages that cannot be selected and move selector index
   // Pokemon is the last stage, make array large enough to fit a bool for all of them
   u8 shouldDisableMat[CSIcon_LAST_STAGE_MAT_IDX + 1] = {false};
@@ -620,7 +645,7 @@ void UpdateTimeline() {
 
   float labelX = 6;
   float labelY = 0.6;
-  float labelGapY = 3.2;
+  float labelGapY = 3.2;  // Distance above the icon
 
   // Iterate through all the steps
   for (int i = 0; i < data->step_count; i++) {
