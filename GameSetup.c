@@ -113,7 +113,7 @@ void Minor_Load(void *minor_data) {
 }
 
 void InitState() {
-  data->state.selector_idx = 0;  // TODO: Set differently if first or second striker
+  data->state.selector_idx = -1;  // Start with nothing selected, will update for the selector
   data->state.selected_values_count = 0;
 }
 
@@ -243,9 +243,6 @@ void InitSelectorJobjs() {
   }
 
   data->selector_count = count;
-
-  // Hover the first item
-  CSBoxSelector_SetHover(data->selectors[0], true);
 }
 
 void ResetButtonState() {
@@ -284,16 +281,10 @@ void CObjThink(GOBJ *gobj) {
   CObj_EndCurrent();
 }
 
-static u32 frame_counter = 0;
-
 void InputsThink(GOBJ *gobj) {
   u8 port = R13_U8(-0x5108);
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
   u64 downInputs = Pad_GetDown(port);
-
-  if (frame_counter == 0) {
-    OSReport("Port: %d\n", port);
-  }
 
   // Button_SetMaterial(data->buttons[0], Button_Material_Ok);
 
@@ -426,8 +417,6 @@ void InputsThink(GOBJ *gobj) {
     // Set hover state. Won't do anything if already set to that state
     Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
   }
-
-  frame_counter++;
 }
 
 void HandleOpponentStep() {
