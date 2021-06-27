@@ -258,6 +258,13 @@ void Minor_Think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
+    ExiSlippi_LoadMatchState(data->match_state);
+
+    // Don't exit the scene until both players are ready (needed to make sure RNG is synced)
+    if (!data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready) {
+      return;
+    }
+
     // TODO: Play an animation on selected stage and play a sound
     Scene_ExitMinor();
   }
@@ -520,6 +527,9 @@ void CompleteGamePrep() {
       GRKINDEXT_BATTLE,
   };
 
+  u8 localCharId;
+  u8 localCharColor;
+
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
     if (step->type != GameSetup_Step_Type_REMOVE_STAGE) {
@@ -551,6 +561,11 @@ void CompleteGamePrep() {
       continue;
     }
 
+    if (step->player_idx == data->match_state->local_player_idx) {
+      localCharId = step->char_selection;
+      localCharColor = step->char_color_selection;
+    }
+
     osq->chars[step->player_idx].is_set = true;
     osq->chars[step->player_idx].char_id = step->char_selection;
     osq->chars[step->player_idx].char_color_id = step->char_color_selection;
@@ -558,6 +573,17 @@ void CompleteGamePrep() {
 
   osq->command = ExiSlippi_Command_OVERWRITE_SELECTIONS;
   ExiSlippi_Transfer(osq, sizeof(ExiSlippi_OverwriteSelections_Query), ExiSlippi_TransferMode_WRITE);
+
+  ExiSlippi_SetSelections_Query *ssq = calloc(sizeof(ExiSlippi_SetSelections_Query));
+  ssq->command = ExiSlippi_Command_SET_MATCH_SELECTIONS;
+  ssq->team_id = 0;
+  ssq->char_id = localCharId;
+  ssq->char_color_id = localCharColor;
+  ssq->char_option = ExiSlippi_SelectionOption_MERGE;
+  ssq->stage_id = osq->stage_id;
+  ssq->stage_option = ExiSlippi_SelectionOption_MERGE;
+  ssq->online_mode = 0;  // Ranked. Doesn't actually do anything in Dolphin atm
+  ExiSlippi_Transfer(ssq, sizeof(ExiSlippi_SetSelections_Query), ExiSlippi_TransferMode_WRITE);
 
   // is complete and should terminate could be used to show some kind of final animation
   data->state.is_complete = true;

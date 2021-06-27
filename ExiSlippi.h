@@ -4,6 +4,7 @@
 #include "./m-ex/MexTK/mex.h"
 
 typedef enum ExiSlippi_Command {
+  ExiSlippi_Command_SET_MATCH_SELECTIONS = 0xB5,
   ExiSlippi_Command_OVERWRITE_SELECTIONS = 0xBF,
   ExiSlippi_Command_GP_COMPLETE_STEP = 0xC0,
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
@@ -14,9 +15,27 @@ typedef enum ExiSlippi_TransferMode {
   ExiSlippi_TransferMode_WRITE = 1,
 } ExiSlippi_TransferMode;
 
+typedef enum ExiSlippi_SelectionOption {
+  ExiSlippi_SelectionOption_UNSET,
+  ExiSlippi_SelectionOption_MERGE,
+  ExiSlippi_SelectionOption_CLEAR,   // Unsupported
+  ExiSlippi_SelectionOption_RANDOM,  // Supported for stage only
+} ExiSlippi_SelectionOption;
+
 // Using pragma pack here will remove any structure padding which is what EXI comms expect
 // https://www.geeksforgeeks.org/how-to-avoid-structure-padding-in-c/
 #pragma pack(1)
+
+typedef struct ExiSlippi_SetSelections_Query {
+  u8 command;
+  u8 team_id;
+  u8 char_id;
+  u8 char_color_id;
+  u8 char_option;
+  u16 stage_id;
+  u8 stage_option;
+  u8 online_mode;
+} ExiSlippi_SetSelections_Query;
 
 typedef struct ExiSlippi_OverwriteCharSelections {
   u8 is_set;

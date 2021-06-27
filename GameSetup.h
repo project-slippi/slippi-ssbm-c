@@ -5,7 +5,7 @@
 #include "Components/RightArrow.h"
 #include "ExiSlippi.h"
 
-// How to style code: https://stackoverflow.com/a/50489812/1249024
+// How to auto-format code: https://stackoverflow.com/a/50489812/1249024
 
 #define MAX_SELECTORS 10
 #define GRACE_SECONDS 3
