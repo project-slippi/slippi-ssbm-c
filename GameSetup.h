@@ -11,9 +11,19 @@
 #define GRACE_SECONDS 3
 #define WAIT_TIMEOUT_SECONDS 15
 
+typedef struct GameSetup_SceneData {
+  u8 max_games;
+  u8 cur_game;
+  u8 p1_score;
+  u8 p2_score;
+  u8 prev_winner;
+  u8 is_tiebreak;
+} GameSetup_SceneData;
+
 typedef enum GameSetup_Process_Type {
-  GameSetup_Process_Type_STAGE_STRIKING = 0,
-  GameSetup_Process_Type_COUNTERPICKING = 1,
+  GameSetup_Process_Type_SKIP = 0,
+  GameSetup_Process_Type_STAGE_STRIKING = 1,
+  GameSetup_Process_Type_COUNTERPICKING = 2,
 } GameSetup_Process_Type;
 
 typedef enum GameSetup_Step_Type {
@@ -86,6 +96,7 @@ void InitState();
 void InitSteps();
 void ResetButtonState();
 void CompleteCurrentStep(int committed_count);
+void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option);
 void PrepareCurrentStep();
 void CompleteGamePrep();
 

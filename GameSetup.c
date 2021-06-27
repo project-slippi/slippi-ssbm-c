@@ -10,21 +10,26 @@ static ArchiveInfo *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
-void Minor_Load(void *minor_data) {
+void Minor_Load(GameSetup_SceneData *minor_data) {
   OSReport("minor load\n");
 
-  // Reset selections such that we can use that as a signal to start the game
-  // TODO: We actually can't do this yet because it causes the match state function to return
-  // TODO: different values, one I noticed is the rng offset returns as zero.
-  // TODO: Perhaps I can call this after fetching match state? Need to figure out exactly what
-  // TODO: our termination condition looks like, have to make sure we get the correct stage.
-  // ExiSlippi_ResetSelections_Query *rsq = calloc(sizeof(ExiSlippi_ResetSelections_Query));
-  // rsq->command = ExiSlippi_Command_RESET_SELECTIONS;
-  // ExiSlippi_Transfer(rsq, sizeof(ExiSlippi_ResetSelections_Query), ExiSlippi_TransferMode_WRITE);
-  // HSD_Free(rsq);
+  OSReport("is_tiebreak: %d\n", minor_data->is_tiebreak);
+
+  data = calloc(sizeof(GameSetup_Data));
+
+  // If this is a tiebreak, just set match selections and terminate scene to go back into a game
+  if (minor_data->is_tiebreak) {
+    data->process_type = GameSetup_Process_Type_SKIP;
+    data->state.is_complete = true;
+    data->state.should_terminate = true;
+
+    u8 optionNone = ExiSlippi_SelectionOption_UNSET;
+    SetMatchSelections(0, 0, optionNone, 0, optionNone);
+
+    return;
+  }
 
   // Init location to store data
-  data = calloc(sizeof(GameSetup_Data));
   data->process_type = GameSetup_Process_Type_STAGE_STRIKING;
 
   // Allocate some memory used throughout
@@ -110,6 +115,26 @@ void Minor_Load(void *minor_data) {
   InitSteps();
   PrepareCurrentStep();
   UpdateTimeline();
+}
+
+void Minor_Think() {
+  // If current step is completed, process finished
+  // TODO: Add some kind of delay/display to indicate which stage was selected
+  if (data->state.should_terminate) {
+    ExiSlippi_LoadMatchState(data->match_state);
+
+    // Don't exit the scene until both players are ready (needed to make sure RNG is synced)
+    if (!data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready) {
+      return;
+    }
+
+    // TODO: Play an animation on selected stage and play a sound
+    Scene_ExitMinor();
+  }
+}
+
+void Minor_Exit(GameSetup_SceneData *minor_data) {
+  OSReport("minor exit\n");
 }
 
 void InitState() {
@@ -252,26 +277,6 @@ void ResetButtonState() {
   }
 
   data->state.btn_hover_idx = 0;
-}
-
-void Minor_Think() {
-  // If current step is completed, process finished
-  // TODO: Add some kind of delay/display to indicate which stage was selected
-  if (data->state.should_terminate) {
-    ExiSlippi_LoadMatchState(data->match_state);
-
-    // Don't exit the scene until both players are ready (needed to make sure RNG is synced)
-    if (!data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready) {
-      return;
-    }
-
-    // TODO: Play an animation on selected stage and play a sound
-    Scene_ExitMinor();
-  }
-}
-
-void Minor_Exit(void *minor_data) {
-  OSReport("minor exit\n");
 }
 
 void CObjThink(GOBJ *gobj) {
@@ -574,20 +579,25 @@ void CompleteGamePrep() {
   osq->command = ExiSlippi_Command_OVERWRITE_SELECTIONS;
   ExiSlippi_Transfer(osq, sizeof(ExiSlippi_OverwriteSelections_Query), ExiSlippi_TransferMode_WRITE);
 
-  ExiSlippi_SetSelections_Query *ssq = calloc(sizeof(ExiSlippi_SetSelections_Query));
-  ssq->command = ExiSlippi_Command_SET_MATCH_SELECTIONS;
-  ssq->team_id = 0;
-  ssq->char_id = localCharId;
-  ssq->char_color_id = localCharColor;
-  ssq->char_option = ExiSlippi_SelectionOption_MERGE;
-  ssq->stage_id = osq->stage_id;
-  ssq->stage_option = ExiSlippi_SelectionOption_MERGE;
-  ssq->online_mode = 0;  // Ranked. Doesn't actually do anything in Dolphin atm
-  ExiSlippi_Transfer(ssq, sizeof(ExiSlippi_SetSelections_Query), ExiSlippi_TransferMode_WRITE);
+  u8 mergeOption = ExiSlippi_SelectionOption_MERGE;
+  SetMatchSelections(localCharId, localCharColor, mergeOption, osq->stage_id, mergeOption);
 
   // is complete and should terminate could be used to show some kind of final animation
   data->state.is_complete = true;
   data->state.should_terminate = true;
+}
+
+void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option) {
+  ExiSlippi_SetSelections_Query *ssq = calloc(sizeof(ExiSlippi_SetSelections_Query));
+  ssq->command = ExiSlippi_Command_SET_MATCH_SELECTIONS;
+  ssq->team_id = 0;
+  ssq->char_id = char_id;
+  ssq->char_color_id = char_color;
+  ssq->char_option = char_option;
+  ssq->stage_id = stage_id;
+  ssq->stage_option = stage_option;
+  ssq->online_mode = 0;  // Ranked. Doesn't actually do anything in Dolphin atm
+  ExiSlippi_Transfer(ssq, sizeof(ExiSlippi_SetSelections_Query), ExiSlippi_TransferMode_WRITE);
 }
 
 void PrepareCurrentStep() {
