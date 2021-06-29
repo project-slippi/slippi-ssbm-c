@@ -7,7 +7,9 @@
 
 // How to auto-format code: https://stackoverflow.com/a/50489812/1249024
 
-#define MAX_SELECTORS 10
+#define STRIKE_STAGE_SELECTOR_COUNT 5
+#define CP_STAGE_SELECTOR_COUNT 6
+
 #define GRACE_SECONDS 3
 #define WAIT_TIMEOUT_SECONDS 15
 
@@ -50,6 +52,9 @@ typedef struct GameSetup_Step {
   RightArrow *arrow;
   FlatTexture_Texture desc_tex;
 
+  CSBoxSelector **selectors;
+  int selector_count;
+
   u8 char_selection;
   u8 char_color_selection;
   u8 stage_selections[2];
@@ -73,14 +78,18 @@ typedef struct GameSetup_Data {
   GameSetup_Step *steps;
   int step_count;
   Button *buttons[2];
-  CSBoxSelector *selectors[MAX_SELECTORS];
   FlatTexture *description;
-  int selector_count;
   int button_count;
   Text *text;
   int timer_subtext_id;
   int timer_frames;
   GameSetup_Step_Type initialized_step_type;
+  GameSetup_SceneData *scene_data;
+
+  CSBoxSelector *stage_strike_selectors[STRIKE_STAGE_SELECTOR_COUNT];
+  CSBoxSelector *stage_cp_selectors[CP_STAGE_SELECTOR_COUNT];
+  CSBoxSelector *char_selectors[1];
+  CSBoxSelector *char_wait_selectors[1];
 
   ExiSlippi_MatchState_Response *match_state;
   ExiSlippi_FetchStep_Query *fetch_query;
@@ -91,8 +100,11 @@ typedef struct GameSetup_Data {
 void CObjThink(GOBJ *gobj);
 void InputsThink(GOBJ *gobj);
 void HandleOpponentStep();
-void InitSelectorJobjs();
+void InitAllSelectorJobjs();
+void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count);
 void InitState();
+void InitStrikingSteps();
+void InitCounterpickingSteps();
 void InitSteps();
 void ResetButtonState();
 void CompleteCurrentStep(int committed_count);

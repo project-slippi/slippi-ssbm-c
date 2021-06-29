@@ -19,6 +19,7 @@ typedef struct CSBoxSelector_State {
   u8 is_hover;
   u8 is_selected;
   u8 is_disabled;
+  u8 is_visible;
   CSBoxSelector_Select_State select_state;
 } CSBoxSelector_State;
 
@@ -36,7 +37,7 @@ void CSBoxSelector_Free(CSBoxSelector *bs);
 
 void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover);
 void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state);
-
+void CSBoxSelector_SetVisibility(CSBoxSelector *bs, u8 is_visible);
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p);
 
 #endif

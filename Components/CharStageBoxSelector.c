@@ -3,6 +3,16 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
+static void _SetVisibility(CSBoxSelector *bs, u8 is_visible) {
+  if (is_visible) {
+    bs->root_jobj->flags &= ~JOBJ_HIDDEN;  // Show
+  } else {
+    bs->root_jobj->flags |= JOBJ_HIDDEN;  // Hide
+  }
+
+  bs->state.is_visible = is_visible;
+}
+
 static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
   JOBJ *jobj = bs->root_jobj->child;
 
@@ -77,6 +87,7 @@ CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   // Init state
   _SetHover(csbs, false);
   _SetSelectState(csbs, CSBoxSelector_Select_State_NotSelected);
+  _SetVisibility(csbs, true);
 
   return csbs;
 }
@@ -107,4 +118,12 @@ void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State 
   }
 
   _SetSelectState(bs, state);
+}
+
+void CSBoxSelector_SetVisibility(CSBoxSelector *bs, u8 is_visible) {
+  if (is_visible == bs->state.is_visible) {
+    return;
+  }
+
+  _SetVisibility(bs, is_visible);
 }

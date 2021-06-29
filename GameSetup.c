@@ -13,9 +13,8 @@ static GameSetup_Data *data;
 void Minor_Load(GameSetup_SceneData *minor_data) {
   OSReport("minor load\n");
 
-  OSReport("is_tiebreak: %d\n", minor_data->is_tiebreak);
-
   data = calloc(sizeof(GameSetup_Data));
+  data->scene_data = minor_data;
 
   // If this is a tiebreak, just set match selections and terminate scene to go back into a game
   if (minor_data->is_tiebreak) {
@@ -30,7 +29,11 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   }
 
   // Init location to store data
-  data->process_type = GameSetup_Process_Type_STAGE_STRIKING;
+  if (minor_data->cur_game == 1) {
+    data->process_type = GameSetup_Process_Type_STAGE_STRIKING;
+  } else {
+    data->process_type = GameSetup_Process_Type_COUNTERPICKING;
+  }
 
   // Allocate some memory used throughout
   data->match_state = ExiSlippi_LoadMatchState(0);  // Fetch initial match state
@@ -79,7 +82,7 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Panels], 0, 0, 3, 1, 1, GObj_Anim);
 
   // Init selectors
-  InitSelectorJobjs();
+  InitAllSelectorJobjs();
 
   // Prepare text
   data->text = Text_CreateText(0, 0);
@@ -155,25 +158,20 @@ static RightArrow *InitStepArrow(CSIcon *icon) {
   return arrow;
 }
 
-void InitSteps() {
+void InitStrikingSteps() {
   ExiSlippi_MatchState_Response *match_state = data->match_state;
 
   data->step_count = 5;
   data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
   data->state.step_idx = 0;
 
-  FlatTexture_Texture p1_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
-  FlatTexture_Texture p2_label = FlatTexture_Texture_OPP_CHAR_LABEL;
-  FlatTexture_Texture step2_desc = FlatTexture_Texture_SELECT_STRIKE_DESC;
-  FlatTexture_Texture step3_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
-  FlatTexture_Texture step4_desc = FlatTexture_Texture_SELECT_STRIKE_DESC;
-  if (match_state->local_player_idx != 0) {
-    p1_label = FlatTexture_Texture_OPP_CHAR_LABEL;
-    p2_label = FlatTexture_Texture_YOUR_CHAR_LABEL;
-    step2_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
-    step3_desc = FlatTexture_Texture_SELECT_TWO_STRIKES_DESC;
-    step4_desc = FlatTexture_Texture_WAIT_STRIKE_DESC;
-  }
+  u8 isFirst = match_state->local_player_idx == 0;
+
+  FlatTexture_Texture labelYourChar = FlatTexture_Texture_YOUR_CHAR_LABEL;
+  FlatTexture_Texture labelOppChar = FlatTexture_Texture_OPP_CHAR_LABEL;
+  FlatTexture_Texture descSelectStrike = FlatTexture_Texture_SELECT_STRIKE_DESC;
+  FlatTexture_Texture descSelectTwoStrikes = FlatTexture_Texture_SELECT_TWO_STRIKES_DESC;
+  FlatTexture_Texture descWaitStrike = FlatTexture_Texture_WAIT_STRIKE_DESC;
 
   data->steps[0].player_idx = 0;
   data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
@@ -183,7 +181,7 @@ void InitSteps() {
   data->steps[0].timer_seconds = 20;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[0].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
-  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], p1_label);
+  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], isFirst ? labelYourChar : labelOppChar);
   data->steps[0].arrow = 0;
 
   data->steps[1].player_idx = 1;
@@ -194,15 +192,17 @@ void InitSteps() {
   data->steps[1].timer_seconds = 20;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[1].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
-  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], p2_label);
+  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], isFirst ? labelOppChar : labelYourChar);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
   data->steps[2].player_idx = 0;
   data->steps[2].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[2].required_selection_count = 1;
   data->steps[2].timer_seconds = 30;
+  data->steps[2].selectors = data->stage_strike_selectors;
+  data->steps[2].selector_count = STRIKE_STAGE_SELECTOR_COUNT;
   data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[2].desc_tex = step2_desc;
+  data->steps[2].desc_tex = isFirst ? descSelectStrike : descWaitStrike;
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], FlatTexture_Texture_STRIKE1_LABEL);
   data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
@@ -210,9 +210,11 @@ void InitSteps() {
   data->steps[3].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[3].required_selection_count = 2;
   data->steps[3].timer_seconds = 30;
+  data->steps[3].selectors = data->stage_strike_selectors;
+  data->steps[3].selector_count = STRIKE_STAGE_SELECTOR_COUNT;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[3].display_icons[1] = CSIcon_Init(gui_assets);
-  data->steps[3].desc_tex = step3_desc;
+  data->steps[3].desc_tex = isFirst ? descWaitStrike : descSelectTwoStrikes;
   data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], FlatTexture_Texture_STRIKE23_LABEL);
   data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
 
@@ -220,8 +222,10 @@ void InitSteps() {
   data->steps[4].type = GameSetup_Step_Type_REMOVE_STAGE;
   data->steps[4].required_selection_count = 1;
   data->steps[4].timer_seconds = 10;
+  data->steps[4].selectors = data->stage_strike_selectors;
+  data->steps[4].selector_count = STRIKE_STAGE_SELECTOR_COUNT;
   data->steps[4].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[4].desc_tex = step4_desc;
+  data->steps[4].desc_tex = isFirst ? descSelectStrike : descWaitStrike;
   data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0], FlatTexture_Texture_STRIKE4_LABEL);
   data->steps[4].arrow = InitStepArrow(data->steps[4].display_icons[0]);
 
@@ -230,21 +234,82 @@ void InitSteps() {
   CompleteCurrentStep(data->steps[1].required_selection_count);
 }
 
-void InitSelectorJobjs() {
-  int count = 5;
-  CSIcon_Material iconMats[] = {
-      CSIcon_Material_Fountain,
-      CSIcon_Material_Dreamland,
-      CSIcon_Material_Yoshis,
-      CSIcon_Material_Pokemon,
-      CSIcon_Material_Battlefield,
-  };
+void InitCounterpickingSteps() {
+  ExiSlippi_MatchState_Response *match_state = data->match_state;
+  GameSetup_SceneData *scene_data = data->scene_data;
 
-  // Do nothing if there are no selectors
-  if (count == 0 || count > MAX_SELECTORS) {
-    return;
+  data->step_count = 4;
+  data->steps = calloc(data->step_count * sizeof(GameSetup_Step));
+  data->state.step_idx = 0;
+
+  u8 isWinner = match_state->local_player_idx == scene_data->prev_winner;
+
+  FlatTexture_Texture labelYourChar = FlatTexture_Texture_YOUR_CHAR_LABEL;
+  FlatTexture_Texture labelOppChar = FlatTexture_Texture_OPP_CHAR_LABEL;
+  FlatTexture_Texture descSelectChar = FlatTexture_Texture_SELECT_CHAR_DESC;
+  FlatTexture_Texture descWaitChar = FlatTexture_Texture_WAIT_CHAR_DESC;
+  FlatTexture_Texture descSelectBan = FlatTexture_Texture_SELECT_BAN_DESC;
+  FlatTexture_Texture descWaitBan = FlatTexture_Texture_WAIT_BAN_DESC;
+  FlatTexture_Texture descSelectStage = FlatTexture_Texture_SELECT_STAGE_DESC;
+  FlatTexture_Texture descWaitStage = FlatTexture_Texture_WAIT_STAGE_DESC;
+
+  data->steps[0].player_idx = scene_data->prev_winner;
+  data->steps[0].type = GameSetup_Step_Type_REMOVE_STAGE;
+  data->steps[0].required_selection_count = 1;
+  data->steps[0].timer_seconds = 30;
+  data->steps[0].selectors = data->stage_cp_selectors;
+  data->steps[0].selector_count = CP_STAGE_SELECTOR_COUNT;
+  data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[0].desc_tex = isWinner ? descSelectBan : descWaitBan;
+  data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], FlatTexture_Texture_BAN_LABEL);
+  data->steps[0].arrow = 0;
+
+  data->steps[1].player_idx = !scene_data->prev_winner;
+  data->steps[1].type = GameSetup_Step_Type_CHOOSE_STAGE;
+  data->steps[1].required_selection_count = 1;
+  data->steps[1].timer_seconds = 30;
+  data->steps[1].selectors = data->stage_cp_selectors;
+  data->steps[1].selector_count = CP_STAGE_SELECTOR_COUNT;
+  data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[1].desc_tex = isWinner ? descWaitStage : descSelectStage;
+  data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], FlatTexture_Texture_STAGE_LABEL);
+  data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
+
+  data->steps[2].player_idx = scene_data->prev_winner;
+  data->steps[2].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[2].required_selection_count = 1;
+  data->steps[2].timer_seconds = 45;
+  data->steps[2].selectors = isWinner ? data->char_selectors : data->char_wait_selectors;
+  data->steps[2].selector_count = 1;
+  data->steps[2].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[2].desc_tex = isWinner ? descSelectChar : descWaitChar;
+  data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], isWinner ? labelYourChar : labelOppChar);
+  data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
+
+  data->steps[3].player_idx = !scene_data->prev_winner;
+  data->steps[3].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[3].required_selection_count = 1;
+  data->steps[3].timer_seconds = 45;
+  data->steps[3].selectors = isWinner ? data->char_wait_selectors : data->char_selectors;
+  data->steps[3].selector_count = 1;
+  data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
+  data->steps[3].desc_tex = isWinner ? descWaitChar : descSelectChar;
+  data->steps[3].label = InitStepLabel(data->steps[3].display_icons[0], isWinner ? labelOppChar : labelYourChar);
+  data->steps[3].arrow = InitStepArrow(data->steps[3].display_icons[0]);
+}
+
+void InitSteps() {
+  switch (data->process_type) {
+    case GameSetup_Process_Type_STAGE_STRIKING:
+      InitStrikingSteps();
+      break;
+    case GameSetup_Process_Type_COUNTERPICKING:
+      InitCounterpickingSteps();
+      break;
   }
+}
 
+void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {
   float gap = 8;
   float yPos = 5.5;
   float xPos = 0;
@@ -262,12 +327,45 @@ void InitSelectorJobjs() {
     CSBoxSelector *csbs = CSBoxSelector_Init(gui_assets);
     CSIcon_SetMaterial(csbs->icon, iconMats[i]);
     CSBoxSelector_SetPos(csbs, (Vec3){xPos, yPos, 0});
+    CSBoxSelector_SetVisibility(csbs, false);
 
-    data->selectors[i] = csbs;
+    selectors[i] = csbs;
     xPos += gap;
   }
+}
 
-  data->selector_count = count;
+void InitAllSelectorJobjs() {
+  ExiSlippi_MatchState_Response *match_state = data->match_state;
+
+  if (data->process_type == GameSetup_Process_Type_STAGE_STRIKING) {
+    CSIcon_Material stageStrikeMats[] = {
+        CSIcon_Material_Fountain,
+        CSIcon_Material_Dreamland,
+        CSIcon_Material_Yoshis,
+        CSIcon_Material_Pokemon,
+        CSIcon_Material_Battlefield,
+    };
+    InitSelectorJobjs(stageStrikeMats, data->stage_strike_selectors, STRIKE_STAGE_SELECTOR_COUNT);
+  }
+
+  if (data->process_type == GameSetup_Process_Type_COUNTERPICKING) {
+    CSIcon_Material stageCpMats[] = {
+        CSIcon_Material_Fountain,
+        CSIcon_Material_Dreamland,
+        CSIcon_Material_Yoshis,
+        CSIcon_Material_Pokemon,
+        CSIcon_Material_Battlefield,
+        CSIcon_Material_FinalDestination,
+    };
+    InitSelectorJobjs(stageCpMats, data->stage_cp_selectors, CP_STAGE_SELECTOR_COUNT);
+
+    CSIcon_Material unknownCharMats[] = {CSIcon_Material_Question};
+    InitSelectorJobjs(unknownCharMats, data->char_wait_selectors, 1);
+
+    u8 charId = match_state->game_info_block[0x60 + match_state->local_player_idx * 0x24];
+    CSIcon_Material playerCharMats[] = {CSIcon_ConvertCharToMat(charId)};
+    InitSelectorJobjs(playerCharMats, data->char_selectors, 1);
+  }
 }
 
 void ResetButtonState() {
@@ -345,13 +443,13 @@ void InputsThink(GOBJ *gobj) {
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_A) {
       int idx = data->state.selector_idx;
-      u8 isSelected = data->selectors[idx]->state.is_selected;
+      u8 isSelected = step->selectors[idx]->state.is_selected;
 
       if (isSelected) {
-        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_NotSelected);
+        CSBoxSelector_SetSelectState(step->selectors[idx], CSBoxSelector_Select_State_NotSelected);
         data->state.selected_values_count--;
       } else {
-        CSBoxSelector_SetSelectState(data->selectors[idx], CSBoxSelector_Select_State_Selected_X);
+        CSBoxSelector_SetSelectState(step->selectors[idx], CSBoxSelector_Select_State_Selected_X);
         data->state.selected_values_count++;
       }
 
@@ -397,13 +495,13 @@ void InputsThink(GOBJ *gobj) {
     if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
       data->state.selector_idx = data->state.prev_selector_idx;
       data->state.selected_values_count = 0;
-      for (int i = 0; i < data->selector_count; i++) {
+      for (int i = 0; i < step->selector_count; i++) {
         // Only reset selectors that are currently selected
-        if (!data->selectors[i]->state.is_selected) {
+        if (!step->selectors[i]->state.is_selected) {
           continue;
         }
 
-        CSBoxSelector_SetSelectState(data->selectors[i], CSBoxSelector_Select_State_NotSelected);
+        CSBoxSelector_SetSelectState(step->selectors[i], CSBoxSelector_Select_State_NotSelected);
       }
 
       // Hide buttons
@@ -419,9 +517,9 @@ void InputsThink(GOBJ *gobj) {
   }
 
   // Update selector position
-  for (int i = 0; i < data->selector_count; i++) {
+  for (int i = 0; i < step->selector_count; i++) {
     // Set hover state. Won't do anything if already set to that state
-    CSBoxSelector_SetHover(data->selectors[i], data->state.selector_idx == i);
+    CSBoxSelector_SetHover(step->selectors[i], data->state.selector_idx == i);
   }
 
   // Update button hover position
@@ -469,8 +567,8 @@ void CompleteCurrentStep(int committed_count) {
 
   // Commit selections to selected values
   int commit_index = committed_count;
-  for (int i = 0; i < data->selector_count; i++) {
-    CSBoxSelector *bs = data->selectors[i];
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
 
     // If this selector is selected, indicate that stage as the one selected
     if (bs->state.is_selected) {
@@ -482,12 +580,12 @@ void CompleteCurrentStep(int committed_count) {
 
   // In the case of a timeout, the selections may not have been made. Select non-disabled
   // stages
-  for (int i = 0; i < data->selector_count; i++) {
+  for (int i = 0; i < step->selector_count; i++) {
     if (commit_index >= step->required_selection_count) {
       break;  // If enough selections have been made, exit loop
     }
 
-    CSBoxSelector *bs = data->selectors[i];
+    CSBoxSelector *bs = step->selectors[i];
 
     // If this selector is selected, indicate that stage as the one selected
     if (!bs->state.is_disabled) {
@@ -505,6 +603,12 @@ void CompleteCurrentStep(int committed_count) {
     data->complete_query->char_color_selection = step->char_color_selection;
     memcpy(data->complete_query->stage_selections, step->stage_selections, 2);
     ExiSlippi_Transfer(data->complete_query, sizeof(ExiSlippi_CompleteStep_Query), ExiSlippi_TransferMode_WRITE);
+  }
+
+  // Hide current selectors, the correct selectors will be made visible in Prepare function
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
+    CSBoxSelector_SetVisibility(bs, false);
   }
 
   // Increment step idx
@@ -611,10 +715,14 @@ void PrepareCurrentStep() {
   // Initialize current timer to 0
   data->timer_frames = 0;
 
-  // TODO: Show/Hide the selectors used for this step and adjust number
-
   // Change description
   FlatTexture_SetTexture(data->description, step->desc_tex);
+
+  // Show current selectors
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
+    CSBoxSelector_SetVisibility(bs, true);
+  }
 
   // Disable stages that cannot be selected and move selector index
   // Pokemon is the last stage, make array large enough to fit a bool for all of them
@@ -638,8 +746,8 @@ void PrepareCurrentStep() {
   }
 
   // Go through selectors and mark the proper state
-  for (int i = 0; i < data->selector_count; i++) {
-    CSBoxSelector *csbs = data->selectors[i];
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *csbs = step->selectors[i];
 
     CSBoxSelector_Select_State newSelectState = CSBoxSelector_Select_State_NotSelected;
     if (shouldDisableMat[csbs->icon->state.material]) {
@@ -750,20 +858,22 @@ u8 UpdateTimer() {
 }
 
 static void ModifySelectorIndex(int change) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
   // Iterate through and try to find an available selector
   int iter_count = 0;
-  for (iter_count = 0; iter_count < data->selector_count; iter_count++) {
+  for (iter_count = 0; iter_count < step->selector_count; iter_count++) {
     // Edit selector index. We increment by count to handle negative numbers, causing them to loop
-    data->state.selector_idx = (data->state.selector_idx + change + data->selector_count) % data->selector_count;
+    data->state.selector_idx = (data->state.selector_idx + change + step->selector_count) % step->selector_count;
 
     // Once we are hovering over a selector that is not disabled, stop editing selector idx
-    if (!data->selectors[data->state.selector_idx]->state.is_disabled) {
+    if (!step->selectors[data->state.selector_idx]->state.is_disabled) {
       return;
     }
   }
 
   // If we didn't find an available selector, don't select any
-  if (iter_count >= data->selector_count) {
+  if (iter_count >= step->selector_count) {
     data->state.selector_idx = -1;
   }
 }

@@ -73,6 +73,7 @@ CSIcon_Material CSIcon_ConvertStageToMat(int stageId);
 int CSIcon_ConvertMatToChar(CSIcon_Material mat);
 int CSIcon_ConvertMatToStage(CSIcon_Material mat);
 
+void CSIcon_SetVisibility(CSIcon *icon, u8 is_visible);
 void CSIcon_SetPos(CSIcon *icon, Vec3 p);
 void CSIcon_SetSelectState(CSIcon *icon, CSIcon_Select_State state);
 
