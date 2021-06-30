@@ -34,6 +34,7 @@ static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state)
 
   // Reset state on all state JOBJs
   bs->x_jobj->flags |= JOBJ_HIDDEN;                      // Hide X
+  bs->check_jobj->flags |= JOBJ_HIDDEN;                  // Hide check
   bs->root_jobj->child->sibling->flags &= ~JOBJ_HIDDEN;  // Show border
 
   // Show X for the X states
@@ -45,6 +46,9 @@ static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state)
     bs->x_jobj->flags &= ~JOBJ_HIDDEN;
     JOBJ_ReqAnimAll(bs->x_jobj, 4);
     bs->x_jobj->dobj->mobj->mat->diffuse = (GXColor){0x87, 0x87, 0x87, 0xFF};
+  } else if (state == CSBoxSelector_Select_State_Selected) {
+    bs->check_jobj->flags &= ~JOBJ_HIDDEN;  // Show check
+    JOBJ_ReqAnimAll(bs->check_jobj, 0);     // Run animation
   }
 
   bs->state.is_selected = state == CSBoxSelector_Select_State_Selected ||
@@ -81,9 +85,11 @@ static void _SetVisibility(CSBoxSelector *bs, u8 is_visible) {
   }
 
   if (is_visible) {
-    bs->x_jobj->flags &= ~JOBJ_HIDDEN;  // Show
+    bs->x_jobj->flags &= ~JOBJ_HIDDEN;      // Show
+    bs->check_jobj->flags &= ~JOBJ_HIDDEN;  // Show
   } else {
-    bs->x_jobj->flags |= JOBJ_HIDDEN;  // Hide
+    bs->x_jobj->flags |= JOBJ_HIDDEN;      // Hide
+    bs->check_jobj->flags |= JOBJ_HIDDEN;  // Hide
   }
 
   CSIcon_SetVisibility(bs->icon, is_visible);
@@ -112,9 +118,15 @@ CSBoxSelector *CSBoxSelector_Init(GUI_GameSetup *gui) {
   csbs->x_gobj = JOBJ_LoadSet(0, x_set, 0, 0, 3, 1, 1, GObj_Anim);
   csbs->x_jobj = csbs->x_gobj->hsd_object;
 
+  // Init check for selected state
+  JOBJSet *check_set = gui->jobjs[GUI_GameSetup_JOBJ_Check];
+  csbs->check_gobj = JOBJ_LoadSet(0, check_set, 0, 0, 3, 1, 1, GObj_Anim);
+  csbs->check_jobj = csbs->check_gobj->hsd_object;
+
   // Attach positions of dependent JOBJs
   JOBJ_AttachPosition(csbs->icon->root_jobj, csbs->root_jobj);
   JOBJ_AttachPosition(csbs->x_jobj, csbs->root_jobj);
+  JOBJ_AttachPosition(csbs->check_jobj, csbs->root_jobj);
 
   // Init state
   _SetHover(csbs, false);
@@ -138,10 +150,6 @@ void CSBoxSelector_SetHover(CSBoxSelector *bs, u8 is_hover) {
 
 void CSBoxSelector_SetPos(CSBoxSelector *bs, Vec3 p) {
   bs->root_jobj->trans = p;
-
-  // Don't think the logic below is needed anymore since we are attaching positions in constructor
-  // bs->x_jobj->trans = p;
-  // CSIcon_SetPos(bs->icon, p);
 }
 
 void CSBoxSelector_SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {

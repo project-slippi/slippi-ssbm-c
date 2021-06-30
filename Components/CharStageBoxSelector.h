@@ -28,6 +28,8 @@ typedef struct CSBoxSelector {
   JOBJ *root_jobj;
   GOBJ *x_gobj;
   JOBJ *x_jobj;
+  GOBJ *check_gobj;
+  JOBJ *check_jobj;
   CSBoxSelector_State state;
   CSIcon *icon;
 } CSBoxSelector;

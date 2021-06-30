@@ -449,7 +449,11 @@ void InputsThink(GOBJ *gobj) {
         CSBoxSelector_SetSelectState(step->selectors[idx], CSBoxSelector_Select_State_NotSelected);
         data->state.selected_values_count--;
       } else {
-        CSBoxSelector_SetSelectState(step->selectors[idx], CSBoxSelector_Select_State_Selected_X);
+        CSBoxSelector_Select_State sel_state = CSBoxSelector_Select_State_Selected_X;
+        if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
+          sel_state = sel_state = CSBoxSelector_Select_State_Selected;
+        }
+        CSBoxSelector_SetSelectState(step->selectors[idx], sel_state);
         data->state.selected_values_count++;
       }
 
