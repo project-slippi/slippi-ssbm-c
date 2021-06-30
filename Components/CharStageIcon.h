@@ -55,6 +55,7 @@ typedef enum CSIcon_Select_State {
 typedef struct CSIcon_State {
   CSIcon_Material material;
   CSIcon_Select_State select_state;
+  u8 is_visible;
 } CSIcon_State;
 
 typedef struct CSIcon {

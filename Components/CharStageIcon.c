@@ -29,6 +29,21 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   icon->state.select_state = state;
 }
 
+static void _SetVisibility(CSIcon *icon, u8 is_visible) {
+  JOBJ *jobj = icon->root_jobj->child;
+  while (jobj) {
+    if (is_visible) {
+      jobj->flags &= ~JOBJ_HIDDEN;  // Show
+    } else {
+      jobj->flags |= JOBJ_HIDDEN;  // Hide
+    }
+
+    jobj = jobj->sibling;
+  }
+
+  icon->state.is_visible = is_visible;
+}
+
 CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   CSIcon *icon = calloc(sizeof(CSIcon));
 
@@ -39,6 +54,7 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
 
   // Init state
   _SetSelectState(icon, CSIcon_Select_State_NotSelected);
+  _SetVisibility(icon, true);
 
   return icon;
 }
@@ -226,4 +242,12 @@ void CSIcon_SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   }
 
   _SetSelectState(icon, state);
+}
+
+void CSIcon_SetVisibility(CSIcon *icon, u8 is_visible) {
+  if (icon->state.is_visible == is_visible) {
+    return;
+  }
+
+  _SetVisibility(icon, is_visible);
 }

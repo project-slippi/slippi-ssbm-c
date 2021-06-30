@@ -3,17 +3,12 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
-static void _SetVisibility(CSBoxSelector *bs, u8 is_visible) {
-  if (is_visible) {
-    bs->root_jobj->flags &= ~JOBJ_HIDDEN;  // Show
-  } else {
-    bs->root_jobj->flags |= JOBJ_HIDDEN;  // Hide
+static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
+  if (!bs->state.is_visible) {
+    bs->state.is_hover = is_hover;
+    return;
   }
 
-  bs->state.is_visible = is_visible;
-}
-
-static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
   JOBJ *jobj = bs->root_jobj->child;
 
   if (is_hover) {
@@ -29,6 +24,11 @@ static void _SetHover(CSBoxSelector *bs, u8 is_hover) {
 }
 
 static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state) {
+  if (!bs->state.is_visible) {
+    bs->state.select_state = state;
+    return;
+  }
+
   // Init flags that may be changed depending on state
   CSIcon_Select_State icon_ss = CSIcon_Select_State_NotSelected;
 
@@ -61,6 +61,38 @@ static void _SetSelectState(CSBoxSelector *bs, CSBoxSelector_Select_State state)
 
   // Commit new state
   bs->state.select_state = state;
+}
+
+static void _SetVisibility(CSBoxSelector *bs, u8 is_visible) {
+  // TODO: Would be really nice if we could just hide the root jobj, but this doesn't seem to do
+  // TODO: anything. I also tried moving the root jobj but that also doesn't seem to do anything
+
+  // Make all children of root jobj invisible
+  JOBJ *jobj = bs->root_jobj->child;
+  while (jobj) {
+    OSReport("[%X] Setting visibility to %s\n", bs, is_visible ? "true" : "false");
+    if (is_visible) {
+      jobj->flags &= ~JOBJ_HIDDEN;  // Show
+    } else {
+      jobj->flags |= JOBJ_HIDDEN;  // Hide
+    }
+
+    jobj = jobj->sibling;
+  }
+
+  if (is_visible) {
+    bs->x_jobj->flags &= ~JOBJ_HIDDEN;  // Show
+  } else {
+    bs->x_jobj->flags |= JOBJ_HIDDEN;  // Hide
+  }
+
+  CSIcon_SetVisibility(bs->icon, is_visible);
+
+  bs->state.is_visible = is_visible;
+
+  // Run other state setting functions to make sure everything is displayed correctly
+  _SetHover(bs, bs->state.is_hover);
+  _SetSelectState(bs, bs->state.select_state);
 }
 
 // Public functions
