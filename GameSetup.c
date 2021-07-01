@@ -569,34 +569,53 @@ void CompleteCurrentStep(int committed_count) {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
   step->state = GameSetup_Step_State_COMPLETE;
 
-  // Commit selections to selected values
   int commit_index = committed_count;
-  for (int i = 0; i < step->selector_count; i++) {
-    CSBoxSelector *bs = step->selectors[i];
 
-    // If this selector is selected, indicate that stage as the one selected
-    if (bs->state.is_selected) {
-      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
-      step->stage_selections[commit_index] = stageId;
-      commit_index++;
-    }
-  }
+  if (step->type == GameSetup_Step_Type_CHOOSE_STAGE || step->type == GameSetup_Step_Type_REMOVE_STAGE) {
+    // Commit selections to selected values
+    for (int i = 0; i < step->selector_count; i++) {
+      CSBoxSelector *bs = step->selectors[i];
 
-  // In the case of a timeout, the selections may not have been made. Select non-disabled
-  // stages
-  for (int i = 0; i < step->selector_count; i++) {
-    if (commit_index >= step->required_selection_count) {
-      break;  // If enough selections have been made, exit loop
+      // If this selector is selected, indicate that stage as the one selected
+      if (bs->state.is_selected) {
+        int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
+        step->stage_selections[commit_index] = stageId;
+        commit_index++;
+      }
     }
 
-    CSBoxSelector *bs = step->selectors[i];
+    // In the case of a timeout, the selections may not have been made. Select non-disabled
+    // stages
+    for (int i = 0; i < step->selector_count; i++) {
+      if (commit_index >= step->required_selection_count) {
+        break;  // If enough selections have been made, exit loop
+      }
 
-    // If this selector is selected, indicate that stage as the one selected
-    if (!bs->state.is_disabled) {
-      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
-      step->stage_selections[commit_index] = stageId;
-      commit_index++;
+      CSBoxSelector *bs = step->selectors[i];
+
+      // If this selector is selected, indicate that stage as the one selected
+      if (!bs->state.is_disabled) {
+        int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
+        step->stage_selections[commit_index] = stageId;
+        commit_index++;
+      }
     }
+  } else if (step->type == GameSetup_Step_Type_CHOOSE_CHAR && committed_count == 0) {
+    // Default color and char to what was selected last game in case of a timeout with no selection.
+    // We don't need to worry about that color not being allowed because the opponent shouldn't
+    // be allowed to take it
+    int playerIdx = step->player_idx;
+    int charId = data->match_state->game_info_block[0x60 + 0x24 * playerIdx];
+    int charColorId = data->match_state->game_info_block[0x63 + 0x24 * playerIdx];
+
+    if (step->selectors[0]->icon->state.material != CSIcon_Material_Question) {
+      // TODO: Grab color
+      charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
+      charColorId = 0;
+    }
+
+    step->char_selection = charId;
+    step->char_color_selection = charColorId;
   }
 
   // If the current player is in control of this step, send a message to opponent
@@ -684,6 +703,7 @@ void CompleteGamePrep() {
     osq->chars[step->player_idx].char_color_id = step->char_color_selection;
   }
 
+  // We overwrite selections to make sure remote player can't cheat their selections
   osq->command = ExiSlippi_Command_OVERWRITE_SELECTIONS;
   ExiSlippi_Transfer(osq, sizeof(ExiSlippi_OverwriteSelections_Query), ExiSlippi_TransferMode_WRITE);
 
