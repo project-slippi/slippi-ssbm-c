@@ -1,5 +1,6 @@
 #include "./m-ex/MexTK/mex.h"
 #include "Components/Button.h"
+#include "Components/CharPickerDialog.h"
 #include "Components/CharStageBoxSelector.h"
 #include "Components/FlatTexture.h"
 #include "Components/RightArrow.h"
@@ -85,6 +86,8 @@ typedef struct GameSetup_Data {
   int timer_frames;
   GameSetup_Step_Type initialized_step_type;
   GameSetup_SceneData *scene_data;
+
+  CharPickerDialog *char_picker_dialog;
 
   CSBoxSelector *stage_strike_selectors[STRIKE_STAGE_SELECTOR_COUNT];
   CSBoxSelector *stage_cp_selectors[CP_STAGE_SELECTOR_COUNT];

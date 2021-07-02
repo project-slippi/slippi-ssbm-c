@@ -74,7 +74,6 @@ static void _SetVisibility(CSBoxSelector *bs, u8 is_visible) {
   // Make all children of root jobj invisible
   JOBJ *jobj = bs->root_jobj->child;
   while (jobj) {
-    OSReport("[%X] Setting visibility to %s\n", bs, is_visible ? "true" : "false");
     if (is_visible) {
       jobj->flags &= ~JOBJ_HIDDEN;  // Show
     } else {

@@ -118,6 +118,14 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   InitSteps();
   PrepareCurrentStep();
   UpdateTimeline();
+
+  // Initialize dialog last to make sure it's on top of everything
+  data->char_picker_dialog = CharPickerDialog_Init(gui_assets);
+
+  // TODO: I don't know why the following doesn't work... I put the displacement in the hsd file instead.
+  // CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, 16, 0});
+  // data->char_picker_dialog->root_jobj->trans.Y = -8;
+  // JOBJ_SetMtxDirtySub(data->char_picker_dialog->root_jobj);
 }
 
 void Minor_Think() {
