@@ -22,6 +22,8 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui) {
     JOBJ_AddChild(cur_joint, cpd->char_icons[i]->root_jobj);
     cur_joint = cur_joint->sibling;
   }
+
+  return cpd;
 }
 
 void CharPickerDialog_Free(CharPickerDialog *cpd) {
