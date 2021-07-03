@@ -4,13 +4,47 @@
 #include "../m-ex/MexTK/mex.h"
 #include "CharStageIcon.h"
 
-CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui) {
+static void _SetPos(CharPickerDialog *cpd, Vec3 pos) {
+  cpd->root_jobj->trans = pos;
+  JOBJ_SetMtxDirtySub(cpd->root_jobj);
+}
+
+static void _InputsThink(GOBJ *gobj) {
+  CharPickerDialog *cpd = gobj->userdata;
+  if (!cpd->state.is_open) {
+    return;
+  }
+
+  u8 port = R13_U8(-0x5108);
+  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
+  u64 downInputs = Pad_GetDown(port);
+
+  if (downInputs & HSD_BUTTON_A) {
+    cpd->on_select(cpd);
+    return;
+  }
+
+  // if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+  //   // Handle a right input
+  //   IncrementSelectorIndex();
+  //   SFX_PlayCommon(2);  // Play move SFX
+  // } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+  //   // Handle a left input
+  //   DecrementSelectorIndex();
+  //   SFX_PlayCommon(2);  // Play move SFX
+  // }
+}
+
+CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_select) {
   CharPickerDialog *cpd = calloc(sizeof(CharPickerDialog));
 
   // Init char picker dialog jobj
   cpd->jobj_set = gui->jobjs[GUI_GameSetup_JOBJ_CharDialog];
   cpd->gobj = JOBJ_LoadSet(0, cpd->jobj_set, 0, 0, 3, 1, 0, GObj_Anim);
   cpd->root_jobj = cpd->gobj->hsd_object;
+
+  // Store callback
+  cpd->on_select = on_select;
 
   // Connect CharStageIcons for each character to the dialog
   JOBJ *cur_joint = cpd->root_jobj->child->child->sibling->child;
@@ -23,6 +57,15 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui) {
     cur_joint = cur_joint->sibling;
   }
 
+  // Create GOBJ to handle inputs
+  GOBJ *input_handler_gobj = GObj_Create(4, 0, 128);
+  GObj_AddUserData(input_handler_gobj, 4, HSD_Free, cpd);
+  GObj_AddProc(input_handler_gobj, _InputsThink, 0);
+
+  // Initialize state
+  CharPickerDialog_SetPos(cpd, (Vec3){0, 0, 0});
+  CharPickerDialog_CloseDialog(cpd);
+
   return cpd;
 }
 
@@ -31,14 +74,22 @@ void CharPickerDialog_Free(CharPickerDialog *cpd) {
 }
 
 void CharPickerDialog_SetPos(CharPickerDialog *cpd, Vec3 pos) {
-  // OSReport("Pos: %f, %f, %f\n", pos.X, pos.Y, pos.Z);
-  // OSReport("PosStart: %f, %f, %f\n", cpd->root_jobj->child->trans.X, cpd->root_jobj->child->trans.Y, cpd->root_jobj->child->trans.Z);
-  cpd->root_jobj->trans = pos;
-  JOBJ_SetMtxDirtySub(cpd->root_jobj);
+  cpd->state.pos = pos;
+  if (!cpd->state.is_open) {
+    return;
+  }
 
-  // OSReport("PosEnd: %f, %f, %f\n", cpd->root_jobj->child->trans.X, cpd->root_jobj->child->trans.Y, cpd->root_jobj->child->trans.Z);
+  _SetPos(cpd, pos);
 }
 
-void CharPickerDialog_OpenDialog(CharPickerDialog *cpd) {
-  // TODO: Implement
+void CharPickerDialog_OpenDialog(CharPickerDialog *cpd, u8 start_char_idx, u8 start_char_color) {
+  cpd->state.is_open = true;
+  cpd->state.char_selection_idx = start_char_idx;
+  cpd->state.char_color_idx = start_char_color;
+  _SetPos(cpd, cpd->state.pos);
+}
+
+void CharPickerDialog_CloseDialog(CharPickerDialog *cpd) {
+  cpd->state.is_open = false;
+  _SetPos(cpd, (Vec3){0, 1000, 0});
 }

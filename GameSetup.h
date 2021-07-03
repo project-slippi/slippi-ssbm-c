@@ -115,6 +115,8 @@ void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id,
 void PrepareCurrentStep();
 void CompleteGamePrep();
 
+void OnCharSelection(CharPickerDialog *cpd);
+
 void IncrementSelectorIndex();
 void DecrementSelectorIndex();
 void ResetSelectorIndex();

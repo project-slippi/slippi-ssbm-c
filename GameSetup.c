@@ -120,8 +120,9 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   UpdateTimeline();
 
   // Initialize dialog last to make sure it's on top of everything
-  data->char_picker_dialog = CharPickerDialog_Init(gui_assets);
+  data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelection);
   CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -8.5, 0});
+  CharPickerDialog_OpenDialog(data->char_picker_dialog, 2, 0);
 }
 
 void Minor_Think() {
@@ -396,17 +397,17 @@ void CObjThink(GOBJ *gobj) {
 }
 
 void InputsThink(GOBJ *gobj) {
-  u8 port = R13_U8(-0x5108);
-  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
-  u64 downInputs = Pad_GetDown(port);
-
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // If current step is completed (process finished, don't allow any inputs)
-  if (step->state == GameSetup_Step_State_COMPLETE) {
+  if (step->state == GameSetup_Step_State_COMPLETE || data->char_picker_dialog->state.is_open) {
     // TODO: Play an animation on selected stage and play a sound
     return;
   }
+
+  u8 port = R13_U8(-0x5108);
+  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
+  u64 downInputs = Pad_GetDown(port);
 
   u8 is_time_elapsed = UpdateTimer();
 
@@ -915,4 +916,9 @@ void DecrementSelectorIndex() {
 void ResetSelectorIndex() {
   data->state.selector_idx = -1;
   ModifySelectorIndex(1);
+}
+
+void OnCharSelection(CharPickerDialog *cpd) {
+  OSReport("Test [%X] %d\n", cpd, cpd->state.char_selection_idx);
+  CharPickerDialog_CloseDialog(cpd);
 }
