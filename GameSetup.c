@@ -924,6 +924,5 @@ void ResetSelectorIndex() {
 }
 
 void OnCharSelection(CharPickerDialog *cpd) {
-  OSReport("Test [%X] %d\n", cpd, cpd->state.char_selection_idx);
   CharPickerDialog_CloseDialog(cpd);
 }

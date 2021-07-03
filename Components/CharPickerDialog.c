@@ -67,8 +67,6 @@ static void _InputsThink(GOBJ *gobj) {
     CSIcon_Select_State state = CSIcon_Select_State_NotSelected;
     if (i == cpd->state.char_selection_idx) {
       state = CSIcon_Select_State_Hover;
-
-      OSReport("Total: %f, Next: %f\n", JOBJ_GetJointAnimFrameTotal(cpd->char_icons[i]->root_jobj), JOBJ_GetJointAnimNextFrame(cpd->char_icons[i]->root_jobj));
     }
 
     CSIcon_SetSelectState(cpd->char_icons[i], state);
