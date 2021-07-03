@@ -24,15 +24,55 @@ static void _InputsThink(GOBJ *gobj) {
     return;
   }
 
-  // if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
-  //   // Handle a right input
-  //   IncrementSelectorIndex();
-  //   SFX_PlayCommon(2);  // Play move SFX
-  // } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
-  //   // Handle a left input
-  //   DecrementSelectorIndex();
-  //   SFX_PlayCommon(2);  // Play move SFX
-  // }
+  if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+    // Handle a right input
+    if (cpd->state.char_selection_idx >= CKIND_GANONDORF) {
+      cpd->state.char_selection_idx = CKIND_YOUNGLINK;
+    } else if ((cpd->state.char_selection_idx + 1) % 7 == 0) {
+      cpd->state.char_selection_idx -= 6;
+    } else {
+      cpd->state.char_selection_idx++;
+    }
+  } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+    // Handle a left input
+    if (cpd->state.char_selection_idx == CKIND_YOUNGLINK) {
+      cpd->state.char_selection_idx = CKIND_GANONDORF;
+    } else if (cpd->state.char_selection_idx % 7 == 0) {
+      cpd->state.char_selection_idx += 6;
+    } else {
+      cpd->state.char_selection_idx--;
+    }
+  } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
+    // Handle a down input
+    if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_SHEIK) {
+      cpd->state.char_selection_idx -= 14;
+    } else if (cpd->state.char_selection_idx >= CKIND_YOUNGLINK) {
+      cpd->state.char_selection_idx -= 21;
+    } else {
+      cpd->state.char_selection_idx += 7;
+    }
+  } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
+    // Handle a up input
+    if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx <= CKIND_LINK) {
+      cpd->state.char_selection_idx += 14;
+    } else if (cpd->state.char_selection_idx <= CKIND_LINK) {
+      cpd->state.char_selection_idx += 21;
+    } else {
+      cpd->state.char_selection_idx -= 7;
+    }
+  }
+
+  // Update which icon shows up selected
+  for (int i = CKIND_FALCON; i <= CKIND_GANONDORF; i++) {
+    CSIcon_Select_State state = CSIcon_Select_State_NotSelected;
+    if (i == cpd->state.char_selection_idx) {
+      state = CSIcon_Select_State_Hover;
+
+      OSReport("Total: %f, Next: %f\n", JOBJ_GetJointAnimFrameTotal(cpd->char_icons[i]->root_jobj), JOBJ_GetJointAnimNextFrame(cpd->char_icons[i]->root_jobj));
+    }
+
+    CSIcon_SetSelectState(cpd->char_icons[i], state);
+  }
 }
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_select) {

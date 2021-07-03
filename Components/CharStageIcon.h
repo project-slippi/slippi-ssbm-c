@@ -47,7 +47,7 @@ typedef enum CSIcon_Material {
 
 typedef enum CSIcon_Select_State {
   CSIcon_Select_State_NotSelected,
-  CSIcon_Select_State_Selected,
+  CSIcon_Select_State_Hover,
   CSIcon_Select_State_Disabled,
   CSIcon_Select_State_Blink,
 } CSIcon_Select_State;

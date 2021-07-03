@@ -400,14 +400,10 @@ void InputsThink(GOBJ *gobj) {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // If current step is completed (process finished, don't allow any inputs)
-  if (step->state == GameSetup_Step_State_COMPLETE || data->char_picker_dialog->state.is_open) {
+  if (step->state == GameSetup_Step_State_COMPLETE) {
     // TODO: Play an animation on selected stage and play a sound
     return;
   }
-
-  u8 port = R13_U8(-0x5108);
-  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
-  u64 downInputs = Pad_GetDown(port);
 
   u8 is_time_elapsed = UpdateTimer();
 
@@ -425,6 +421,15 @@ void InputsThink(GOBJ *gobj) {
     UpdateTimeline();
     return;
   }
+
+  // If char picker dialog is open, don't process inputs here
+  if (data->char_picker_dialog->state.is_open) {
+    return;
+  }
+
+  u8 port = R13_U8(-0x5108);
+  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
+  u64 downInputs = Pad_GetDown(port);
 
   if (data->state.selector_idx >= 0) {
     ////////////////////////////////

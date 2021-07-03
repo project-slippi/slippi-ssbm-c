@@ -24,6 +24,10 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   if (state == CSIcon_Select_State_Blink) {
     JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 0);
     JOBJ_ReqAnimAll(icon->root_jobj, 0);
+  } else if (state == CSIcon_Select_State_Hover) {
+    // FIXME: This is supposed to loop at 20 frames but it doesn't seem to be that long...
+    JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 2);
+    JOBJ_ReqAnimAll(icon->root_jobj, 0);
   }
 
   icon->state.select_state = state;
