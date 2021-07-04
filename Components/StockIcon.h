@@ -1,0 +1,24 @@
+#ifndef STOCK_ICON_H
+#define STOCK_ICON_H
+
+#include "../Files.h"
+#include "../m-ex/MexTK/mex.h"
+
+// How to style code: https://stackoverflow.com/a/50489812/1249024
+
+typedef struct StockIcon_State {
+  u8 is_visible;
+} StockIcon_State;
+
+typedef struct StockIcon {
+  GOBJ *gobj;
+  JOBJ *root_jobj;
+  StockIcon_State state;
+} StockIcon;
+
+StockIcon *StockIcon_Init(GUI_GameSetup *gui);
+void StockIcon_Free(StockIcon *si);
+
+void StockIcon_SetIcon(StockIcon *si, u8 charId, u8 charColor);
+
+#endif

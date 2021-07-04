@@ -3,6 +3,7 @@
 
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
+#include "StockIcon.h"
 
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
@@ -62,6 +63,7 @@ typedef struct CSIcon {
   GOBJ *gobj;
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
+  StockIcon *stock_icon;
   CSIcon_State state;
 } CSIcon;
 

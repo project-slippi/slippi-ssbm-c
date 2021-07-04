@@ -56,6 +56,11 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   icon->gobj = JOBJ_LoadSet(0, icon->jobj_set, 0, 0, 3, 1, 0, GObj_Anim);
   icon->root_jobj = icon->gobj->hsd_object;
 
+  // Init stock icon
+  icon->stock_icon = StockIcon_Init(gui);
+  JOBJ_AttachPosition(icon->stock_icon->root_jobj, icon->root_jobj->child->sibling);
+  StockIcon_SetIcon(icon->stock_icon, 0, 0);
+
   // Init state
   _SetSelectState(icon, CSIcon_Select_State_NotSelected);
   _SetVisibility(icon, true);

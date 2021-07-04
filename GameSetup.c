@@ -3,6 +3,7 @@
 #include "./Components/Button.h"
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
+#include "./Components/StockIcon.h"
 #include "./m-ex/MexTK/mex.h"
 #include "Files.h"
 
@@ -115,6 +116,10 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
 
   // Init steps
   InitSteps();
+
+  // Add test stock icon
+  StockIcon *si = StockIcon_Init(gui_assets);
+  StockIcon_SetIcon(si, 0, 0);
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelection);
