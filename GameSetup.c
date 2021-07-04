@@ -113,16 +113,18 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   FlatTexture_SetPosCorners(data->description, tl, tr, bl, br);
   FlatTexture_SetPos(data->description, (Vec3){-18, 12.2, 0});
 
-  // Initialize state, init steps, and prepare current step
-  InitState();
+  // Init steps
   InitSteps();
-  PrepareCurrentStep();
-  UpdateTimeline();
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelection);
   CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -8.5, 0});
   CharPickerDialog_OpenDialog(data->char_picker_dialog, 2, 0);
+
+  // Prepare the state and displays
+  InitState();
+  PrepareCurrentStep();
+  UpdateTimeline();
 }
 
 void Minor_Think() {

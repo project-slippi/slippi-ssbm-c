@@ -33,6 +33,9 @@ static void _InputsThink(GOBJ *gobj) {
     } else {
       cpd->state.char_selection_idx++;
     }
+
+    // Reset color
+    cpd->state.char_color_idx = 0;
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
     if (cpd->state.char_selection_idx == CKIND_YOUNGLINK) {
@@ -42,6 +45,9 @@ static void _InputsThink(GOBJ *gobj) {
     } else {
       cpd->state.char_selection_idx--;
     }
+
+    // Reset color
+    cpd->state.char_color_idx = 0;
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_SHEIK) {
@@ -51,6 +57,9 @@ static void _InputsThink(GOBJ *gobj) {
     } else {
       cpd->state.char_selection_idx += 7;
     }
+
+    // Reset color
+    cpd->state.char_color_idx = 0;
   } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
     // Handle a up input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx <= CKIND_LINK) {
@@ -60,6 +69,9 @@ static void _InputsThink(GOBJ *gobj) {
     } else {
       cpd->state.char_selection_idx -= 7;
     }
+
+    // Reset color
+    cpd->state.char_color_idx = 0;
   }
 
   // Update which icon shows up selected
