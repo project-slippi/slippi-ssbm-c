@@ -12,6 +12,7 @@ typedef struct CharPickerDialog_State {
   u8 is_open;
   u8 char_selection_idx;
   u8 char_color_idx;
+  u32 open_frame_count;
 } CharPickerDialog_State;
 
 typedef struct CharPickerDialog {

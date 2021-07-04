@@ -15,6 +15,14 @@ static void _InputsThink(GOBJ *gobj) {
     return;
   }
 
+  // Increment frame count
+  cpd->state.open_frame_count++;
+
+  // Skip input handling on the first frame of opening
+  if (cpd->state.open_frame_count == 1) {
+    return;
+  }
+
   u8 port = R13_U8(-0x5108);
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
   u64 downInputs = Pad_GetDown(port);
@@ -136,6 +144,7 @@ void CharPickerDialog_OpenDialog(CharPickerDialog *cpd, u8 start_char_idx, u8 st
   cpd->state.is_open = true;
   cpd->state.char_selection_idx = start_char_idx;
   cpd->state.char_color_idx = start_char_color;
+  cpd->state.open_frame_count = 0;
   _SetPos(cpd, cpd->state.pos);
 }
 

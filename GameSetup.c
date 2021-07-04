@@ -119,7 +119,6 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelection);
   CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -8.5, 0});
-  CharPickerDialog_OpenDialog(data->char_picker_dialog, 2, 0);
 
   // Prepare the state and displays
   InitState();
@@ -185,7 +184,9 @@ void InitStrikingSteps() {
   data->steps[0].required_selection_count = 1;
   data->steps[0].char_selection = match_state->game_info_block[0x60];
   data->steps[0].char_color_selection = match_state->game_info_block[0x63];
-  data->steps[0].timer_seconds = 20;
+  data->steps[0].timer_seconds = 45;
+  data->steps[0].selectors = isFirst ? data->char_selectors : data->char_wait_selectors;
+  data->steps[0].selector_count = 1;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[0].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
   data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], isFirst ? labelYourChar : labelOppChar);
@@ -196,7 +197,9 @@ void InitStrikingSteps() {
   data->steps[1].required_selection_count = 1;
   data->steps[1].char_selection = match_state->game_info_block[0x60 + 0x24];
   data->steps[1].char_color_selection = match_state->game_info_block[0x63 + 0x24];
-  data->steps[1].timer_seconds = 20;
+  data->steps[1].timer_seconds = 45;
+  data->steps[1].selectors = isFirst ? data->char_wait_selectors : data->char_selectors;
+  data->steps[1].selector_count = 1;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
   data->steps[1].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], isFirst ? labelOppChar : labelYourChar);
@@ -365,23 +368,28 @@ void InitAllSelectorJobjs() {
         CSIcon_Material_FinalDestination,
     };
     InitSelectorJobjs(stageCpMats, data->stage_cp_selectors, CP_STAGE_SELECTOR_COUNT);
-
-    CSIcon_Material unknownCharMats[] = {CSIcon_Material_Question};
-    InitSelectorJobjs(unknownCharMats, data->char_wait_selectors, 1);
-
-    u8 charId = match_state->game_info_block[0x60 + match_state->local_player_idx * 0x24];
-    CSIcon_Material playerCharMats[] = {CSIcon_ConvertCharToMat(charId)};
-    InitSelectorJobjs(playerCharMats, data->char_selectors, 1);
   }
+
+  CSIcon_Material unknownCharMats[] = {CSIcon_Material_Question};
+  InitSelectorJobjs(unknownCharMats, data->char_wait_selectors, 1);
+
+  u8 charId = match_state->game_info_block[0x60 + match_state->local_player_idx * 0x24];
+  CSIcon_Material playerCharMats[] = {CSIcon_ConvertCharToMat(charId)};
+  InitSelectorJobjs(playerCharMats, data->char_selectors, 1);
 }
 
-void ResetButtonState() {
+void ResetButtonState(u8 is_visible) {
   for (int i = 0; i < data->button_count; i++) {
     Button_SetHover(data->buttons[i], false);
-    Button_SetVisibility(data->buttons[i], false);
+    Button_SetVisibility(data->buttons[i], is_visible);
   }
 
   data->state.btn_hover_idx = 0;
+
+  // If buttons are visible, set hover state to the first button
+  if (is_visible) {
+    Button_SetHover(data->buttons[0], true);
+  }
 }
 
 void CObjThink(GOBJ *gobj) {
@@ -398,37 +406,28 @@ void CObjThink(GOBJ *gobj) {
   CObj_EndCurrent();
 }
 
-void InputsThink(GOBJ *gobj) {
-  GameSetup_Step *step = &data->steps[data->state.step_idx];
-
-  // If current step is completed (process finished, don't allow any inputs)
-  if (step->state == GameSetup_Step_State_COMPLETE) {
-    // TODO: Play an animation on selected stage and play a sound
-    return;
+void UpdateButtonHoverPos(u64 scrollInputs) {
+  ////////////////////////////////
+  // Adjust button hover
+  ////////////////////////////////
+  if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
+    // Handle a right input
+    data->state.btn_hover_idx++;
+    SFX_PlayCommon(2);  // Play move SFX
+  } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
+    // Handle a left input
+    data->state.btn_hover_idx--;
+    SFX_PlayCommon(2);  // Play move SFX
   }
 
-  u8 is_time_elapsed = UpdateTimer();
-
-  // Check if this step is player controlled or if we are waiting for the opponent
-  if (step->player_idx != data->match_state->local_player_idx) {
-    HandleOpponentStep();
-    return;
+  if (data->state.btn_hover_idx < 0) {
+    data->state.btn_hover_idx += data->button_count;
+  } else if (data->state.btn_hover_idx >= data->button_count) {
+    data->state.btn_hover_idx -= data->button_count;
   }
+}
 
-  // If this step is player controlled and time is elapsed, complete the step
-  if (is_time_elapsed) {
-    SFX_PlayCommon(1);
-    CompleteCurrentStep(0);
-    PrepareCurrentStep();
-    UpdateTimeline();
-    return;
-  }
-
-  // If char picker dialog is open, don't process inputs here
-  if (data->char_picker_dialog->state.is_open) {
-    return;
-  }
-
+void HandleStageInputs(GameSetup_Step *step) {
   u8 port = R13_U8(-0x5108);
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
   u64 downInputs = Pad_GetDown(port);
@@ -477,33 +476,11 @@ void InputsThink(GOBJ *gobj) {
       data->state.prev_selector_idx = data->state.selector_idx;
       data->state.selector_idx = -1;
 
-      // Display and prepare buttons
-      for (int i = 0; i < data->button_count; i++) {
-        Button_SetVisibility(data->buttons[i], true);
-      }
-
-      data->state.btn_hover_idx = 0;
-      Button_SetHover(data->buttons[0], true);
+      ResetButtonState(true);
     }
   } else {
-    ////////////////////////////////
-    // Adjust button hover
-    ////////////////////////////////
-    if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
-      // Handle a right input
-      data->state.btn_hover_idx++;
-      SFX_PlayCommon(2);  // Play move SFX
-    } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
-      // Handle a left input
-      data->state.btn_hover_idx--;
-      SFX_PlayCommon(2);  // Play move SFX
-    }
-
-    if (data->state.btn_hover_idx < 0) {
-      data->state.btn_hover_idx += data->button_count;
-    } else if (data->state.btn_hover_idx >= data->button_count) {
-      data->state.btn_hover_idx -= data->button_count;
-    }
+    // Takes scroll inputs and updates button selection state position
+    UpdateButtonHoverPos(scrollInputs);
 
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
@@ -519,7 +496,7 @@ void InputsThink(GOBJ *gobj) {
       }
 
       // Hide buttons
-      ResetButtonState();
+      ResetButtonState(false);
 
       SFX_PlayCommon(2);
     } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
@@ -540,6 +517,79 @@ void InputsThink(GOBJ *gobj) {
   for (int i = 0; i < data->button_count; i++) {
     // Set hover state. Won't do anything if already set to that state
     Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
+  }
+}
+
+void HandleCharacterInputs(GameSetup_Step *step) {
+  u8 port = R13_U8(-0x5108);
+  u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
+  u64 downInputs = Pad_GetDown(port);
+
+  // If char picker dialog is open, don't process inputs here. The callback function OnCharSelection
+  // will be used to return to the button state
+  if (!data->char_picker_dialog->state.is_open) {
+    // Takes scroll inputs and updates button selection state position
+    UpdateButtonHoverPos(scrollInputs);
+
+    // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
+    if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
+      u8 charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
+      u8 charColor = 0;
+      CharPickerDialog_OpenDialog(data->char_picker_dialog, charId, 0);
+
+      // Hide buttons
+      ResetButtonState(false);
+
+      SFX_PlayCommon(2);
+    } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
+      SFX_PlayCommon(1);
+      CompleteCurrentStep(0);
+      PrepareCurrentStep();
+      UpdateTimeline();
+    }
+  }
+
+  // Update button hover position
+  for (int i = 0; i < data->button_count; i++) {
+    // Set hover state. Won't do anything if already set to that state
+    Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
+  }
+}
+
+void InputsThink(GOBJ *gobj) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // If current step is completed (process finished, don't allow any inputs)
+  if (step->state == GameSetup_Step_State_COMPLETE) {
+    // TODO: Play an animation on selected stage and play a sound
+    return;
+  }
+
+  u8 is_time_elapsed = UpdateTimer();
+
+  // Check if this step is player controlled or if we are waiting for the opponent
+  if (step->player_idx != data->match_state->local_player_idx) {
+    HandleOpponentStep();
+    return;
+  }
+
+  // If this step is player controlled and time is elapsed, complete the step
+  if (is_time_elapsed) {
+    SFX_PlayCommon(1);
+    CompleteCurrentStep(0);
+    PrepareCurrentStep();
+    UpdateTimeline();
+    return;
+  }
+
+  switch (step->type) {
+    case GameSetup_Step_Type_CHOOSE_STAGE:
+    case GameSetup_Step_Type_REMOVE_STAGE:
+      HandleStageInputs(step);
+      break;
+    case GameSetup_Step_Type_CHOOSE_CHAR:
+      HandleCharacterInputs(step);
+      break;
   }
 }
 
@@ -738,26 +788,7 @@ void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id,
   ExiSlippi_Transfer(ssq, sizeof(ExiSlippi_SetSelections_Query), ExiSlippi_TransferMode_WRITE);
 }
 
-void PrepareCurrentStep() {
-  // Do nothing if step outside of bounds
-  if (data->state.step_idx >= data->step_count) {
-    return;
-  }
-
-  GameSetup_Step *step = &data->steps[data->state.step_idx];
-
-  // Initialize current timer to 0
-  data->timer_frames = 0;
-
-  // Change description
-  FlatTexture_SetTexture(data->description, step->desc_tex);
-
-  // Show current selectors
-  for (int i = 0; i < step->selector_count; i++) {
-    CSBoxSelector *bs = step->selectors[i];
-    CSBoxSelector_SetVisibility(bs, true);
-  }
-
+void PrepareStageStep(GameSetup_Step *step) {
   // Disable stages that cannot be selected and move selector index
   // Pokemon is the last stage, make array large enough to fit a bool for all of them
   u8 shouldDisableMat[CSIcon_LAST_STAGE_MAT_IDX + 1] = {false};
@@ -800,7 +831,50 @@ void PrepareCurrentStep() {
   }
 
   // Clear button state
-  ResetButtonState();
+  ResetButtonState(false);
+}
+
+void PrepareCharacterStep(GameSetup_Step *step) {
+  // We don't use the selector on char steps
+  data->state.selector_idx = -1;
+
+  // Buttons are visible if we are the player picking a character
+  u8 buttons_visible = step->player_idx == data->match_state->local_player_idx;
+  ResetButtonState(buttons_visible);
+
+  // Ensure dialog starts hidden
+  CharPickerDialog_CloseDialog(data->char_picker_dialog);
+}
+
+void PrepareCurrentStep() {
+  // Do nothing if step outside of bounds
+  if (data->state.step_idx >= data->step_count) {
+    return;
+  }
+
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Initialize current timer to 0
+  data->timer_frames = 0;
+
+  // Change description
+  FlatTexture_SetTexture(data->description, step->desc_tex);
+
+  // Show current selectors
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
+    CSBoxSelector_SetVisibility(bs, true);
+  }
+
+  switch (step->type) {
+    case GameSetup_Step_Type_CHOOSE_STAGE:
+    case GameSetup_Step_Type_REMOVE_STAGE:
+      PrepareStageStep(step);
+      break;
+    case GameSetup_Step_Type_CHOOSE_CHAR:
+      PrepareCharacterStep(step);
+      break;
+  }
 }
 
 void UpdateTimeline() {
@@ -926,5 +1000,16 @@ void ResetSelectorIndex() {
 }
 
 void OnCharSelection(CharPickerDialog *cpd) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Copy selections from dialog to selector
+  CSIcon_Material mat = CSIcon_ConvertCharToMat(cpd->state.char_selection_idx);
+  // TODO: Get and set color
+  CSIcon_SetMaterial(step->selectors[0]->icon, mat);
+
+  // Display buttons
+  ResetButtonState(true);
+
+  // Close dialog
   CharPickerDialog_CloseDialog(cpd);
 }
