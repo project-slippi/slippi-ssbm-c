@@ -22,10 +22,11 @@ typedef struct CharPickerDialog {
   CSIcon *char_icons[CKIND_GANONDORF + 1];
   CharPickerDialog_State state;
 
-  void (*on_select)();
+  void (*on_close)();
+  u8 (*get_next_color)();
 } CharPickerDialog;
 
-CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_select);
+CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color);
 void CharPickerDialog_Free(CharPickerDialog *cpd);
 
 void CharPickerDialog_SetPos(CharPickerDialog *cpd, Vec3 pos);

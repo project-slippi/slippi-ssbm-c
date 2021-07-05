@@ -28,8 +28,25 @@ static void _InputsThink(GOBJ *gobj) {
   u64 downInputs = Pad_GetDown(port);
 
   if (downInputs & HSD_BUTTON_A) {
-    cpd->on_select(cpd);
+    SFX_PlayCommon(1);  // Play "accept" sound
+    CharPickerDialog_CloseDialog(cpd);
+    cpd->on_close(cpd, true);
     return;
+  } else if (downInputs & HSD_BUTTON_B) {
+    SFX_PlayCommon(0);  // Play "back" sound
+    CharPickerDialog_CloseDialog(cpd);
+    cpd->on_close(cpd, false);
+    return;
+  }
+
+  if (downInputs & HSD_BUTTON_X) {
+    // Increment color
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, 1);
+    SFX_PlayCommon(2);  // Play "next" sound
+  } else if (downInputs % HSD_BUTTON_Y) {
+    // Decrement color
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, -1);
+    SFX_PlayCommon(2);  // Play "next" sound
   }
 
   if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
@@ -44,6 +61,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
+    SFX_PlayCommon(2);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
     if (cpd->state.char_selection_idx == CKIND_YOUNGLINK) {
@@ -56,6 +74,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
+    SFX_PlayCommon(2);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_SHEIK) {
@@ -68,6 +87,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
+    SFX_PlayCommon(2);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
     // Handle a up input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx <= CKIND_LINK) {
@@ -80,20 +100,25 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
+    SFX_PlayCommon(2);  // Play "next" sound
   }
 
   // Update which icon shows up selected
   for (int i = CKIND_FALCON; i <= CKIND_GANONDORF; i++) {
     CSIcon_Select_State state = CSIcon_Select_State_NotSelected;
+    u8 colorId = 0;
     if (i == cpd->state.char_selection_idx) {
       state = CSIcon_Select_State_Hover;
+      colorId = cpd->state.char_color_idx;
     }
 
+    CSIcon_SetStockIconVisibility(cpd->char_icons[i], i == cpd->state.char_selection_idx);
+    StockIcon_SetIcon(cpd->char_icons[i]->stock_icon, i, colorId);
     CSIcon_SetSelectState(cpd->char_icons[i], state);
   }
 }
 
-CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_select) {
+CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color) {
   CharPickerDialog *cpd = calloc(sizeof(CharPickerDialog));
 
   // Init char picker dialog jobj
@@ -102,7 +127,8 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_select) {
   cpd->root_jobj = cpd->gobj->hsd_object;
 
   // Store callback
-  cpd->on_select = on_select;
+  cpd->on_close = on_close;
+  cpd->get_next_color = get_next_color;
 
   // Connect CharStageIcons for each character to the dialog
   JOBJ *cur_joint = cpd->root_jobj->child->child->sibling->child;

@@ -57,12 +57,14 @@ typedef struct CSIcon_State {
   CSIcon_Material material;
   CSIcon_Select_State select_state;
   u8 is_visible;
+  u8 is_stock_icon_visible;
 } CSIcon_State;
 
 typedef struct CSIcon {
   GOBJ *gobj;
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
+  JOBJ *stock_bg_jobj;
   StockIcon *stock_icon;
   CSIcon_State state;
 } CSIcon;
@@ -79,5 +81,6 @@ int CSIcon_ConvertMatToStage(CSIcon_Material mat);
 void CSIcon_SetVisibility(CSIcon *icon, u8 is_visible);
 void CSIcon_SetPos(CSIcon *icon, Vec3 p);
 void CSIcon_SetSelectState(CSIcon *icon, CSIcon_Select_State state);
+void CSIcon_SetStockIconVisibility(CSIcon *icon, u8 is_visible);
 
 #endif

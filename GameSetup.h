@@ -115,7 +115,8 @@ void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id,
 void PrepareCurrentStep();
 void CompleteGamePrep();
 
-void OnCharSelection(CharPickerDialog *cpd);
+void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection);
+u8 GetNextColor(u8 charId, u8 colorId, int incr);
 
 void IncrementSelectorIndex();
 void DecrementSelectorIndex();

@@ -8,11 +8,14 @@
 
 typedef struct StockIcon_State {
   u8 is_visible;
+  u8 char_id;
+  u8 color_id;
 } StockIcon_State;
 
 typedef struct StockIcon {
   GOBJ *gobj;
   JOBJ *root_jobj;
+  JOBJSet *jobj_set;
   StockIcon_State state;
 } StockIcon;
 

@@ -117,12 +117,8 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   // Init steps
   InitSteps();
 
-  // Add test stock icon
-  StockIcon *si = StockIcon_Init(gui_assets);
-  StockIcon_SetIcon(si, 0, 0);
-
   // Initialize dialog last to make sure it's on top of everything
-  data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelection);
+  data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelectionComplete, GetNextColor);
   CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -8.5, 0});
 
   // Prepare the state and displays
@@ -304,7 +300,7 @@ void InitCounterpickingSteps() {
   data->steps[3].player_idx = !scene_data->prev_winner;
   data->steps[3].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[3].required_selection_count = 1;
-  data->steps[3].timer_seconds = 45;
+  data->steps[3].timer_seconds = 2000;
   data->steps[3].selectors = isWinner ? data->char_wait_selectors : data->char_selectors;
   data->steps[3].selector_count = 1;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
@@ -379,8 +375,11 @@ void InitAllSelectorJobjs() {
   InitSelectorJobjs(unknownCharMats, data->char_wait_selectors, 1);
 
   u8 charId = match_state->game_info_block[0x60 + match_state->local_player_idx * 0x24];
+  u8 colorId = match_state->game_info_block[0x63 + match_state->local_player_idx * 0x24];
   CSIcon_Material playerCharMats[] = {CSIcon_ConvertCharToMat(charId)};
   InitSelectorJobjs(playerCharMats, data->char_selectors, 1);
+  CSIcon_SetStockIconVisibility(data->char_selectors[0]->icon, true);
+  StockIcon_SetIcon(data->char_selectors[0]->icon->stock_icon, charId, colorId);
 }
 
 void ResetButtonState(u8 is_visible) {
@@ -530,8 +529,8 @@ void HandleCharacterInputs(GameSetup_Step *step) {
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
   u64 downInputs = Pad_GetDown(port);
 
-  // If char picker dialog is open, don't process inputs here. The callback function OnCharSelection
-  // will be used to return to the button state
+  // If char picker dialog is open, don't process inputs here. The callback function
+  // OnCharSelectionComplete will be used to return to the button state
   if (!data->char_picker_dialog->state.is_open) {
     // Takes scroll inputs and updates button selection state position
     UpdateButtonHoverPos(scrollInputs);
@@ -539,8 +538,8 @@ void HandleCharacterInputs(GameSetup_Step *step) {
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
       u8 charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
-      u8 charColor = 0;
-      CharPickerDialog_OpenDialog(data->char_picker_dialog, charId, 0);
+      u8 charColor = step->selectors[0]->icon->stock_icon->state.color_id;
+      CharPickerDialog_OpenDialog(data->char_picker_dialog, charId, charColor);
 
       // Hide buttons
       ResetButtonState(false);
@@ -674,9 +673,8 @@ void CompleteCurrentStep(int committed_count) {
     int charColorId = data->match_state->game_info_block[0x63 + 0x24 * playerIdx];
 
     if (step->selectors[0]->icon->state.material != CSIcon_Material_Question) {
-      // TODO: Grab color
       charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
-      charColorId = 0;
+      charColorId = step->selectors[0]->icon->stock_icon->state.color_id;
     }
 
     step->char_selection = charId;
@@ -920,11 +918,17 @@ void UpdateTimeline() {
     }
 
     for (int j = 0; j < step->required_selection_count; j++) {
+      CSIcon_SetStockIconVisibility(step->display_icons[j], false);
+
       // Show question if not complete, result if complete
       CSIcon_Material mat = CSIcon_Material_Question;
       if (step->state == GameSetup_Step_State_COMPLETE) {
         if (step->type == GameSetup_Step_Type_CHOOSE_CHAR) {
           mat = CSIcon_ConvertCharToMat(step->char_selection);
+
+          // Show stock icon with proper color
+          CSIcon_SetStockIconVisibility(step->display_icons[j], true);
+          StockIcon_SetIcon(step->display_icons[j]->stock_icon, step->char_selection, step->char_color_selection);
         } else {
           mat = CSIcon_ConvertStageToMat(step->stage_selections[j]);
         }
@@ -1004,17 +1008,30 @@ void ResetSelectorIndex() {
   ModifySelectorIndex(1);
 }
 
-void OnCharSelection(CharPickerDialog *cpd) {
+void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection) {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // Copy selections from dialog to selector
-  CSIcon_Material mat = CSIcon_ConvertCharToMat(cpd->state.char_selection_idx);
-  // TODO: Get and set color
-  CSIcon_SetMaterial(step->selectors[0]->icon, mat);
+  if (is_selection) {
+    CSIcon_Material mat = CSIcon_ConvertCharToMat(cpd->state.char_selection_idx);
+    CSIcon_SetMaterial(step->selectors[0]->icon, mat);
+    StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, cpd->state.char_selection_idx, cpd->state.char_color_idx);
+  }
 
   // Display buttons
   ResetButtonState(true);
+}
 
-  // Close dialog
-  CharPickerDialog_CloseDialog(cpd);
+u8 GetNextColor(u8 charId, u8 colorId, int incr) {
+  u8 newCol = colorId + incr;
+
+  u8 maxColor = CSS_GetCostumeNum(charId);
+  newCol = newCol % maxColor;
+  if (newCol < 0) {
+    newCol += maxColor;
+  }
+
+  // TODO: Do recursive call if this color is not allowed
+
+  return newCol;
 }

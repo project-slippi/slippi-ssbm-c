@@ -4,6 +4,7 @@
 #include "../m-ex/MexTK/mex.h"
 
 static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
+  OSReport("[%X]\n", icon->stock_icon);
   JOBJ_RemoveAnimAll(icon->root_jobj);
 
   // Set alpha for both mobjs
@@ -14,14 +15,17 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
 
   HSD_Material *bg_mat = icon->root_jobj->child->dobj->mobj->mat;
   HSD_Material *fg_mat = icon->root_jobj->child->dobj->next->mobj->mat;
+  HSD_Material *stock_border_mat = icon->stock_bg_jobj->dobj->next->mobj->mat;
 
   bg_mat->alpha = alpha;  // background
   fg_mat->alpha = alpha;  // foreground
 
   // Reset the colors of the background. Is there a way to reset to the file configuration?
   bg_mat->diffuse = (GXColor){128, 128, 128, 255};
+  stock_border_mat->diffuse = (GXColor){128, 128, 128, 255};
 
   if (state == CSIcon_Select_State_Blink) {
+    OSReport("[%X]\n", icon->stock_icon);
     JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 0);
     JOBJ_ReqAnimAll(icon->root_jobj, 0);
   } else if (state == CSIcon_Select_State_Hover) {
@@ -33,19 +37,31 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   icon->state.select_state = state;
 }
 
+static void _SetStockIconVisibility(CSIcon *icon, u8 is_visible) {
+  icon->state.is_stock_icon_visible = is_visible;
+
+  // Display or hide stock icon
+  if (is_visible && icon->state.is_visible) {
+    icon->stock_bg_jobj->flags &= ~JOBJ_HIDDEN;
+    icon->stock_icon->root_jobj->child->flags &= ~JOBJ_HIDDEN;
+  } else {
+    icon->stock_bg_jobj->flags |= JOBJ_HIDDEN;
+    icon->stock_icon->root_jobj->child->flags |= JOBJ_HIDDEN;
+  }
+}
+
 static void _SetVisibility(CSIcon *icon, u8 is_visible) {
   JOBJ *jobj = icon->root_jobj->child;
-  while (jobj) {
-    if (is_visible) {
-      jobj->flags &= ~JOBJ_HIDDEN;  // Show
-    } else {
-      jobj->flags |= JOBJ_HIDDEN;  // Hide
-    }
-
-    jobj = jobj->sibling;
-  }
 
   icon->state.is_visible = is_visible;
+
+  if (is_visible) {
+    jobj->flags &= ~JOBJ_HIDDEN;
+  } else {
+    jobj->flags |= JOBJ_HIDDEN;
+  }
+
+  _SetStockIconVisibility(icon, icon->state.is_stock_icon_visible);
 }
 
 CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
@@ -55,13 +71,14 @@ CSIcon *CSIcon_Init(GUI_GameSetup *gui) {
   icon->jobj_set = gui->jobjs[GUI_GameSetup_JOBJ_CSIcon];
   icon->gobj = JOBJ_LoadSet(0, icon->jobj_set, 0, 0, 3, 1, 0, GObj_Anim);
   icon->root_jobj = icon->gobj->hsd_object;
+  icon->stock_bg_jobj = icon->root_jobj->child->sibling->child;
 
   // Init stock icon
   icon->stock_icon = StockIcon_Init(gui);
-  JOBJ_AttachPosition(icon->stock_icon->root_jobj, icon->root_jobj->child->sibling);
-  StockIcon_SetIcon(icon->stock_icon, 0, 0);
+  JOBJ_AddChild(icon->root_jobj->child->sibling, icon->stock_icon->root_jobj);
 
   // Init state
+  icon->state.is_stock_icon_visible = false;
   _SetSelectState(icon, CSIcon_Select_State_NotSelected);
   _SetVisibility(icon, true);
 
@@ -259,4 +276,12 @@ void CSIcon_SetVisibility(CSIcon *icon, u8 is_visible) {
   }
 
   _SetVisibility(icon, is_visible);
+}
+
+void CSIcon_SetStockIconVisibility(CSIcon *icon, u8 is_visible) {
+  if (icon->state.is_stock_icon_visible == is_visible) {
+    return;
+  }
+
+  _SetStockIconVisibility(icon, is_visible);
 }
