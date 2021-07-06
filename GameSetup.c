@@ -1027,9 +1027,9 @@ void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection) {
 }
 
 u8 GetNextColor(u8 charId, u8 colorId, int incr) {
-  u8 newCol = colorId + incr;
+  int newCol = colorId + incr;
 
-  u8 maxColor = CSS_GetCostumeNum(charId);
+  int maxColor = CSS_GetCostumeNum(charId);
   newCol = newCol % maxColor;
   if (newCol < 0) {
     newCol += maxColor;

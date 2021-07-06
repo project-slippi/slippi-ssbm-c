@@ -4,7 +4,6 @@
 #include "../m-ex/MexTK/mex.h"
 
 static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
-  OSReport("[%X]\n", icon->stock_icon);
   JOBJ_RemoveAnimAll(icon->root_jobj);
 
   // Set alpha for both mobjs
@@ -25,7 +24,6 @@ static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   stock_border_mat->diffuse = (GXColor){128, 128, 128, 255};
 
   if (state == CSIcon_Select_State_Blink) {
-    OSReport("[%X]\n", icon->stock_icon);
     JOBJ_AddSetAnim(icon->root_jobj, icon->jobj_set, 0);
     JOBJ_ReqAnimAll(icon->root_jobj, 0);
   } else if (state == CSIcon_Select_State_Hover) {

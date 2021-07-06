@@ -4,7 +4,6 @@
 #include "../m-ex/MexTK/mex.h"
 
 static void _SetIcon(StockIcon *si, u8 charId, u8 charColor) {
-  OSReport("[%X] Setting icon: %d - %d\n", si, charId, charColor);
   si->state.char_id = charId;
   si->state.color_id = charColor;
 

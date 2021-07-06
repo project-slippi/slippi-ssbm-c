@@ -57,10 +57,6 @@ void Button_Free(Button *btn) {
 }
 
 void Button_SetMaterial(Button *btn, Button_Material matIdx) {
-  // char prnt[50];
-  // sprintf(prnt, "Mat: %f\n", JOBJ_GetCurrentMatAnimFrame(btn->root_jobj->child));
-  // OSReport(prnt);
-
   // Add set anim id 1 which allows us to change texture and animate
   JOBJ_AddSetAnim(btn->root_jobj, btn->jobj_set, 1);
   JOBJ_ReqAnimAll(btn->root_jobj->child, matIdx);
