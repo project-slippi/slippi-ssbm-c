@@ -88,38 +88,39 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   // Prepare text
   data->text = Text_CreateText(0, 0);
   data->text->kerning = 1;
-  data->text->align = 0;  // align left
+  data->text->align = 1;  // align center
+  data->text->use_aspect = 1;
   data->text->scale = (Vec2){0.01, 0.01};
 
-  data->timer_subtext_id = Text_AddSubtext(data->text, -2300, -1300, "0:30");
-  Text_SetScale(data->text, data->timer_subtext_id, 5, 5);
+  data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
+  Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
 
   // Load confirm/change buttons
   data->buttons[0] = Button_Init(gui_assets);
   data->buttons[1] = Button_Init(gui_assets);
-  Button_SetPos(data->buttons[0], (Vec3){-4.8, -2.5, 0});
-  Button_SetPos(data->buttons[1], (Vec3){4.8, -2.5, 0});
+  Button_SetPos(data->buttons[0], (Vec3){-4.8, -3, 0});
+  Button_SetPos(data->buttons[1], (Vec3){4.8, -3, 0});
   Button_SetMaterial(data->buttons[0], Button_Material_Ok);
   Button_SetMaterial(data->buttons[1], Button_Material_Redo);
   data->button_count = 2;
 
   // Initialize description message
-  float desc_width = 36;
-  float desc_height_half = 0.9;
+  float desc_width_half = 45 / 2;
+  float desc_height_half = 1.8 / 2;
   data->description = FlatTexture_Init(gui_assets);
-  Vec3 tl = {0, desc_height_half, 0};
-  Vec3 tr = {desc_width, desc_height_half, 0};
-  Vec3 bl = {0, -desc_height_half, 0};
-  Vec3 br = {desc_width, -desc_height_half, 0};
+  Vec3 tl = {-desc_width_half, desc_height_half, 0};
+  Vec3 tr = {desc_width_half, desc_height_half, 0};
+  Vec3 bl = {-desc_width_half, -desc_height_half, 0};
+  Vec3 br = {desc_width_half, -desc_height_half, 0};
   FlatTexture_SetPosCorners(data->description, tl, tr, bl, br);
-  FlatTexture_SetPos(data->description, (Vec3){-18, 12.2, 0});
+  FlatTexture_SetPos(data->description, (Vec3){0, -3, 0});
 
   // Init steps
   InitSteps();
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelectionComplete, GetNextColor);
-  CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -8.5, 0});
+  CharPickerDialog_SetPos(data->char_picker_dialog, (Vec3){0, -9, 0});
 
   // Prepare the state and displays
   InitState();
@@ -322,7 +323,7 @@ void InitSteps() {
 
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {
   float gap = 8;
-  float yPos = 5.5;
+  float yPos = 5;
   float xPos = 0;
 
   // If odd number of items, the middle point should be in between two items
@@ -394,6 +395,9 @@ void ResetButtonState(u8 is_visible) {
   if (is_visible) {
     Button_SetHover(data->buttons[0], true);
   }
+
+  // Description text visibility should be opposite of button visibility
+  FlatTexture_SetVisibility(data->description, !is_visible);
 }
 
 void CObjThink(GOBJ *gobj) {
