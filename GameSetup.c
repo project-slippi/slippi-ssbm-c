@@ -556,8 +556,9 @@ void InputsThink(GOBJ *gobj) {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // If current step is completed (process finished, don't allow any inputs)
-  if (step->state == GameSetup_Step_State_COMPLETE) {
+  if (data->state.is_complete) {
     // TODO: Play an animation on selected stage and play a sound
+    data->state.should_terminate = true;
     return;
   }
 
@@ -773,7 +774,6 @@ void CompleteGamePrep() {
 
   // is complete and should terminate could be used to show some kind of final animation
   data->state.is_complete = true;
-  data->state.should_terminate = true;
 }
 
 void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option) {
@@ -823,7 +823,10 @@ void PrepareStageStep(GameSetup_Step *step) {
     CSBoxSelector_SetSelectState(csbs, newSelectState);
   }
 
-  if (step->player_idx == data->match_state->local_player_idx) {
+  // Checking for active state ensures not re-enabling selector hover state on last stage strike
+  u8 isController = step->player_idx == data->match_state->local_player_idx;
+  u8 isActive = step->state == GameSetup_Step_State_ACTIVE;
+  if (isController && isActive) {
     // Reset selector index to choose first non-disabled icon
     data->state.selected_values_count = 0;
     ResetSelectorIndex();
@@ -859,7 +862,8 @@ void PrepareCurrentStep() {
   data->timer_frames = 0;
 
   // Change description
-  FlatTexture_SetTexture(data->description, step->desc_tex);
+  FlatTexture_Texture desc = data->state.is_complete ? FlatTexture_Texture_GET_READY_DESC : step->desc_tex;
+  FlatTexture_SetTexture(data->description, desc);
 
   // Show current selectors
   for (int i = 0; i < step->selector_count; i++) {
