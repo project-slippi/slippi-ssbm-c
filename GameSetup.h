@@ -123,4 +123,5 @@ void DecrementSelectorIndex();
 void ResetSelectorIndex();
 
 u8 UpdateTimer();  // Returns bool indicating if time is elapsed
+void UpdateHoverDisplays();
 void UpdateTimeline();

@@ -515,17 +515,8 @@ void HandleStageInputs(GameSetup_Step *step) {
     }
   }
 
-  // Update selector position
-  for (int i = 0; i < step->selector_count; i++) {
-    // Set hover state. Won't do anything if already set to that state
-    CSBoxSelector_SetHover(step->selectors[i], data->state.selector_idx == i);
-  }
-
-  // Update button hover position
-  for (int i = 0; i < data->button_count; i++) {
-    // Set hover state. Won't do anything if already set to that state
-    Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
-  }
+  // Update hover for buttons and selectors
+  UpdateHoverDisplays();
 }
 
 void HandleCharacterInputs(GameSetup_Step *step) {
@@ -557,11 +548,8 @@ void HandleCharacterInputs(GameSetup_Step *step) {
     }
   }
 
-  // Update button hover position
-  for (int i = 0; i < data->button_count; i++) {
-    // Set hover state. Won't do anything if already set to that state
-    Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
-  }
+  // Update button hover
+  UpdateHoverDisplays();
 }
 
 void InputsThink(GOBJ *gobj) {
@@ -695,11 +683,17 @@ void CompleteCurrentStep(int committed_count) {
     ExiSlippi_Transfer(data->complete_query, sizeof(ExiSlippi_CompleteStep_Query), ExiSlippi_TransferMode_WRITE);
   }
 
+  // Mark no selection, selection index will be initialized by prepare
+  data->state.selector_idx = -1;
+
   // Hide current selectors, the correct selectors will be made visible in Prepare function
   for (int i = 0; i < step->selector_count; i++) {
     CSBoxSelector *bs = step->selectors[i];
     CSBoxSelector_SetVisibility(bs, false);
   }
+
+  // Update selector state to make sure hover states don't linger (such as on timeout)
+  UpdateHoverDisplays();
 
   // Increment step idx
   data->state.step_idx++;
@@ -956,6 +950,22 @@ void UpdateTimeline() {
     }
 
     xPos += gap + double_ofst;
+  }
+}
+
+void UpdateHoverDisplays() {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Update selector position
+  for (int i = 0; i < step->selector_count; i++) {
+    // Set hover state. Won't do anything if already set to that state
+    CSBoxSelector_SetHover(step->selectors[i], data->state.selector_idx == i);
+  }
+
+  // Update button hover position
+  for (int i = 0; i < data->button_count; i++) {
+    // Set hover state. Won't do anything if already set to that state
+    Button_SetHover(data->buttons[i], data->state.btn_hover_idx == i);
   }
 }
 
