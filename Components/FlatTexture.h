@@ -7,6 +7,7 @@
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
 typedef enum FlatTexture_Texture {
+  FlatTexture_Texture_EMPTY,
   FlatTexture_Texture_YOUR_CHAR_LABEL,
   FlatTexture_Texture_OPP_CHAR_LABEL,
   FlatTexture_Texture_STRIKE1_LABEL,

@@ -258,7 +258,7 @@ void InitCounterpickingSteps() {
 
   FlatTexture_Texture labelYourChar = FlatTexture_Texture_YOUR_CHAR_LABEL;
   FlatTexture_Texture labelOppChar = FlatTexture_Texture_OPP_CHAR_LABEL;
-  FlatTexture_Texture descSelectChar = FlatTexture_Texture_SELECT_CHAR_DESC;
+  FlatTexture_Texture descSelectChar = FlatTexture_Texture_EMPTY;
   FlatTexture_Texture descWaitChar = FlatTexture_Texture_WAIT_CHAR_DESC;
   FlatTexture_Texture descSelectBan = FlatTexture_Texture_SELECT_BAN_DESC;
   FlatTexture_Texture descWaitBan = FlatTexture_Texture_WAIT_BAN_DESC;
