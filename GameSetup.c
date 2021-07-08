@@ -363,8 +363,6 @@ void InitHeader(GameSetup_SceneData *minor_data) {
   // positioning for even number
   xPos -= gap * (int)(minor_data->max_games / 2);
 
-  OSReport("Cur Game: %d\n", minor_data->cur_game);
-
   // Initialize the box selectors
   for (int i = 0; i < minor_data->max_games; i++) {
     GameResult *gr = GameResult_Init(gui_assets);
@@ -373,7 +371,6 @@ void InitHeader(GameSetup_SceneData *minor_data) {
     // Check if player won this game if the game is complete
     if (i < minor_data->cur_game - 1) {
       u8 is_winner = minor_data->game_results[i] == data->match_state->local_player_idx;
-      OSReport("Setting result of %d to: %d\n", i, is_winner);
       GameResult_SetResult(gr, is_winner ? GameResult_Result_WIN : GameResult_Result_LOSS);
     }
 
@@ -884,10 +881,9 @@ void PrepareStageStep(GameSetup_Step *step) {
     CSBoxSelector_SetSelectState(csbs, newSelectState);
   }
 
-  // Checking for active state ensures not re-enabling selector hover state on last stage strike
+  // Checking for complete state ensures not re-enabling selector hover state on last stage strike
   u8 isController = step->player_idx == data->match_state->local_player_idx;
-  u8 isActive = step->state == GameSetup_Step_State_ACTIVE;
-  if (isController && isActive) {
+  if (isController && !data->state.is_complete) {
     // Reset selector index to choose first non-disabled icon
     data->state.selected_values_count = 0;
     ResetSelectorIndex();
