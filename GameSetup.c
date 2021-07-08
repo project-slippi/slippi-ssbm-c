@@ -928,6 +928,17 @@ void PrepareCurrentStep() {
     CSBoxSelector_SetVisibility(bs, true);
   }
 
+  // Animate the correct turn indicator
+  if (!data->state.is_complete) {
+    u8 is_control = step->player_idx == data->match_state->local_player_idx;
+    TurnIndicator_DisplayState active_ds = is_control ? TurnIndicator_DisplayState_ANIM_YEL : TurnIndicator_DisplayState_ANIM_GRAY;
+    TurnIndicator_SetDisplayState(data->turn_indicators[step->player_idx], active_ds);
+    TurnIndicator_SetDisplayState(data->turn_indicators[!step->player_idx], TurnIndicator_DisplayState_STATIC);
+  } else {
+    TurnIndicator_SetDisplayState(data->turn_indicators[0], TurnIndicator_DisplayState_STATIC);
+    TurnIndicator_SetDisplayState(data->turn_indicators[1], TurnIndicator_DisplayState_STATIC);
+  }
+
   switch (step->type) {
     case GameSetup_Step_Type_CHOOSE_STAGE:
     case GameSetup_Step_Type_REMOVE_STAGE:

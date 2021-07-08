@@ -18,7 +18,7 @@ static void _SetDisplayState(TurnIndicator *ti, TurnIndicator_DisplayState ds) {
     small_arrow_mat->diffuse = (GXColor){254, 202, 52, 255};
     JOBJ_AddSetAnim(ti->root_jobj, ti->jobj_set, 0);
     JOBJ_ReqAnimAll(ti->root_jobj, 0);
-  } else if (ds == TurnIndicator_DisplayState_ANIM_GREY) {
+  } else if (ds == TurnIndicator_DisplayState_ANIM_GRAY) {
     JOBJ_AddSetAnim(ti->root_jobj, ti->jobj_set, 0);
     JOBJ_ReqAnimAll(ti->root_jobj, 0);
   } else {

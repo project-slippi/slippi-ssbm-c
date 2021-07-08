@@ -13,7 +13,7 @@ typedef enum TurnIndicator_Direction {
 
 typedef enum TurnIndicator_DisplayState {
   TurnIndicator_DisplayState_STATIC,
-  TurnIndicator_DisplayState_ANIM_GREY,
+  TurnIndicator_DisplayState_ANIM_GRAY,
   TurnIndicator_DisplayState_ANIM_YEL,
 } TurnIndicator_DisplayState;
 
