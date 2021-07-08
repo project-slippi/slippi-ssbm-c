@@ -5,6 +5,7 @@
 #include "Components/FlatTexture.h"
 #include "Components/GameResult.h"
 #include "Components/RightArrow.h"
+#include "Components/TurnIndicator.h"
 #include "ExiSlippi.h"
 
 // How to auto-format code: https://stackoverflow.com/a/50489812/1249024
@@ -80,8 +81,11 @@ typedef struct GameSetup_Data {
   GameSetup_Step *steps;
   int step_count;
   Button *buttons[2];
-  FlatTexture *description;
   int button_count;
+  FlatTexture *description;
+  TurnIndicator *turn_indicators[2];
+  GameResult **game_results;
+  int game_result_count;
   Text *text;
   int timer_subtext_id;
   int timer_frames;

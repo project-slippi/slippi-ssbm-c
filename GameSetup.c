@@ -345,21 +345,12 @@ void InitHeader() {
   InitPlayerInfo(2, 2800, data->match_state->p2_name, data->match_state->p2_connect_code);
 
   // Init arrows
-  // TODO: Move to component class
-  JOBJSet *sa_jobj_set = gui_assets->jobjs[GUI_GameSetup_JOBJ_SideArrow];
-  GOBJ *sa_gobj = JOBJ_LoadSet(0, sa_jobj_set, 0, 0, 3, 1, 1, GObj_Anim);
-  JOBJ *sa_jobj = sa_gobj->hsd_object;
-  sa_jobj->trans = (Vec3){6, 17.9, 0};
-  // sa_jobj->child->dobj->mobj->mat->diffuse = (GXColor){249, 230, 52, 255};
-  // sa_jobj->child->sibling->dobj->mobj->mat->diffuse = (GXColor){249, 230, 52, 255};
-  sa_jobj->child->dobj->mobj->mat->diffuse = (GXColor){254, 202, 52, 255};
-  sa_jobj->child->sibling->dobj->mobj->mat->diffuse = (GXColor){254, 202, 52, 255};
+  data->turn_indicators[0] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_LEFT);
+  TurnIndicator_SetPos(data->turn_indicators[0], (Vec3){-6, 17.9, 0});
+  TurnIndicator_SetDisplayState(data->turn_indicators[0], TurnIndicator_DisplayState_ANIM_YEL);
 
-  JOBJSet *sa2_jobj_set = gui_assets->jobjs[GUI_GameSetup_JOBJ_SideArrow];
-  GOBJ *sa2_gobj = JOBJ_LoadSet(0, sa2_jobj_set, 0, 0, 3, 1, 0, 0);
-  JOBJ *sa2_jobj = sa2_gobj->hsd_object;
-  sa2_jobj->trans = (Vec3){-6, 17.9, 0};
-  sa2_jobj->rot.Z = M_PI;
+  data->turn_indicators[1] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_RIGHT);
+  TurnIndicator_SetPos(data->turn_indicators[1], (Vec3){6, 17.9, 0});
 
   // Init game score
   GameResult *gr = GameResult_Init(gui_assets);

@@ -25,7 +25,6 @@ typedef struct GameResult {
 GameResult *GameResult_Init(GUI_GameSetup *gui);
 void GameResult_Free(GameResult *gr);
 
-void GameResult_SetVisibility(GameResult *gr, u8 is_visible);
 void GameResult_SetResult(GameResult *gr, GameResult_Result res);
 void GameResult_SetPos(GameResult *gr, Vec3 p);
 
