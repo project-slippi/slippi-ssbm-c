@@ -761,10 +761,6 @@ void CompleteCurrentStep(int committed_count) {
     CompleteGamePrep();
     data->state.step_idx = data->step_count - 1;
     return;
-  } else {
-    // Activate next step
-    step = &data->steps[data->state.step_idx];
-    step->state = GameSetup_Step_State_ACTIVE;
   }
 }
 
@@ -914,6 +910,11 @@ void PrepareCurrentStep() {
   }
 
   GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Activate step if it hasn't been (should only be on last step if already completed)
+  if (step->state == GameSetup_Step_State_PENDING) {
+    step->state = GameSetup_Step_State_ACTIVE;
+  }
 
   // Initialize current timer to 0
   data->timer_frames = 0;
