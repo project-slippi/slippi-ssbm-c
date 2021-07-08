@@ -360,6 +360,10 @@ void InitHeader() {
   JOBJ *sa2_jobj = sa2_gobj->hsd_object;
   sa2_jobj->trans = (Vec3){-6, 17.9, 0};
   sa2_jobj->rot.Z = M_PI;
+
+  // Init game score
+  GameResult *gr = GameResult_Init(gui_assets);
+  GameResult_SetPos(gr, (Vec3){0, 21.45, 0});
 }
 
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {

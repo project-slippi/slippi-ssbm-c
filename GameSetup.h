@@ -3,6 +3,7 @@
 #include "Components/CharPickerDialog.h"
 #include "Components/CharStageBoxSelector.h"
 #include "Components/FlatTexture.h"
+#include "Components/GameResult.h"
 #include "Components/RightArrow.h"
 #include "ExiSlippi.h"
 
