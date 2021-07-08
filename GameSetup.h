@@ -109,6 +109,7 @@ void InitState();
 void InitStrikingSteps();
 void InitCounterpickingSteps();
 void InitSteps();
+void InitHeader();
 void ResetButtonState(u8 is_visible);
 void CompleteCurrentStep(int committed_count);
 void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option);

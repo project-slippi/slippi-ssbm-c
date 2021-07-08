@@ -24,6 +24,7 @@ typedef enum GUI_GameSetup_JOBJ {
   GUI_GameSetup_JOBJ_Check,
   GUI_GameSetup_JOBJ_CharDialog,
   GUI_GameSetup_JOBJ_StockIcon,
+  GUI_GameSetup_JOBJ_SideArrow,
 } GUI_GameSetup_JOBJ;
 
 #endif

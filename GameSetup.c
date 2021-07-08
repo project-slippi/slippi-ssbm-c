@@ -92,9 +92,6 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   data->text->use_aspect = 1;
   data->text->scale = (Vec2){0.01, 0.01};
 
-  data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
-  Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
-
   // Load confirm/change buttons
   data->buttons[0] = Button_Init(gui_assets);
   data->buttons[1] = Button_Init(gui_assets);
@@ -117,6 +114,9 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
 
   // Init steps
   InitSteps();
+
+  // Init header
+  InitHeader();
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelectionComplete, GetNextColor);
@@ -319,6 +319,47 @@ void InitSteps() {
       InitCounterpickingSteps();
       break;
   }
+}
+
+void InitPlayerInfo(u8 align, float xPos, char *name, char *code) {
+  Text *text = Text_CreateText(0, 0);
+  text->kerning = 1;
+  text->align = align;
+  text->use_aspect = 1;
+  text->scale = (Vec2){0.01, 0.01};
+  int nameSubtextId = Text_AddSubtext(text, xPos, -1940, name);
+  Text_SetScale(text, nameSubtextId, 5, 5);
+  int codeSubtextId = Text_AddSubtext(text, xPos, -1740, code);
+  Text_SetScale(text, codeSubtextId, 3, 3);
+  GXColor col = (GXColor){128, 128, 128, 255};
+  Text_SetColor(text, codeSubtextId, &col);
+}
+
+void InitHeader() {
+  // Init timer subtext
+  data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
+  Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
+
+  // Init character name subtexts
+  InitPlayerInfo(0, -2800, data->match_state->p1_name, data->match_state->p1_connect_code);
+  InitPlayerInfo(2, 2800, data->match_state->p2_name, data->match_state->p2_connect_code);
+
+  // Init arrows
+  // TODO: Move to component class
+  JOBJSet *sa_jobj_set = gui_assets->jobjs[GUI_GameSetup_JOBJ_SideArrow];
+  GOBJ *sa_gobj = JOBJ_LoadSet(0, sa_jobj_set, 0, 0, 3, 1, 1, GObj_Anim);
+  JOBJ *sa_jobj = sa_gobj->hsd_object;
+  sa_jobj->trans = (Vec3){6, 17.9, 0};
+  // sa_jobj->child->dobj->mobj->mat->diffuse = (GXColor){249, 230, 52, 255};
+  // sa_jobj->child->sibling->dobj->mobj->mat->diffuse = (GXColor){249, 230, 52, 255};
+  sa_jobj->child->dobj->mobj->mat->diffuse = (GXColor){254, 202, 52, 255};
+  sa_jobj->child->sibling->dobj->mobj->mat->diffuse = (GXColor){254, 202, 52, 255};
+
+  JOBJSet *sa2_jobj_set = gui_assets->jobjs[GUI_GameSetup_JOBJ_SideArrow];
+  GOBJ *sa2_gobj = JOBJ_LoadSet(0, sa2_jobj_set, 0, 0, 3, 1, 0, 0);
+  JOBJ *sa2_jobj = sa2_gobj->hsd_object;
+  sa2_jobj->trans = (Vec3){-6, 17.9, 0};
+  sa2_jobj->rot.Z = M_PI;
 }
 
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {
