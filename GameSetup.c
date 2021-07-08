@@ -116,7 +116,7 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   InitSteps();
 
   // Init header
-  InitHeader();
+  InitHeader(minor_data);
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelectionComplete, GetNextColor);
@@ -335,7 +335,7 @@ void InitPlayerInfo(u8 align, float xPos, char *name, char *code) {
   Text_SetColor(text, codeSubtextId, &col);
 }
 
-void InitHeader() {
+void InitHeader(GameSetup_SceneData *minor_data) {
   // Init timer subtext
   data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
   Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
@@ -352,9 +352,34 @@ void InitHeader() {
   data->turn_indicators[1] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_RIGHT);
   TurnIndicator_SetPos(data->turn_indicators[1], (Vec3){6, 17.9, 0});
 
-  // Init game score
-  GameResult *gr = GameResult_Init(gui_assets);
-  GameResult_SetPos(gr, (Vec3){0, 21.45, 0});
+  // Allocate memory for storing game result components
+  data->game_results = calloc(minor_data->max_games * sizeof(u32));
+
+  // Init game score. Need to make the correct number of elements
+  float gap = 2.2;
+  float xPos = 0;
+
+  // Move to x pos for first item. Should always be odd number of items so we don't need to handle
+  // positioning for even number
+  xPos -= gap * (int)(minor_data->max_games / 2);
+
+  OSReport("Cur Game: %d\n", minor_data->cur_game);
+
+  // Initialize the box selectors
+  for (int i = 0; i < minor_data->max_games; i++) {
+    GameResult *gr = GameResult_Init(gui_assets);
+    GameResult_SetPos(gr, (Vec3){xPos, 21.45, 0});
+
+    // Check if player won this game if the game is complete
+    if (i < minor_data->cur_game - 1) {
+      u8 is_winner = minor_data->game_results[i] == data->match_state->local_player_idx;
+      OSReport("Setting result of %d to: %d\n", i, is_winner);
+      GameResult_SetResult(gr, is_winner ? GameResult_Result_WIN : GameResult_Result_LOSS);
+    }
+
+    data->game_results[i] = gr;
+    xPos += gap;
+  }
 }
 
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {

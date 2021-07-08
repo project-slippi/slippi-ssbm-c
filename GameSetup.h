@@ -23,6 +23,7 @@ typedef struct GameSetup_SceneData {
   u8 p2_score;
   u8 prev_winner;
   u8 is_tiebreak;
+  u8 game_results[9];
 } GameSetup_SceneData;
 
 typedef enum GameSetup_Process_Type {
@@ -114,7 +115,7 @@ void InitState();
 void InitStrikingSteps();
 void InitCounterpickingSteps();
 void InitSteps();
-void InitHeader();
+void InitHeader(GameSetup_SceneData *minor_data);
 void ResetButtonState(u8 is_visible);
 void CompleteCurrentStep(int committed_count);
 void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option);
