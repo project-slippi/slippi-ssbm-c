@@ -672,9 +672,25 @@ void HandleOpponentStep() {
   step->char_color_selection = data->fetch_resp->char_color_selection;
   memcpy(step->stage_selections, data->fetch_resp->stage_selections, 2);
 
+  int selection_count = data->fetch_resp->is_skip ? 0 : step->required_selection_count;
+
+  // Check to make sure opponent didn't select a stage that is disabled
+  if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
+    for (int i = 0; i < step->selector_count; i++) {
+      CSBoxSelector *bs = step->selectors[i];
+      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
+
+      // If the stage selected is disabled, act as if stage was not selected, will end up
+      // causing a desync (on purpose)
+      if (bs->state.is_disabled && stageId == step->stage_selections[0]) {
+        selection_count = 0;
+      }
+    }
+  }
+
   // Complete the step. Indicate that all selections are already made
   SFX_PlayCommon(1);
-  CompleteCurrentStep(data->fetch_resp->is_skip ? 0 : step->required_selection_count);
+  CompleteCurrentStep(selection_count);
   PrepareCurrentStep();
   UpdateTimeline();
 }
