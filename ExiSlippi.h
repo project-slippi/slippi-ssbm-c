@@ -97,7 +97,7 @@ typedef struct ExiSlippi_MatchState_Response {
 } ExiSlippi_MatchState_Response;
 
 // Not sure if resetting is strictly needed, might be contained to the file
-#pragma pack(reset)
+#pragma pack()
 
 void ExiSlippi_Transfer(void *msg, u32 length, u8 mode);
 ExiSlippi_MatchState_Response *ExiSlippi_LoadMatchState(ExiSlippi_MatchState_Response *msrb);

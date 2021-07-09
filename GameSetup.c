@@ -865,6 +865,14 @@ void PrepareStageStep(GameSetup_Step *step) {
     }
   }
 
+  // Handle Dave's stupid rule. Check if the score of the person picking a stage (the player that
+  // lost the last game) is greater than 0 (they have won a game)
+  if (data->scene_data->score_by_player[!data->scene_data->prev_winner] > 0) {
+    u16 dsrStageId = data->scene_data->last_stage_win_by_player[!data->scene_data->prev_winner];
+    u8 matIdx = CSIcon_ConvertStageToMat(dsrStageId);
+    shouldDisableMat[matIdx] = true;
+  }
+
   // Go through selectors and mark the proper state
   for (int i = 0; i < step->selector_count; i++) {
     CSBoxSelector *csbs = step->selectors[i];

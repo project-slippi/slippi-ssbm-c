@@ -16,15 +16,18 @@
 #define GRACE_SECONDS 3
 #define WAIT_TIMEOUT_SECONDS 15
 
+// This struct is defined in asm via directives and has no padding, so we need to use pack(1)
+#pragma pack(1)
 typedef struct GameSetup_SceneData {
   u8 max_games;
   u8 cur_game;
-  u8 p1_score;
-  u8 p2_score;
+  u8 score_by_player[2];
   u8 prev_winner;
   u8 is_tiebreak;
   u8 game_results[9];
+  u16 last_stage_win_by_player[2];
 } GameSetup_SceneData;
+#pragma pack()
 
 typedef enum GameSetup_Process_Type {
   GameSetup_Process_Type_SKIP = 0,
