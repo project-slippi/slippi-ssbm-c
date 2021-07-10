@@ -920,7 +920,7 @@ void PrepareCharacterStep(GameSetup_Step *step) {
   data->state.selector_idx = -1;
 
   // Buttons are visible if we are the player picking a character
-  u8 buttons_visible = step->player_idx == data->match_state->local_player_idx;
+  u8 buttons_visible = !data->state.is_complete && step->player_idx == data->match_state->local_player_idx;
   ResetButtonState(buttons_visible);
 
   // Ensure dialog starts hidden
