@@ -116,7 +116,7 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   InitSteps();
 
   // Init header
-  InitHeader(minor_data);
+  InitHeader();
 
   // Initialize dialog last to make sure it's on top of everything
   data->char_picker_dialog = CharPickerDialog_Init(gui_assets, OnCharSelectionComplete, GetNextColor);
@@ -327,6 +327,7 @@ void InitPlayerInfo(u8 align, float xPos, char *name, char *code) {
   text->align = align;
   text->use_aspect = 1;
   text->scale = (Vec2){0.01, 0.01};
+  text->aspect.X *= 2.5;
   int nameSubtextId = Text_AddSubtext(text, xPos, -1940, name);
   Text_SetScale(text, nameSubtextId, 5, 5);
   int codeSubtextId = Text_AddSubtext(text, xPos, -1740, code);
@@ -335,7 +336,9 @@ void InitPlayerInfo(u8 align, float xPos, char *name, char *code) {
   Text_SetColor(text, codeSubtextId, &col);
 }
 
-void InitHeader(GameSetup_SceneData *minor_data) {
+void InitHeader() {
+  GameSetup_SceneData *minor_data = data->scene_data;
+
   // Init timer subtext
   data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
   Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
