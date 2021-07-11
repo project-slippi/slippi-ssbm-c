@@ -1,6 +1,7 @@
 #include "CharPickerDialog.h"
 
 #include "../Files.h"
+#include "../Game/Sounds.h"
 #include "../m-ex/MexTK/mex.h"
 #include "CharStageIcon.h"
 
@@ -28,12 +29,12 @@ static void _InputsThink(GOBJ *gobj) {
   u64 downInputs = Pad_GetDown(port);
 
   if (downInputs & HSD_BUTTON_A) {
-    SFX_PlayCommon(1);  // Play "accept" sound
+    SFX_PlayCommon(CommonSound_ACCEPT);  // Play "accept" sound
     CharPickerDialog_CloseDialog(cpd);
     cpd->on_close(cpd, true);
     return;
   } else if (downInputs & HSD_BUTTON_B) {
-    SFX_PlayCommon(0);  // Play "back" sound
+    SFX_PlayCommon(CommonSound_BACK);  // Play "back" sound
     CharPickerDialog_CloseDialog(cpd);
     cpd->on_close(cpd, false);
     return;
@@ -42,11 +43,11 @@ static void _InputsThink(GOBJ *gobj) {
   if (downInputs & HSD_BUTTON_X) {
     // Increment color
     cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, 1);
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (downInputs % HSD_BUTTON_Y) {
     // Decrement color
     cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, -1);
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   }
 
   if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
@@ -61,7 +62,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
     if (cpd->state.char_selection_idx == CKIND_YOUNGLINK) {
@@ -74,7 +75,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_SHEIK) {
@@ -87,7 +88,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
     // Handle a up input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx <= CKIND_LINK) {
@@ -100,7 +101,7 @@ static void _InputsThink(GOBJ *gobj) {
 
     // Reset color
     cpd->state.char_color_idx = 0;
-    SFX_PlayCommon(2);  // Play "next" sound
+    SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   }
 
   // Update which icon shows up selected

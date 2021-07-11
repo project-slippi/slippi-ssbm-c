@@ -14,6 +14,8 @@
 #define CP_STAGE_SELECTOR_COUNT 6
 
 #define GRACE_SECONDS 3
+#define WARN_SECONDS 10
+#define PANIC_SECONDS 3
 #define WAIT_TIMEOUT_SECONDS 15
 
 // This struct is defined in asm via directives and has no padding, so we need to use pack(1)

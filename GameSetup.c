@@ -4,6 +4,7 @@
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
 #include "./Components/StockIcon.h"
+#include "./Game/Sounds.h"
 #include "./m-ex/MexTK/mex.h"
 #include "Files.h"
 
@@ -482,11 +483,11 @@ void UpdateButtonHoverPos(u64 scrollInputs) {
   if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
     // Handle a right input
     data->state.btn_hover_idx++;
-    SFX_PlayCommon(2);  // Play move SFX
+    SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
     data->state.btn_hover_idx--;
-    SFX_PlayCommon(2);  // Play move SFX
+    SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
   }
 
   if (data->state.btn_hover_idx < 0) {
@@ -508,11 +509,11 @@ void HandleStageInputs(GameSetup_Step *step) {
     if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
       // Handle a right input
       IncrementSelectorIndex();
-      SFX_PlayCommon(2);  // Play move SFX
+      SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
     } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
       // Handle a left input
       DecrementSelectorIndex();
-      SFX_PlayCommon(2);  // Play move SFX
+      SFX_PlayCommon(CommonSound_NEXT);  // Play move SFX
     }
 
     ////////////////////////////////
@@ -536,7 +537,7 @@ void HandleStageInputs(GameSetup_Step *step) {
       }
 
       // TODO: Pick better sound?
-      SFX_PlayCommon(2);
+      SFX_PlayCommon(CommonSound_NEXT);
     }
 
     // Check condition to see if selections are complete
@@ -567,9 +568,9 @@ void HandleStageInputs(GameSetup_Step *step) {
       // Hide buttons
       ResetButtonState(false);
 
-      SFX_PlayCommon(2);
+      SFX_PlayCommon(CommonSound_NEXT);
     } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
-      SFX_PlayCommon(1);
+      SFX_PlayCommon(CommonSound_ACCEPT);
       CompleteCurrentStep(0);
       PrepareCurrentStep();
       UpdateTimeline();
@@ -600,9 +601,9 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       // Hide buttons
       ResetButtonState(false);
 
-      SFX_PlayCommon(2);
+      SFX_PlayCommon(CommonSound_NEXT);
     } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
-      SFX_PlayCommon(1);
+      SFX_PlayCommon(CommonSound_ACCEPT);
       CompleteCurrentStep(0);
       PrepareCurrentStep();
       UpdateTimeline();
@@ -633,7 +634,7 @@ void InputsThink(GOBJ *gobj) {
 
   // If this step is player controlled and time is elapsed, complete the step
   if (is_time_elapsed) {
-    SFX_PlayCommon(1);
+    SFX_PlayCommon(CommonSound_ACCEPT);
     CompleteCurrentStep(0);
     PrepareCurrentStep();
     UpdateTimeline();
@@ -692,7 +693,7 @@ void HandleOpponentStep() {
   }
 
   // Complete the step. Indicate that all selections are already made
-  SFX_PlayCommon(1);
+  SFX_PlayCommon(CommonSound_ACCEPT);
   CompleteCurrentStep(selection_count);
   PrepareCurrentStep();
   UpdateTimeline();
@@ -1081,8 +1082,30 @@ u8 UpdateTimer() {
   int minutes_remaining = seconds_remaining / 60;
   Text_SetText(data->text, data->timer_subtext_id, "%d:%02d", minutes_remaining, seconds_remaining % 60);
 
+  // Set text defaults
+  GXColor defaultCol = {255, 255, 255, 255};
+  Text_SetColor(data->text, data->timer_subtext_id, &defaultCol);
+
   // Increment frame timer
   data->timer_frames++;
+
+  u8 isController = step->player_idx == data->match_state->local_player_idx;
+  if (isController) {
+    int framesRemaining = step->timer_seconds * 60 - data->timer_frames;
+
+    // Play sound if only 3 seconds remaining (not counting grace period)
+    if (framesRemaining == 60 * PANIC_SECONDS) {
+      SFX_PlayCommon(CommonSound_OFFSCREEN);
+    }
+
+    if (seconds_remaining <= PANIC_SECONDS) {
+      GXColor col = {255, 50, 50, 255};
+      Text_SetColor(data->text, data->timer_subtext_id, &col);
+    } else if (seconds_remaining <= WARN_SECONDS) {
+      GXColor col = {254, 202, 52, 255};
+      Text_SetColor(data->text, data->timer_subtext_id, &col);
+    }
+  }
 
   // Return that we have run out of time 3 seconds after time runs out
   return data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS);
