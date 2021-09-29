@@ -8,7 +8,7 @@
 #include "./m-ex/MexTK/mex.h"
 #include "Files.h"
 
-static ArchiveInfo *gui_archive;
+static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
@@ -48,9 +48,9 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   GObj_AddProc(input_handler_gobj, InputsThink, 0);
 
   // Load file
-  gui_archive = File_Load("GameSetup_gui.dat");
-  // gui_archive = File_Load("GmTou1p.dat");
-  gui_assets = File_GetSymbol(gui_archive, "ScGamTour_scene_data");
+  gui_archive = Archive_LoadFile("GameSetup_gui.dat");
+  // gui_archive = Archive_LoadFile("GmTou1p.dat");
+  gui_assets = Archive_GetPublicAddress(gui_archive, "ScGamTour_scene_data");
 
   GOBJ *cam_gobj = GObj_Create(2, 3, 128);
   COBJ *cam_cobj = COBJ_LoadDesc(gui_assets->cobjs[0]);
