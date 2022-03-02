@@ -44,7 +44,7 @@ static void _InputsThink(GOBJ *gobj) {
     // Increment color
     cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, 1);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
-  } else if (downInputs % HSD_BUTTON_Y) {
+  } else if (downInputs & HSD_BUTTON_Y) {
     // Decrement color
     cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, cpd->state.char_color_idx, -1);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
