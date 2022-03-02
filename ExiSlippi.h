@@ -92,6 +92,10 @@ typedef struct ExiSlippi_MatchState_Response {
   char p2_connect_code[10];
   char p3_connect_code[10];
   char p4_connect_code[10];
+  char p1_uid[29];
+  char p2_uid[29];
+  char p3_uid[29];
+  char p4_uid[29];
   char err_msg[241];
   u8 game_info_block[0x138];
 } ExiSlippi_MatchState_Response;
