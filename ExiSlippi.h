@@ -22,6 +22,15 @@ typedef enum ExiSlippi_SelectionOption {
   ExiSlippi_SelectionOption_RANDOM,  // Supported for stage only
 } ExiSlippi_SelectionOption;
 
+typedef enum ExiSlippi_MmState {
+  ExiSlippi_MmState_UNSET,
+  ExiSlippi_MmState_INITIALIZING,
+  ExiSlippi_MmState_MATCHMAKING,
+  ExiSlippi_MmState_OPPONENT_CONNECTING,
+  ExiSlippi_MmState_CONNECTION_SUCCESS,
+  ExiSlippi_MmState_ERROR_ENCOUNTERED,
+} ExiSlippi_MmState;
+
 // Using pragma pack here will remove any structure padding which is what EXI comms expect
 // https://www.geeksforgeeks.org/how-to-avoid-structure-padding-in-c/
 #pragma pack(1)
@@ -70,7 +79,7 @@ typedef struct ExiSlippi_FetchStep_Response {
 } ExiSlippi_FetchStep_Response;
 
 typedef struct ExiSlippi_MatchState_Response {
-  u8 connection_state;
+  u8 mm_state;
   u8 is_local_player_ready;
   u8 is_remote_player_ready;
   u8 local_player_idx;

@@ -19,13 +19,14 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   data->scene_data = minor_data;
 
   // If this is a tiebreak, just set match selections and terminate scene to go back into a game
-  if (minor_data->is_tiebreak) {
+  if (minor_data->tiebreak_game_num > 0) {
     data->process_type = GameSetup_Process_Type_SKIP;
     data->state.is_complete = true;
     data->state.should_terminate = true;
 
-    u8 optionNone = ExiSlippi_SelectionOption_UNSET;
-    SetMatchSelections(0, 0, optionNone, 0, optionNone);
+    // Doesn't matter what we send here, overwrite from previous game should still be active
+    u8 optionMerge = ExiSlippi_SelectionOption_MERGE;
+    SetMatchSelections(0, 0, optionMerge, 0, optionMerge);
 
     return;
   }
@@ -133,10 +134,14 @@ void Minor_Think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
-    ExiSlippi_LoadMatchState(data->match_state);
+    data->match_state = ExiSlippi_LoadMatchState(data->match_state);
 
-    // Don't exit the scene until both players are ready (needed to make sure RNG is synced)
-    if (!data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready) {
+    u8 notReady = !data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready;
+    u8 isConnected = data->match_state->mm_state == ExiSlippi_MmState_CONNECTION_SUCCESS;
+
+    // Don't exit the scene until both players are ready. Needed to make sure RNG is synced as well
+    // as ensure both clients have been reset correctly (esp on tiebreak)
+    if (notReady && isConnected) {
       return;
     }
 
@@ -843,8 +848,12 @@ void CompleteGamePrep() {
   osq->command = ExiSlippi_Command_OVERWRITE_SELECTIONS;
   ExiSlippi_Transfer(osq, sizeof(ExiSlippi_OverwriteSelections_Query), ExiSlippi_TransferMode_WRITE);
 
-  u8 mergeOption = ExiSlippi_SelectionOption_MERGE;
-  SetMatchSelections(localCharId, localCharColor, mergeOption, osq->stage_id, mergeOption);
+  // Send match selections, the only reason this is here is really to send RNG and sync the start
+  // It isn't needed on game 1 because we have already received selections from the queue process
+  if (data->scene_data->cur_game > 1) {
+    u8 mergeOption = ExiSlippi_SelectionOption_MERGE;
+    SetMatchSelections(localCharId, localCharColor, mergeOption, osq->stage_id, mergeOption);
+  }
 
   // is complete and should terminate could be used to show some kind of final animation
   data->state.is_complete = true;

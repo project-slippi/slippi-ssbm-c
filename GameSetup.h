@@ -25,7 +25,7 @@ typedef struct GameSetup_SceneData {
   u8 cur_game;
   u8 score_by_player[2];
   u8 prev_winner;
-  u8 is_tiebreak;
+  u8 tiebreak_game_num;
   u8 game_results[9];
   u16 last_stage_win_by_player[2];
 } GameSetup_SceneData;
