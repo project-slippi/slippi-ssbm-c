@@ -192,7 +192,7 @@ void InitStrikingSteps() {
   data->steps[0].required_selection_count = 1;
   data->steps[0].char_selection = match_state->game_info_block[0x60];
   data->steps[0].char_color_selection = match_state->game_info_block[0x63];
-  data->steps[0].timer_seconds = 45;
+  data->steps[0].timer_seconds = 15;
   data->steps[0].selectors = isFirst ? data->char_selectors : data->char_wait_selectors;
   data->steps[0].selector_count = 1;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
@@ -205,7 +205,7 @@ void InitStrikingSteps() {
   data->steps[1].required_selection_count = 1;
   data->steps[1].char_selection = match_state->game_info_block[0x60 + 0x24];
   data->steps[1].char_color_selection = match_state->game_info_block[0x63 + 0x24];
-  data->steps[1].timer_seconds = 45;
+  data->steps[1].timer_seconds = 15;
   data->steps[1].selectors = isFirst ? data->char_wait_selectors : data->char_selectors;
   data->steps[1].selector_count = 1;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
@@ -597,10 +597,11 @@ void HandleCharacterInputs(GameSetup_Step *step) {
     // Takes scroll inputs and updates button selection state position
     UpdateButtonHoverPos(scrollInputs);
 
+    u8 charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
+    u8 charColor = step->selectors[0]->icon->stock_icon->state.color_id;
+
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
     if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
-      u8 charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
-      u8 charColor = step->selectors[0]->icon->stock_icon->state.color_id;
       CharPickerDialog_OpenDialog(data->char_picker_dialog, charId, charColor);
 
       // Hide buttons
@@ -612,6 +613,16 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       CompleteCurrentStep(0);
       PrepareCurrentStep();
       UpdateTimeline();
+    } else if (downInputs & HSD_BUTTON_X) {
+      // Increment color
+      u8 newColor = GetNextColor(charId, charColor, 1);
+      StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
+      SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
+    } else if (downInputs & HSD_BUTTON_Y) {
+      // Decrement color
+      u8 newColor = GetNextColor(charId, charColor, -1);
+      StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
+      SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
     }
   }
 
