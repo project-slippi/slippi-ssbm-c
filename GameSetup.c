@@ -669,6 +669,7 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
       if (!buttonsVisible) {
+        CSIcon_SetSelectState(step->selectors[0]->icon, CSIcon_Select_State_NotSelected);
         ResetButtonState(true);  // Show okay button
       }
     } else if (downInputs & HSD_BUTTON_Y) {
@@ -677,6 +678,7 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
       if (!buttonsVisible) {
+        CSIcon_SetSelectState(step->selectors[0]->icon, CSIcon_Select_State_NotSelected);
         ResetButtonState(true);  // Show okay button
       }
     }
@@ -1012,6 +1014,10 @@ void PrepareCharacterStep(GameSetup_Step *step) {
     u8 buttons_visible = !data->state.is_complete && step->player_idx == data->match_state->local_player_idx;
     ResetButtonState(buttons_visible);
   } else if (step->type == GameSetup_Step_Type_CHOOSE_COLOR) {
+    u8 isController = step->player_idx == data->match_state->local_player_idx;
+    CSIcon_Select_State csiState = isController ? CSIcon_Select_State_Hover : CSIcon_Select_State_NotSelected;
+    CSIcon_SetSelectState(step->selectors[0]->icon, csiState);
+
     // When picking color, don't show buttons
     ResetButtonState(false);
   }
