@@ -28,6 +28,9 @@ typedef struct GameSetup_SceneData {
   u8 tiebreak_game_num;
   u8 game_results[9];
   u16 last_stage_win_by_player[2];
+  u8 color_ban_active;
+  u8 color_ban_char;
+  u8 color_ban_color;
 } GameSetup_SceneData;
 #pragma pack()
 
@@ -42,6 +45,7 @@ typedef enum GameSetup_Step_Type {
   GameSetup_Step_Type_REMOVE_STAGE = 1,
   GameSetup_Step_Type_CHOOSE_STAGE = 2,
   GameSetup_Step_Type_CHOOSE_CHAR = 3,
+  GameSetup_Step_Type_CHOOSE_COLOR = 4,
 } GameSetup_Step_Type;
 
 typedef enum GameSetup_Step_State {
@@ -55,6 +59,8 @@ typedef struct GameSetup_Step {
   GameSetup_Step_Type type;
   int required_selection_count;
   u32 timer_seconds;
+
+  u8 hide_secondary_button;
 
   CSIcon *display_icons[2];
   FlatTexture *label;

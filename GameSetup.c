@@ -4,6 +4,7 @@
 #include "./Components/CharStageBoxSelector.h"
 #include "./Components/CharStageIcon.h"
 #include "./Components/StockIcon.h"
+#include "./Game/Characters.h"
 #include "./Game/Sounds.h"
 #include "./m-ex/MexTK/mex.h"
 #include "Files.h"
@@ -187,29 +188,44 @@ void InitStrikingSteps() {
   FlatTexture_Texture descSelectTwoStrikes = FlatTexture_Texture_SELECT_TWO_STRIKES_DESC;
   FlatTexture_Texture descWaitStrike = FlatTexture_Texture_WAIT_STRIKE_DESC;
 
+  u8 char1 = match_state->game_info_block[0x60];
+  u8 charCol1 = match_state->game_info_block[0x63];
+  u8 char2 = match_state->game_info_block[0x60 + 0x24];
+  u8 charCol2 = match_state->game_info_block[0x63 + 0x24];
+
+  u8 isColorMatch = IsMatchingSelection(char1, charCol1, char2, charCol2);
+  if (isColorMatch) {
+    // Add this ban to scene data, this color will be banned for the duration of the set
+    data->scene_data->color_ban_active = 1;
+    data->scene_data->color_ban_char = char1;
+    data->scene_data->color_ban_color = charCol1;
+  }
+
   data->steps[0].player_idx = 0;
-  data->steps[0].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[0].type = GameSetup_Step_Type_CHOOSE_COLOR;
   data->steps[0].required_selection_count = 1;
-  data->steps[0].char_selection = match_state->game_info_block[0x60];
-  data->steps[0].char_color_selection = match_state->game_info_block[0x63];
-  data->steps[0].timer_seconds = 15;
+  data->steps[0].hide_secondary_button = true;
+  data->steps[0].char_selection = char1;
+  data->steps[0].char_color_selection = charCol1;
+  data->steps[0].timer_seconds = 25;
   data->steps[0].selectors = isFirst ? data->char_selectors : data->char_wait_selectors;
   data->steps[0].selector_count = 1;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[0].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
+  data->steps[0].desc_tex = isFirst ? FlatTexture_Texture_SELECT_CHAR_DESC : FlatTexture_Texture_WAIT_CHAR_DESC;  // TODO: Change to "Change color"
   data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], isFirst ? labelYourChar : labelOppChar);
   data->steps[0].arrow = 0;
 
   data->steps[1].player_idx = 1;
-  data->steps[1].type = GameSetup_Step_Type_CHOOSE_CHAR;
+  data->steps[1].type = GameSetup_Step_Type_CHOOSE_COLOR;
   data->steps[1].required_selection_count = 1;
-  data->steps[1].char_selection = match_state->game_info_block[0x60 + 0x24];
-  data->steps[1].char_color_selection = match_state->game_info_block[0x63 + 0x24];
-  data->steps[1].timer_seconds = 15;
+  data->steps[1].hide_secondary_button = true;
+  data->steps[1].char_selection = char2;
+  data->steps[1].char_color_selection = charCol2;
+  data->steps[1].timer_seconds = 25;
   data->steps[1].selectors = isFirst ? data->char_wait_selectors : data->char_selectors;
   data->steps[1].selector_count = 1;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[1].desc_tex = FlatTexture_Texture_SELECT_CHAR_DESC;
+  data->steps[1].desc_tex = isFirst ? FlatTexture_Texture_WAIT_CHAR_DESC : FlatTexture_Texture_SELECT_CHAR_DESC;  // TODO: Change to "Change color"
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], isFirst ? labelOppChar : labelYourChar);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
@@ -247,9 +263,12 @@ void InitStrikingSteps() {
   data->steps[4].label = InitStepLabel(data->steps[4].display_icons[0], FlatTexture_Texture_STRIKE4_LABEL);
   data->steps[4].arrow = InitStepArrow(data->steps[4].display_icons[0]);
 
-  // Start with the first two steps completed
-  CompleteCurrentStep(data->steps[0].required_selection_count);
-  CompleteCurrentStep(data->steps[1].required_selection_count);
+  // Start with the first two steps completed unless the color matched, allow players to change
+  // colors if colors matched
+  if (!isColorMatch) {
+    CompleteCurrentStep(data->steps[0].required_selection_count);
+    CompleteCurrentStep(data->steps[1].required_selection_count);
+  }
 }
 
 void InitCounterpickingSteps() {
@@ -451,9 +470,21 @@ void InitAllSelectorJobjs() {
 }
 
 void ResetButtonState(u8 is_visible) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
   for (int i = 0; i < data->button_count; i++) {
     Button_SetHover(data->buttons[i], false);
     Button_SetVisibility(data->buttons[i], is_visible);
+  }
+
+  // TODO: Move OK button to the middle, the commented out version below does not work, the button
+  // TODO: never moves back
+  if (step->hide_secondary_button) {
+    // Button_SetPos(data->buttons[0], (Vec3){0, -3, 0});
+    Button_SetVisibility(data->buttons[1], false);
+  } else {
+    // Button_SetPos(data->buttons[0], (Vec3){-4.8, -3, 0});
+    // Button_SetPos(data->buttons[1], (Vec3){4.8, -3, 0});
   }
 
   data->state.btn_hover_idx = 0;
@@ -482,6 +513,14 @@ void CObjThink(GOBJ *gobj) {
 }
 
 void UpdateButtonHoverPos(u64 scrollInputs) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+  int btnCnt = step->hide_secondary_button ? 1 : data->button_count;
+
+  // No need to do anything if we only have one button
+  if (btnCnt == 1) {
+    return;
+  }
+
   ////////////////////////////////
   // Adjust button hover
   ////////////////////////////////
@@ -496,9 +535,9 @@ void UpdateButtonHoverPos(u64 scrollInputs) {
   }
 
   if (data->state.btn_hover_idx < 0) {
-    data->state.btn_hover_idx += data->button_count;
-  } else if (data->state.btn_hover_idx >= data->button_count) {
-    data->state.btn_hover_idx -= data->button_count;
+    data->state.btn_hover_idx += btnCnt;
+  } else if (data->state.btn_hover_idx >= btnCnt) {
+    data->state.btn_hover_idx -= btnCnt;
   }
 }
 
@@ -600,15 +639,20 @@ void HandleCharacterInputs(GameSetup_Step *step) {
     u8 charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
     u8 charColor = step->selectors[0]->icon->stock_icon->state.color_id;
 
+    u8 isColorStep = step->type == GameSetup_Step_Type_CHOOSE_COLOR;
+
+    // Needed so that when picking color, the user can't press A to select until they change colors
+    u8 buttonsVisible = data->buttons[0]->state.is_visible;
+
     // TODO: Handle buttons before scroll, don't scroll on the same frame a button is pressed
-    if (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1)) {
+    if (!isColorStep && (downInputs & HSD_BUTTON_B || (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 1))) {
       CharPickerDialog_OpenDialog(data->char_picker_dialog, charId, charColor);
 
       // Hide buttons
       ResetButtonState(false);
 
       SFX_PlayCommon(CommonSound_NEXT);
-    } else if (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0) {
+    } else if (buttonsVisible && (downInputs & HSD_BUTTON_A && data->state.btn_hover_idx == 0)) {
       SFX_PlayCommon(CommonSound_ACCEPT);
       CompleteCurrentStep(0);
       PrepareCurrentStep();
@@ -618,11 +662,13 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       u8 newColor = GetNextColor(charId, charColor, 1);
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
+      ResetButtonState(true);            // Show okay button
     } else if (downInputs & HSD_BUTTON_Y) {
       // Decrement color
       u8 newColor = GetNextColor(charId, charColor, -1);
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
+      ResetButtonState(true);            // Show okay button
     }
   }
 
@@ -663,6 +709,7 @@ void InputsThink(GOBJ *gobj) {
       HandleStageInputs(step);
       break;
     case GameSetup_Step_Type_CHOOSE_CHAR:
+    case GameSetup_Step_Type_CHOOSE_COLOR:
       HandleCharacterInputs(step);
       break;
   }
@@ -722,7 +769,9 @@ void CompleteCurrentStep(int committed_count) {
 
   int commit_index = committed_count;
 
-  if (step->type == GameSetup_Step_Type_CHOOSE_STAGE || step->type == GameSetup_Step_Type_REMOVE_STAGE) {
+  u8 isStageStep = step->type == GameSetup_Step_Type_CHOOSE_STAGE || step->type == GameSetup_Step_Type_REMOVE_STAGE;
+  u8 isCharStep = step->type == GameSetup_Step_Type_CHOOSE_CHAR || step->type == GameSetup_Step_Type_CHOOSE_COLOR;
+  if (isStageStep) {
     // Commit selections to selected values
     for (int i = 0; i < step->selector_count; i++) {
       CSBoxSelector *bs = step->selectors[i];
@@ -751,7 +800,7 @@ void CompleteCurrentStep(int committed_count) {
         commit_index++;
       }
     }
-  } else if (step->type == GameSetup_Step_Type_CHOOSE_CHAR && committed_count == 0) {
+  } else if (isCharStep && committed_count == 0) {
     // Default color and char to what was selected last game in case of a timeout with no selection.
     // We don't need to worry about that color not being allowed because the opponent shouldn't
     // be allowed to take it
@@ -841,7 +890,8 @@ void CompleteGamePrep() {
 
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
-    if (step->type != GameSetup_Step_Type_CHOOSE_CHAR) {
+    u8 isCharStep = step->type == GameSetup_Step_Type_CHOOSE_CHAR || step->type == GameSetup_Step_Type_CHOOSE_COLOR;
+    if (!isCharStep) {
       continue;
     }
 
@@ -943,9 +993,14 @@ void PrepareCharacterStep(GameSetup_Step *step) {
   // We don't use the selector on char steps
   data->state.selector_idx = -1;
 
-  // Buttons are visible if we are the player picking a character
-  u8 buttons_visible = !data->state.is_complete && step->player_idx == data->match_state->local_player_idx;
-  ResetButtonState(buttons_visible);
+  if (step->type == GameSetup_Step_Type_CHOOSE_CHAR) {
+    // Buttons are visible if we are the player picking a character
+    u8 buttons_visible = !data->state.is_complete && step->player_idx == data->match_state->local_player_idx;
+    ResetButtonState(buttons_visible);
+  } else if (step->type == GameSetup_Step_Type_CHOOSE_COLOR) {
+    // When picking color, don't show buttons
+    ResetButtonState(false);
+  }
 
   // Ensure dialog starts hidden
   CharPickerDialog_CloseDialog(data->char_picker_dialog);
@@ -994,6 +1049,7 @@ void PrepareCurrentStep() {
       PrepareStageStep(step);
       break;
     case GameSetup_Step_Type_CHOOSE_CHAR:
+    case GameSetup_Step_Type_CHOOSE_COLOR:
       PrepareCharacterStep(step);
       break;
   }
@@ -1042,7 +1098,8 @@ void UpdateTimeline() {
       // Show question if not complete, result if complete
       CSIcon_Material mat = CSIcon_Material_Question;
       if (step->state == GameSetup_Step_State_COMPLETE) {
-        if (step->type == GameSetup_Step_Type_CHOOSE_CHAR) {
+        u8 isCharStep = step->type == GameSetup_Step_Type_CHOOSE_CHAR || step->type == GameSetup_Step_Type_CHOOSE_COLOR;
+        if (isCharStep) {
           mat = CSIcon_ConvertCharToMat(step->char_selection);
 
           // Show stock icon with proper color
