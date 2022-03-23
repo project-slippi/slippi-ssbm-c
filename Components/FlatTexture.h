@@ -25,6 +25,8 @@ typedef enum FlatTexture_Texture {
   FlatTexture_Texture_SELECT_CHAR_DESC,
   FlatTexture_Texture_WAIT_CHAR_DESC,
   FlatTexture_Texture_GET_READY_DESC,
+  FlatTexture_Texture_SELECT_COLOR_DESC,
+  FlatTexture_Texture_WAIT_COLOR_DESC,
 } FlatTexture_Texture;
 
 typedef struct FlatTexture_State {

@@ -211,7 +211,7 @@ void InitStrikingSteps() {
   data->steps[0].selectors = isFirst ? data->char_selectors : data->char_wait_selectors;
   data->steps[0].selector_count = 1;
   data->steps[0].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[0].desc_tex = isFirst ? FlatTexture_Texture_SELECT_CHAR_DESC : FlatTexture_Texture_WAIT_CHAR_DESC;  // TODO: Change to "Change color"
+  data->steps[0].desc_tex = isFirst ? FlatTexture_Texture_SELECT_COLOR_DESC : FlatTexture_Texture_WAIT_COLOR_DESC;
   data->steps[0].label = InitStepLabel(data->steps[0].display_icons[0], isFirst ? labelYourChar : labelOppChar);
   data->steps[0].arrow = 0;
 
@@ -225,7 +225,7 @@ void InitStrikingSteps() {
   data->steps[1].selectors = isFirst ? data->char_wait_selectors : data->char_selectors;
   data->steps[1].selector_count = 1;
   data->steps[1].display_icons[0] = CSIcon_Init(gui_assets);
-  data->steps[1].desc_tex = isFirst ? FlatTexture_Texture_WAIT_CHAR_DESC : FlatTexture_Texture_SELECT_CHAR_DESC;  // TODO: Change to "Change color"
+  data->steps[1].desc_tex = isFirst ? FlatTexture_Texture_WAIT_COLOR_DESC : FlatTexture_Texture_SELECT_COLOR_DESC;
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], isFirst ? labelOppChar : labelYourChar);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
