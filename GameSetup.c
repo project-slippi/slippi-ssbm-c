@@ -312,9 +312,14 @@ void InitCounterpickingSteps() {
   data->steps[1].label = InitStepLabel(data->steps[1].display_icons[0], FlatTexture_Texture_STAGE_LABEL);
   data->steps[1].arrow = InitStepArrow(data->steps[1].display_icons[0]);
 
-  data->steps[2].player_idx = scene_data->prev_winner;
+  u8 winnerIdx = scene_data->prev_winner;
+  u8 loserIdx = !scene_data->prev_winner;
+
+  data->steps[2].player_idx = winnerIdx;
   data->steps[2].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[2].required_selection_count = 1;
+  data->steps[2].char_selection = match_state->game_info_block[0x60 + winnerIdx * 0x24];
+  data->steps[2].char_color_selection = match_state->game_info_block[0x63 + winnerIdx * 0x24];
   data->steps[2].timer_seconds = 45;
   data->steps[2].selectors = isWinner ? data->char_selectors : data->char_wait_selectors;
   data->steps[2].selector_count = 1;
@@ -323,10 +328,12 @@ void InitCounterpickingSteps() {
   data->steps[2].label = InitStepLabel(data->steps[2].display_icons[0], isWinner ? labelYourChar : labelOppChar);
   data->steps[2].arrow = InitStepArrow(data->steps[2].display_icons[0]);
 
-  data->steps[3].player_idx = !scene_data->prev_winner;
+  data->steps[3].player_idx = loserIdx;
   data->steps[3].type = GameSetup_Step_Type_CHOOSE_CHAR;
   data->steps[3].required_selection_count = 1;
-  data->steps[3].timer_seconds = 2000;
+  data->steps[3].char_selection = match_state->game_info_block[0x60 + loserIdx * 0x24];
+  data->steps[3].char_color_selection = match_state->game_info_block[0x63 + loserIdx * 0x24];
+  data->steps[3].timer_seconds = 45;
   data->steps[3].selectors = isWinner ? data->char_wait_selectors : data->char_selectors;
   data->steps[3].selector_count = 1;
   data->steps[3].display_icons[0] = CSIcon_Init(gui_assets);
@@ -662,13 +669,17 @@ void HandleCharacterInputs(GameSetup_Step *step) {
       u8 newColor = GetNextColor(charId, charColor, 1);
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
-      ResetButtonState(true);            // Show okay button
+      if (!buttonsVisible) {
+        ResetButtonState(true);  // Show okay button
+      }
     } else if (downInputs & HSD_BUTTON_Y) {
       // Decrement color
       u8 newColor = GetNextColor(charId, charColor, -1);
       StockIcon_SetIcon(step->selectors[0]->icon->stock_icon, charId, newColor);
       SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
-      ResetButtonState(true);            // Show okay button
+      if (!buttonsVisible) {
+        ResetButtonState(true);  // Show okay button
+      }
     }
   }
 
@@ -811,6 +822,10 @@ void CompleteCurrentStep(int committed_count) {
     if (step->selectors[0]->icon->state.material != CSIcon_Material_Question) {
       charId = CSIcon_ConvertMatToChar(step->selectors[0]->icon->state.material);
       charColorId = step->selectors[0]->icon->stock_icon->state.color_id;
+    }
+
+    if (!IsColorAllowed(charId, charColorId, playerIdx)) {
+      charColorId = GetNextColor(charId, charColorId, 1);
     }
 
     step->char_selection = charId;
@@ -1237,6 +1252,8 @@ void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection) {
 }
 
 u8 GetNextColor(u8 charId, u8 colorId, int incr) {
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
   int newCol = colorId + incr;
 
   int maxColor = CSS_GetCostumeNum(charId);
@@ -1245,7 +1262,41 @@ u8 GetNextColor(u8 charId, u8 colorId, int incr) {
     newCol += maxColor;
   }
 
-  // TODO: Do recursive call if this color is not allowed
+  // Do recursive call if this color is not allowed
+  if (!IsColorAllowed(charId, newCol, step->player_idx)) {
+    // Don't allow a recursive call that has incr = 0, would infinite loop
+    return GetNextColor(charId, newCol, incr ? incr : 1);
+  }
 
   return newCol;
+}
+
+u8 IsColorAllowed(u8 charId, u8 colorId, u8 playerIdx) {
+  // Check persistent color ban (in the case the same color was picked in double blind)
+  u8 colorBanActive = data->scene_data->color_ban_active;
+  u8 bannedColorChar = data->scene_data->color_ban_char;
+  u8 bannedColorId = data->scene_data->color_ban_color;
+  if (colorBanActive && IsMatchingSelection(charId, colorId, bannedColorChar, bannedColorId)) {
+    return false;
+  }
+
+  // Check to make sure the current player is not picking a color picked by the opponent
+  for (int i = 0; i < data->step_count; i++) {
+    GameSetup_Step *s = &data->steps[i];
+
+    if (s->player_idx == playerIdx) {
+      continue;
+    }
+
+    u8 isCharStep = s->type == GameSetup_Step_Type_CHOOSE_CHAR || s->type == GameSetup_Step_Type_CHOOSE_COLOR;
+    if (!isCharStep) {
+      continue;
+    }
+
+    if (IsMatchingSelection(charId, colorId, s->char_selection, s->char_color_selection)) {
+      return false;
+    }
+  }
+
+  return true;
 }

@@ -135,6 +135,7 @@ void CompleteGamePrep();
 
 void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection);
 u8 GetNextColor(u8 charId, u8 colorId, int incr);
+u8 IsColorAllowed(u8 charId, u8 colorId, u8 playerIdx);
 
 void IncrementSelectorIndex();
 void DecrementSelectorIndex();
