@@ -85,4 +85,5 @@ void Button_SetVisibility(Button *btn, u8 is_visible) {
 
 void Button_SetPos(Button *btn, Vec3 p) {
   btn->root_jobj->trans = p;
+  JOBJ_SetMtxDirtySub(btn->root_jobj);
 }

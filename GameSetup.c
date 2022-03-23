@@ -487,11 +487,10 @@ void ResetButtonState(u8 is_visible) {
   // TODO: Move OK button to the middle, the commented out version below does not work, the button
   // TODO: never moves back
   if (step->hide_secondary_button) {
-    // Button_SetPos(data->buttons[0], (Vec3){0, -3, 0});
+    Button_SetPos(data->buttons[0], (Vec3){0, -3, 0});
     Button_SetVisibility(data->buttons[1], false);
   } else {
-    // Button_SetPos(data->buttons[0], (Vec3){-4.8, -3, 0});
-    // Button_SetPos(data->buttons[1], (Vec3){4.8, -3, 0});
+    Button_SetPos(data->buttons[0], (Vec3){-4.8, -3, 0});
   }
 
   data->state.btn_hover_idx = 0;
