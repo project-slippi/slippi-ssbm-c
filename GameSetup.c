@@ -586,7 +586,21 @@ void HandleStageInputs(GameSetup_Step *step) {
         data->state.selected_values_count++;
       }
 
-      // TODO: Pick better sound?
+      SFX_PlayCommon(CommonSound_NEXT);
+    } else if (downInputs & HSD_BUTTON_B) {
+      // Reset selections, this would happen in the case where you need to make two selections
+      // while striking and you have made one. In that case pretty B clears the selection that
+      // has been made
+      data->state.selected_values_count = 0;
+      for (int i = 0; i < step->selector_count; i++) {
+        // Only reset selectors that are currently selected
+        if (!step->selectors[i]->state.is_selected) {
+          continue;
+        }
+
+        CSBoxSelector_SetSelectState(step->selectors[i], CSBoxSelector_Select_State_NotSelected);
+      }
+
       SFX_PlayCommon(CommonSound_NEXT);
     }
 
