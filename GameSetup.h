@@ -31,6 +31,7 @@ typedef struct GameSetup_SceneData {
   u8 color_ban_active;
   u8 color_ban_char;
   u8 color_ban_color;
+  u8 (*get_winner_idx)();
 } GameSetup_SceneData;
 #pragma pack()
 
