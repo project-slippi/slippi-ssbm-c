@@ -105,14 +105,8 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   data->button_count = 2;
 
   // Initialize description message
-  float desc_width_half = 45 / 2;
-  float desc_height_half = 1.8 / 2;
   data->description = FlatTexture_Init(gui_assets);
-  Vec3 tl = {-desc_width_half, desc_height_half, 0};
-  Vec3 tr = {desc_width_half, desc_height_half, 0};
-  Vec3 bl = {-desc_width_half, -desc_height_half, 0};
-  Vec3 br = {desc_width_half, -desc_height_half, 0};
-  FlatTexture_SetPosCorners(data->description, tl, tr, bl, br);
+  FlatTexture_SetSize(data->description, 45, 1.8);
   FlatTexture_SetPos(data->description, (Vec3){0, -3, 0});
 
   // Init steps
@@ -547,6 +541,22 @@ void UpdateButtonHoverPos(u64 scrollInputs) {
   }
 }
 
+void HandleDisconnectInputs() {
+  u8 port = R13_U8(-0x5108);
+  u64 downInputs = Pad_GetDown(port);
+
+  if (data->disconnect_frames < 30) {
+    data->disconnect_frames++;
+    return;
+  }
+
+  FlatTexture_SetVisibility(data->description, true);
+
+  if (downInputs & HSD_BUTTON_A || downInputs & HSD_BUTTON_START) {
+    data->state.should_terminate = true;
+  }  
+}
+
 void HandleStageInputs(GameSetup_Step *step) {
   u8 port = R13_U8(-0x5108);
   u64 scrollInputs = Pad_GetRapidHeld(port);  // long delay between initial triggers, then frequent
@@ -712,6 +722,11 @@ void InputsThink(GOBJ *gobj) {
     return;
   }
 
+  if (data->state.is_disconnect) {
+    HandleDisconnectInputs();
+    return;
+  }
+
   u8 is_time_elapsed = UpdateTimer();
 
   // Check if this step is player controlled or if we are waiting for the opponent
@@ -744,9 +759,21 @@ void InputsThink(GOBJ *gobj) {
 void HandleOpponentStep() {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
+  // Check if we are disconnected from opponent
+  data->match_state = ExiSlippi_LoadMatchState(data->match_state);
+  u8 isConnected = data->match_state->mm_state == ExiSlippi_MmState_CONNECTION_SUCCESS;
+  if (!isConnected) {
+    // This will show the error and wait for user to press a button to return to CSS
+    ShowDisconnectedMessage();
+    return;
+  }
+
   // Check if we've timed out waiting for opponent
   if (data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS + WAIT_TIMEOUT_SECONDS)) {
-    // TODO: Abandon match
+    // Stop match by disconnecting from opponent
+    ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
+    ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
+    ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
     return;
   }
 
@@ -1163,6 +1190,39 @@ void UpdateTimeline() {
 
     xPos += gap + double_ofst;
   }
+}
+
+void ShowDisconnectedMessage() {
+  data->state.is_disconnect = true;
+  data->disconnect_frames = 0;
+
+  GameSetup_Step *step = &data->steps[data->state.step_idx];
+
+  // Mark no selection
+  data->state.selector_idx = -1;
+
+  // Hide description
+  FlatTexture_SetVisibility(data->description, false);
+  FlatTexture_SetTexture(data->description, FlatTexture_Texture_RETURN_CSS_DESC);
+
+  // Hide current selectors
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
+    CSBoxSelector_SetVisibility(bs, false);
+  }
+
+  // Update selector state to make sure hover states don't linger (such as on timeout)
+  UpdateHoverDisplays();
+
+  // Display disconnected message
+  data->disconnect_msg = FlatTexture_Init(gui_assets);
+  FlatTexture_SetColor(data->disconnect_msg, (GXColor){255, 0, 0, 255});
+  FlatTexture_SetSize(data->disconnect_msg, 35, 4);
+  FlatTexture_SetPos(data->disconnect_msg, (Vec3){0, 3, 0});
+  FlatTexture_SetTexture(data->disconnect_msg, FlatTexture_Texture_DISCONNECTED);
+
+  // Play error sound
+  SFX_PlayCommon(CommonSound_ERROR);
 }
 
 void UpdateHoverDisplays() {

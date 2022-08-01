@@ -27,6 +27,8 @@ typedef enum FlatTexture_Texture {
   FlatTexture_Texture_GET_READY_DESC,
   FlatTexture_Texture_SELECT_COLOR_DESC,
   FlatTexture_Texture_WAIT_COLOR_DESC,
+  FlatTexture_Texture_RETURN_CSS_DESC,
+  FlatTexture_Texture_DISCONNECTED,
 } FlatTexture_Texture;
 
 typedef struct FlatTexture_State {
@@ -46,5 +48,7 @@ void FlatTexture_SetVisibility(FlatTexture *ft, u8 is_visible);
 void FlatTexture_SetTexture(FlatTexture *ft, FlatTexture_Texture tex);
 void FlatTexture_SetPos(FlatTexture *ft, Vec3 p);
 void FlatTexture_SetPosCorners(FlatTexture *ft, Vec3 tl, Vec3 tr, Vec3 bl, Vec3 br);
+void FlatTexture_SetSize(FlatTexture *ft, float width, float height);
+void FlatTexture_SetColor(FlatTexture *ft, GXColor color);
 
 #endif

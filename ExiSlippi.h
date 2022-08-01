@@ -5,6 +5,7 @@
 
 typedef enum ExiSlippi_Command {
   ExiSlippi_Command_SET_MATCH_SELECTIONS = 0xB5,
+  ExiSlippi_Command_CLEANUP_CONNECTION = 0xBA,
   ExiSlippi_Command_OVERWRITE_SELECTIONS = 0xBF,
   ExiSlippi_Command_GP_COMPLETE_STEP = 0xC0,
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
@@ -108,6 +109,10 @@ typedef struct ExiSlippi_MatchState_Response {
   char err_msg[241];
   u8 game_info_block[0x138];
 } ExiSlippi_MatchState_Response;
+
+typedef struct ExiSlippi_CleanupConnection_Query {
+  u8 command;
+} ExiSlippi_CleanupConnection_Query;
 
 // Not sure if resetting is strictly needed, might be contained to the file
 #pragma pack()

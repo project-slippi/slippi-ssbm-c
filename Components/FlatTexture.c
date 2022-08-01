@@ -57,3 +57,18 @@ void FlatTexture_SetPosCorners(FlatTexture *ft, Vec3 tl, Vec3 tr, Vec3 bl, Vec3 
   ft->root_jobj->child->sibling->sibling->trans = tl;
   ft->root_jobj->child->sibling->sibling->sibling->trans = br;
 }
+
+void FlatTexture_SetSize(FlatTexture *ft, float width, float height) {
+  float desc_width_half = width / 2;
+  float desc_height_half = height / 2;
+  
+  Vec3 tl = {-desc_width_half, desc_height_half, 0};
+  Vec3 tr = {desc_width_half, desc_height_half, 0};
+  Vec3 bl = {-desc_width_half, -desc_height_half, 0};
+  Vec3 br = {desc_width_half, -desc_height_half, 0};
+  FlatTexture_SetPosCorners(ft, tl, tr, bl, br);
+}
+
+void FlatTexture_SetColor(FlatTexture *ft, GXColor color) {
+  ft->root_jobj->dobj->mobj->mat->diffuse = color;
+}

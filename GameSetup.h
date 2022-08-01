@@ -86,6 +86,7 @@ typedef struct GameSetup_State {
   int step_idx;
   u8 is_complete;
   u8 should_terminate;
+  u8 is_disconnect;
 } GameSetup_State;
 
 typedef struct GameSetup_Data {
@@ -96,12 +97,14 @@ typedef struct GameSetup_Data {
   Button *buttons[2];
   int button_count;
   FlatTexture *description;
+  FlatTexture *disconnect_msg;
   TurnIndicator *turn_indicators[2];
   GameResult **game_results;
   int game_result_count;
   Text *text;
   int timer_subtext_id;
   int timer_frames;
+  int disconnect_frames;
   GameSetup_Step_Type initialized_step_type;
   GameSetup_SceneData *scene_data;
 
@@ -133,6 +136,7 @@ void CompleteCurrentStep(int committed_count);
 void SetMatchSelections(u8 char_id, u8 char_color, u8 char_option, u16 stage_id, u8 stage_option);
 void PrepareCurrentStep();
 void CompleteGamePrep();
+void ShowDisconnectedMessage();
 
 void OnCharSelectionComplete(CharPickerDialog *cpd, u8 is_selection);
 u8 GetNextColor(u8 charId, u8 colorId, int incr);
