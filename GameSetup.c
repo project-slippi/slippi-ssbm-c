@@ -715,15 +715,24 @@ void HandleCharacterInputs(GameSetup_Step *step) {
 void InputsThink(GOBJ *gobj) {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
+  if (data->state.is_disconnect) {
+    HandleDisconnectInputs();
+    return;
+  }
+
+  // Check if we are disconnected from opponent
+  data->match_state = ExiSlippi_LoadMatchState(data->match_state);
+  u8 isConnected = data->match_state->mm_state == ExiSlippi_MmState_CONNECTION_SUCCESS;
+  if (!isConnected) {
+    // This will show the error and wait for user to press a button to return to CSS
+    ShowDisconnectedMessage();
+    return;
+  }
+
   // If current step is completed (process finished, don't allow any inputs)
   if (data->state.is_complete) {
     // TODO: Play an animation on selected stage and play a sound
     data->state.should_terminate = true;
-    return;
-  }
-
-  if (data->state.is_disconnect) {
-    HandleDisconnectInputs();
     return;
   }
 
@@ -758,15 +767,6 @@ void InputsThink(GOBJ *gobj) {
 
 void HandleOpponentStep() {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
-
-  // Check if we are disconnected from opponent
-  data->match_state = ExiSlippi_LoadMatchState(data->match_state);
-  u8 isConnected = data->match_state->mm_state == ExiSlippi_MmState_CONNECTION_SUCCESS;
-  if (!isConnected) {
-    // This will show the error and wait for user to press a button to return to CSS
-    ShowDisconnectedMessage();
-    return;
-  }
 
   // Check if we've timed out waiting for opponent
   if (data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS + WAIT_TIMEOUT_SECONDS)) {
