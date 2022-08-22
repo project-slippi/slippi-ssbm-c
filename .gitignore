@@ -1,5 +1,7 @@
 .vscode
+.idea
 vanilla-melee/fix-ssm.mp4
 install.bat
 output/*
+build/*
 m-ex/

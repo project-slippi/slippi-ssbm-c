@@ -1,12 +1,12 @@
-#include "./m-ex/MexTK/mex.h"
-#include "Components/Button.h"
-#include "Components/CharPickerDialog.h"
-#include "Components/CharStageBoxSelector.h"
-#include "Components/FlatTexture.h"
-#include "Components/GameResult.h"
-#include "Components/RightArrow.h"
-#include "Components/TurnIndicator.h"
-#include "ExiSlippi.h"
+#include "../../m-ex/MexTK/mex.h"
+#include "../../Components/Button.h"
+#include "../../Components/CharPickerDialog.h"
+#include "../../Components/CharStageBoxSelector.h"
+#include "../../Components/FlatTexture.h"
+#include "../../Components/GameResult.h"
+#include "../../Components/RightArrow.h"
+#include "../../Components/TurnIndicator.h"
+#include "../../ExiSlippi.h"
 
 // How to auto-format code: https://stackoverflow.com/a/50489812/1249024
 
