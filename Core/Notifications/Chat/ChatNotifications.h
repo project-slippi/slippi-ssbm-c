@@ -1,6 +1,6 @@
 #ifndef SLIPPI_CORE_CHAT_NOTIFICATION_H
 #define SLIPPI_CORE_CHAT_NOTIFICATION_H
-#include "../../../slippi.h"
+#include "../../../Slippi.h"
 #include "../notifications.h"
 
 #define CHAT_SOUND_NEW_MESSAGE 0xb7		// Global Sound ID

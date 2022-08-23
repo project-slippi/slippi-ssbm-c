@@ -3,7 +3,7 @@
 #include "chat_notifications.h"
 #include "text.c"
 
-#include "../../../common.h"
+#include "../../../Common.h"
 #include "../notifications.c"
 
 int ChatMessagesLocalCount = 0;

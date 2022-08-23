@@ -2,4 +2,4 @@
 -s mnFunction ^
 -o "output/GameSetup.dat" ^
 -t "m-ex/MexTK/mnFunction.txt" ^
--q -ow -c -l "m-ex/MexTK/melee.link"
+-q -ow -c -l "melee.link"
