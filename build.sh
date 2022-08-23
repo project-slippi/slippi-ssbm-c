@@ -10,14 +10,14 @@ rm -rf $BUILD_PATH
 
 echo "Compiling Ranked Scene..."
 
-#mono $COMPILER_PATH -ff \
-#-i "Scenes/Ranked/GameSetup.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/Button.c" "Components/FlatTexture.c" "Components/RightArrow.c" "Components/CharPickerDialog.c" "Components/StockIcon.c" "Components/GameResult.c" "Components/TurnIndicator.c" "Game/Characters.c" \
-#-s mnFunction \
-#-t "$TK_PATH/mnFunction.txt" \
-#-l "./melee.link" \
-#-b $BUILD_PATH \
-#-o "$OUTPUT_PATH/GameSetup.dat" \
-#-ow -c
+mono $COMPILER_PATH -ff \
+-i "Scenes/Ranked/GameSetup.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/Button.c" "Components/FlatTexture.c" "Components/RightArrow.c" "Components/CharPickerDialog.c" "Components/StockIcon.c" "Components/GameResult.c" "Components/TurnIndicator.c" "Game/Characters.c" \
+-s mnFunction \
+-t "$TK_PATH/mnFunction.txt" \
+-l "./melee.link" \
+-b $BUILD_PATH \
+-o "$OUTPUT_PATH/GameSetup.dat" \
+-ow -c
 
 echo "Compiling Slippi CSS..."
 mono $COMPILER_PATH -ff \
@@ -27,19 +27,8 @@ mono $COMPILER_PATH -ff \
 -l "./melee.link" \
 -b $BUILD_PATH \
 -o "$OUTPUT_PATH/SlippiCSS.dat" \
--ow -c -v
+-ow -c
 
-cp "$OUTPUT_PATH/SlippiCSS.dat" "/Users/robertperalta/Dev/github/Ishiiruka/build/Binaries/Slippi Dolphin.app/Contents/Resources/Sys/GameFiles/GALE01/SlippiCSS.dat"
-
-
-#echo "Compiling Everything else..."
-#mono $COMPILER_PATH -ff \
-#-i $SOURCE_FILES \
-#-s slpFunction \
-#-t "./slpFunction.txt" \
-#-l "./melee.link" \
-#-b $BUILD_PATH \
-#-o "$OUTPUT_PATH/Slippi.dat" \
-#-ow -c
+#cp "$OUTPUT_PATH/SlippiCSS.dat" "/Users/robertperalta/Dev/github/Ishiiruka/build/Binaries/Slippi Dolphin.app/Contents/Resources/Sys/GameFiles/GALE01/SlippiCSS.dat"
 
 echo "Finished Building at: $(date)"
