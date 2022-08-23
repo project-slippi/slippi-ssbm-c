@@ -55,7 +55,7 @@ void UpdateChat() {
     if (chatInput->input <= 0) return; // Return if not input
 
     // TODO: Move this back
-     SlpCSSDesc* slpCss = GetSlpCSSDT()->SlpCSSDatAddress;// Archive_GetPublicAddress(archive, "slpCSS");
+    SlpCSSDesc *slpCss = GetSlpCSSDT()->SlpCSSDatAddress;// Archive_GetPublicAddress(archive, "slpCSS");
 //    HSD_Archive *archive = Archive_LoadFile("slpCSS.dat");
 //    SlpCSSDesc *slpCss = Archive_GetPublicAddress(archive, "slpCSS");
     ChatWindowData *data = calloc(sizeof(ChatWindowData));
