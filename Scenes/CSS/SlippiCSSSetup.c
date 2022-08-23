@@ -1,4 +1,7 @@
-#include "../../CSS/main.c"
+#ifndef SLIPPI_CSS_SETUP_C
+#define SLIPPI_CSS_SETUP_C
+
+#include "Main.c"
 
 //Runs every frame during CSS
 void minor_think() {
@@ -20,3 +23,5 @@ void minor_exit() {
     CSS_exit();
     OSReport("CSS_exit\n");
 }
+
+#endif SLIPPI_CSS_SETUP_C

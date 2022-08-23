@@ -1,14 +1,8 @@
-#export TK_PATH=../../MexTK/
-#export TK_PATH="/Users/robertperalta/Dev/github/MexTK/MexFF/bin/Release/"
-#export COMPILER_PATH="/Users/robertperalta/Dev/github/MexTK/MexFF/bin/Release/MexTK.exe"
-
-
-#export TK_PATH=/Users/robertperalta/Dev/github/slippi-ssbm-asm/m-ex/MexTK
 export TK_PATH=./m-ex/MexTK/
 export OUTPUT_PATH=./output/
 export BUILD_PATH=./build/
 export COMPILER_PATH="$TK_PATH/MexTK.exe"
-#export COMPILER_PATH="$TK_PATH/MexTK/MexFF/bin/Release/MexTK.exe"
+#export COMPILER_PATH="/Users/robertperalta/Dev/github/MexTK/MexFF/bin/Release/MexTK.exe"
 export SOURCE_FILES=$(find . -type f -regex ".*\.c" -not -path ".*/examples/*" | xargs)
 
 echo "Started Building at: $(date)"
@@ -27,7 +21,7 @@ echo "Compiling Ranked Scene..."
 
 echo "Compiling Slippi CSS..."
 mono $COMPILER_PATH -ff \
--i "Scenes/CSS/main.c" \
+-i "Scenes/CSS/SlippiCSSSetup.c" \
 -s mnFunction \
 -t "$TK_PATH/mnFunction.txt" \
 -l "./melee.link" \

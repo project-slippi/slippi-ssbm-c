@@ -1,10 +1,10 @@
 #ifndef SLIPPI_CORE_CHAT_NOTIFICATION_C
 #define SLIPPI_CORE_CHAT_NOTIFICATION_C
-#include "chat_notifications.h"
-#include "text.c"
+#include "ChatNotifications.h"
+#include "Text.c"
 
 #include "../../../Common.h"
-#include "../notifications.c"
+#include "../Notifications.c"
 
 int ChatMessagesLocalCount = 0;
 int ChatMessagesRemoteCount = 0;

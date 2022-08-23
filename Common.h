@@ -1,7 +1,7 @@
 #ifndef SLIPPI_COMMON_H
 #define SLIPPI_COMMON_H
 #include <stdbool.h>
-#include "../MexTK/mex.h";
+#include "../MexTK/mex.h"
 
 #define NULL ((void *)0)
 #define spawn(X) calloc(sizeof(X)) 

@@ -1,6 +1,6 @@
 #ifndef SLIPPI_CORE_NOTIFICATION_H
 #define SLIPPI_CORE_NOTIFICATION_H
-#include "../../slippi.h"
+#include "../../Slippi.h"
 
 #define DEFAULT_ANIM_FRAMES 20 									// Frames that notification message animations live for 
 #define NOTIFICATION_MESSAGE_SET_LENGTH 10						// Max Messages allowed to be shown

@@ -1,6 +1,6 @@
 #ifndef SLIPPI_CSS_CHAT_TEXT_H
 #define SLIPPI_CSS_CHAT_TEXT_H
-#include "../../../slippi.h"
+#include "../../../Slippi.h"
 
 enum CHAT_LABELS {
 	CHAT_STR_HEADER,

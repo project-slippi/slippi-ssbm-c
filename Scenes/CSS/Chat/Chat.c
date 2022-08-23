@@ -1,12 +1,12 @@
 #ifndef SLIPPI_CSS_CHAT_C
 #define SLIPPI_CSS_CHAT_C
 
-#include "chat.h"
-#include "../../common.h"
+#include "Chat.h"
+#include "../../../Common.h"
 
-#include "../../Core/Notifications/notifications.c"
-#include "../../Core/Notifications/Chat/chat_notifications.h"
-#include "../../Core/Notifications/Chat/text.c"
+#include "../../../Core/Notifications/Notifications.c"
+#include "../../../Core/Notifications/Chat/ChatNotifications.h"
+#include "../../../Core/Notifications/Chat/Text.c"
 
 #define CHAT_WINDOW_FRAMES 60*2.5           // 4 seconds at 60fps
 #define CHAT_ALLOW_COMMAND_FRAMES 60*0.2    // 1.5 seconds at 60fps

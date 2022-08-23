@@ -1,7 +1,7 @@
 #ifndef SLIPPI_CORE_NOTIFICATION_C
 #define SLIPPI_CORE_NOTIFICATION_C
-#include "notifications.h"
-#include "Chat/chat_notifications.c"
+#include "Notifications.h"
+#include "Chat/ChatNotifications.c"
 
 GOBJ* _notificationsGOBJ = NULL;
 int LastNotificationMessageID = -1; // Initial Notification Message ID to always add to the bottom of the list

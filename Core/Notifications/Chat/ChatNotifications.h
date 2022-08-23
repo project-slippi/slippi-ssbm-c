@@ -1,7 +1,7 @@
 #ifndef SLIPPI_CORE_CHAT_NOTIFICATION_H
 #define SLIPPI_CORE_CHAT_NOTIFICATION_H
 #include "../../../Slippi.h"
-#include "../notifications.h"
+#include "../Notifications.h"
 
 #define CHAT_SOUND_NEW_MESSAGE 0xb7		// Global Sound ID
 #define CHAT_SOUND_BLOCK_MESSAGE 0x3 	// Common Sound

@@ -1,9 +1,9 @@
 #ifndef SLIPPI_CSS_MAIN_C
 #define SLIPPI_CSS_MAIN_C
-#include "main.h"
+#include "Main.h"
 
-#include "../Core/Notifications/notifications.c"
-#include "Chat/chat.c"
+#include "../../Core/Notifications/Notifications.c"
+#include "Chat/Chat.c"
 
 void UpdateOnlineCSS(){
     if(!IsSlippiOnlineCSS()) return;

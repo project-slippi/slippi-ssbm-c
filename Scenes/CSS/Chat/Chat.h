@@ -1,6 +1,6 @@
 #ifndef SLIPPI_CSS_CHAT_H
 #define SLIPPI_CSS_CHAT_H
-#include "../../Core/Notifications/Chat/text.h"
+#include "../../../Core/Notifications/Chat/Text.h"
 
 #define CHAT_SOUND_NEW_MESSAGE 0xb7		// Global Sound ID
 #define CHAT_SOUND_BLOCK_MESSAGE 0x3 	// Common Sound
