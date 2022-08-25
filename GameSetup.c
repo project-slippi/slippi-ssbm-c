@@ -129,6 +129,16 @@ void Minor_Think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
+    data->state.terminate_counter += 1;
+    if (data->state.terminate_counter > 15 * 60)
+    {
+      // If we have been waiting for over 15 seconds, there's clearly an issue so let's just
+      // terminate the connection
+      ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
+      ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
+      ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
+    }
+
     data->match_state = ExiSlippi_LoadMatchState(data->match_state);
 
     u8 notReady = !data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready;
