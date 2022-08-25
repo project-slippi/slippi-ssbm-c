@@ -129,11 +129,14 @@ void Minor_Think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
+    // Increment terminate counter so we don't wait forever
     data->state.terminate_counter += 1;
-    if (data->state.terminate_counter > 15 * 60)
-    {
-      // If we have been waiting for over 15 seconds, there's clearly an issue so let's just
-      // terminate the connection
+
+    // We will terminate the connection here on two conditions.
+    // 1. We have been waiting for the opponent to ready up for 15 seconds
+    // 2. We have already played 5 games (4 tiebreaks) and still have no conclusion. This could
+    //    happen if both players are just AFK or if the clients always desync
+    if (data->state.terminate_counter > 15 * 60 || data->scene_data->tiebreak_game_num >= 5) {
       ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
       ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
       ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
