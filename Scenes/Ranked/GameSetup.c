@@ -128,6 +128,19 @@ void minor_think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
+    // Increment terminate counter so we don't wait forever
+    data->state.terminate_counter += 1;
+
+    // We will terminate the connection here on two conditions.
+    // 1. We have been waiting for the opponent to ready up for 15 seconds
+    // 2. We have already played 5 games (4 tiebreaks) and still have no conclusion. This could
+    //    happen if both players are just AFK or if the clients always desync
+    if (data->state.terminate_counter > 15 * 60 || data->scene_data->tiebreak_game_num >= 5) {
+      ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
+      ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
+      ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
+    }
+
     data->match_state = ExiSlippi_LoadMatchState(data->match_state);
 
     u8 notReady = !data->match_state->is_local_player_ready || !data->match_state->is_remote_player_ready;
@@ -477,8 +490,6 @@ void ResetButtonState(u8 is_visible) {
     Button_SetVisibility(data->buttons[i], is_visible);
   }
 
-  // TODO: Move OK button to the middle, the commented out version below does not work, the button
-  // TODO: never moves back
   if (step->hide_secondary_button) {
     Button_SetPos(data->buttons[0], (Vec3){0, -3, 0});
     Button_SetVisibility(data->buttons[1], false);

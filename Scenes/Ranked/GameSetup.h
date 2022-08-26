@@ -31,6 +31,7 @@ typedef struct GameSetup_SceneData {
   u8 color_ban_active;
   u8 color_ban_char;
   u8 color_ban_color;
+  u8 last_game_end_mode;
   u8 (*get_winner_idx)();
 } GameSetup_SceneData;
 #pragma pack()
@@ -86,6 +87,7 @@ typedef struct GameSetup_State {
   int step_idx;
   u8 is_complete;
   u8 should_terminate;
+  u32 terminate_counter;
   u8 is_disconnect;
 } GameSetup_State;
 
