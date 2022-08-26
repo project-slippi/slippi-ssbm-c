@@ -53,7 +53,7 @@ char *GetChatText(int groupId, int messageId, bool useMessageIndex) {
 
 
 //	OSReport("GetChatText s: %s\n", ChatGroups[groupIndex][index]);
-    return ChatGroups[groupIndex][index];
+    return CHAT_MSG_STRINGS[ChatGroups[groupIndex][index]];
 };
 
 Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
