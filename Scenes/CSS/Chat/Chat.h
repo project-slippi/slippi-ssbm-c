@@ -18,7 +18,7 @@ typedef struct ChatWindowData {
     SlpCSSDesc *slpCss; // Slp CSS to pass around
     int groupId;        // Chat Group ID (Misc, Compliments), this holds the input value
     int framesLeft;        // FramesLeft before closing the window for inactivity
-    int framesCounter;  // Frames Counter used to allow sending another chat command
+    int delayedFrames;  // Frames Counter used to allow sending another chat command
 } ChatWindowData;
 
 typedef struct ChatInput {

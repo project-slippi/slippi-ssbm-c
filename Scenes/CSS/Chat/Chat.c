@@ -64,7 +64,7 @@ void UpdateChat() {
     data->groupId = chatInput->input;
     data->slpCss = slpCss;
     data->framesLeft = CHAT_WINDOW_FRAMES;
-    data->framesCounter = CHAT_ALLOW_COMMAND_FRAMES; // Allow sending right away
+    data->delayedFrames = CHAT_ALLOW_COMMAND_FRAMES; // Allow sending right away
 
     //OSReport("data->groupID = %i\n", data->groupId);
 
@@ -94,7 +94,7 @@ void UpdateChatWindow(GOBJ *gobj) {
     ChatWindowData *data = gobj->userdata;
     JOBJ *jobj = (JOBJ *) gobj->hsd_object;
 
-    data->framesCounter++; // Increase Frames Counter
+    data->delayedFrames++; // Increase Frames Counter
 
     if (!data->text) {
         gobj->gx_pri = 128; // Hack to allow thing to be shown
@@ -117,16 +117,18 @@ void UpdateChatWindow(GOBJ *gobj) {
 
     if (chatInput->input > 0) {
         // Should close and send chat message
-        if (data->framesCounter < CHAT_ALLOW_COMMAND_FRAMES) {
+        if (data->delayedFrames < CHAT_ALLOW_COMMAND_FRAMES) {
             return;
         } else if (CanAddNewChatMessage()) {
-            data->framesCounter = 0; // Reset frames counter since last message sent
+            data->delayedFrames = 0; // Reset frames counter since last message sent
             int chatCommand = (data->groupId << 4) + chatInput->input;
 //            OSReport("chatInput->input: %i, a: 0x%x\n", chatInput->input, chatCommand);
             SendOutgoingChatCommand(chatCommand);
             CloseChatWindow(jobj, data);
+            SFX_PlayRaw(0xb7, 127, 64, 0, 0); // Play a sound indicating a new message was sent
             return;
         } else {
+            data->delayedFrames = 0; // Reset frames counter 
             SFX_PlayCommon(CHAT_SOUND_BLOCK_MESSAGE);
             return;
         }
@@ -176,36 +178,36 @@ ChatInput *PadGetChatInput(bool checkForCommands) {
             PAD_BUTTON_B,
     };
 
+
     // Check each player if matches any of the allowed commands
     // if found, return the ChatInput object with info on who
     // pressed the button 
-    for (int playerIndex = 0; playerIndex < 4; playerIndex++) {
-        HSD_Pad *pad = PadGet(playerIndex, PADGET_ENGINE);
+    int playerIndex = ACCESS_U8(stc_css_hmnport);
+    HSD_Pad *pad = PadGet(playerIndex, PADGET_ENGINE);
 
-        for (int i = 0; i < sizeof(normalInputs) / sizeof(int); i++) {
-            int inputToCheck = normalInputs[i];
-            if (pad->down & inputToCheck) {
-                //OSReport("PadGetChatInput %i\n", inputToCheck);
-                input->input = inputToCheck;
-                input->playerIndex = playerIndex;
-                return input;
-            }
+    for (int i = 0; i < sizeof(normalInputs) / sizeof(int); i++) {
+        int inputToCheck = normalInputs[i];
+        if (pad->down & inputToCheck) {
+            //OSReport("PadGetChatInput %i\n", inputToCheck);
+            input->input = inputToCheck;
+            input->playerIndex = playerIndex;
+            return input;
         }
-
-        // skip to next iteration if we should not check for window commands
-        if (!checkForCommands) continue;
-
-        for (int i = 0; i < sizeof(windowCommands) / sizeof(int); i++) {
-            int inputToCheck = windowCommands[i];
-            if (pad->down & inputToCheck) {
-                //OSReport("PadGetChatInput %i\n", inputToCheck);
-                input->input = inputToCheck;
-                input->playerIndex = playerIndex;
-                return input;
-            }
-        }
-
     }
+
+    // return input if we should not check for window commands
+    if (!checkForCommands) return input;
+
+    for (int i = 0; i < sizeof(windowCommands) / sizeof(int); i++) {
+        int inputToCheck = windowCommands[i];
+        if (pad->down & inputToCheck) {
+            //OSReport("PadGetChatInput %i\n", inputToCheck);
+            input->input = inputToCheck;
+            input->playerIndex = playerIndex;
+            return input;
+        }
+    }
+
     return input;
 }
 
