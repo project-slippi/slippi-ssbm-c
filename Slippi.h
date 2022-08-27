@@ -165,6 +165,7 @@ typedef enum EXI_TX_MODE {
 } EXI_TX_MODE;
 
 // Static Functions
+// TODO: deprecate in favor of ExiSlippi_Transfer
 void* (*EXITransferBuffer)(void* buffer, int bufferSize, EXI_TX_MODE txMode) = (void *)0x800055f0;
 Text* (*createSlippiPremadeText)(int playerIndex, int messageId, int textType, int gx_pri, float x, float y, float z, float scale) = (void *)0x800056b4;
 int (*createSubtext)(Text* text, GXColor* color, int textType, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize) = (void *)0x800056b4;
