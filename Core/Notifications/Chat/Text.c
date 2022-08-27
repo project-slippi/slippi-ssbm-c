@@ -83,9 +83,9 @@ Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
         float yPos = 79.0f + margin;
         char *label = GetChatText(groupId, i, true);
 
-        //TODO: for some reason if I don't print the yPosition, it gets reset to 0 for all labels except index 0....
+        //TODO: for some reason if I don't print something, the yPosition gets reset to 0 for all labels except index 0....
         //If you don't believe me, try commenting the line below
-        OSReport("yPos: %f\n", yPos);
+        OSReport("yPos: %f", yPos);
         createSubtext(text, &MSG_COLORS[MSG_COLOR_WHITE], 0x0, 0, (char **) {label}, 0.45f, labelX + offset, yPos, 0.0f,
                       0.0f);
     }

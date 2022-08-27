@@ -71,7 +71,7 @@ void FreeChatMessage(void *ptr) {
     } else {
         ChatMessagesRemoteCount--;
     }
-    OSReport("Free -> Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
+    //OSReport("Free -> Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
 
     HSD_Free(ptr);
 }
@@ -93,7 +93,7 @@ void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb,
     } else {
         ChatMessagesRemoteCount++;
     }
-    OSReport("Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
+    //OSReport("Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
 }
 
 Text *CreateChatMessageText(NotificationMessage *msg) {
