@@ -196,8 +196,15 @@ int GetRemotePlayerCount(){
 /**
  * Checks if on Online CSS
  * */
-bool IsSlippiOnlineCSS(){
-	return stc_scene_info->minor_curr == MNRKIND_TITLE && stc_scene_info->major_curr == MJRKIND_HANYUTESTCSS;
+bool IsSlippiOnlineCSS() {
+    return stc_scene_info->minor_curr == MNRKIND_TITLE && stc_scene_info->major_curr == MJRKIND_HANYUTESTCSS;
+}
+
+/**
+ * Checks if on CSS Name Entry Screen
+ */
+bool IsOnCSSNameEntryScreen() {
+    return ACCESS_U8(stc_css_exitkind);
 }
 
 /**

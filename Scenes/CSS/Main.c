@@ -10,6 +10,9 @@ void UpdateOnlineCSS() {
     if (!IsSlippiOnlineCSS()) return;
     //bp();
 
+    // Do not handle notifications or chat input if on Name Entry Screen
+    if (IsOnCSSNameEntryScreen()) return;
+
     ListenForNotifications();
     ListenForChatInput();
 }
