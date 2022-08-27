@@ -52,7 +52,10 @@ void UpdateChat() {
     if (GOBJ_IsAlive(_chatWindowGOBJ)) return;
 
     ChatInput *chatInput = PadGetChatInput(false);
-    if (chatInput->input <= 0) return; // Return if not input
+    if (chatInput->input <= 0) {
+        HSD_Free(chatInput);
+        return; // Return if not input
+    }
 
     // TODO: Move this back
     SlpCSSDesc *slpCss = GetSlpCSSDT()->SlpCSSDatAddress;// Archive_GetPublicAddress(archive, "slpCSS");
@@ -81,6 +84,9 @@ void UpdateChat() {
 
     SFX_PlayCommon(CHAT_SOUND_OPEN_WINDOW);
     GetSlpCSSDT()->chatWindowOpened = true;
+
+    // cleanup
+    HSD_Free(chatInput);
 }
 
 /**
