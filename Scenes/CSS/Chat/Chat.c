@@ -34,7 +34,7 @@ void FreeChatWindow(void *ptr) {
 void ListenForChatInput() {
     // OSReport("ListenForChatInput 0x%x 0x%x 0x%x 0x%x 0x%x\n",_chatMainGOBJ, _chatMainGOBJ->previous, _chatMainGOBJ->next, _chatMainGOBJ->previousOrdered, _chatMainGOBJ->nextOrdered);
     if (GOBJ_IsAlive(_chatMainGOBJ)) return;
-    OSReport("Initializing Chat Input Listener.... 0x%x\n", _chatMainGOBJ);
+    // OSReport("Initializing Chat Input Listener.... 0x%x\n", _chatMainGOBJ);
     GOBJ *gobj = GObj_Create(0x4, 0x5, 0x80);
 
     _chatMainGOBJ = gobj;

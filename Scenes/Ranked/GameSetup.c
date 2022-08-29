@@ -13,7 +13,7 @@ static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
 void minor_load(GameSetup_SceneData *minor_data) {
-  OSReport("minor load\n");
+  // OSReport("minor load\n");
 
   data = calloc(sizeof(GameSetup_Data));
   data->scene_data = minor_data;
@@ -158,7 +158,7 @@ void minor_think() {
 }
 
 void minor_exit(GameSetup_SceneData *minor_data) {
-  OSReport("minor exit\n");
+  // OSReport("minor exit\n");
 }
 
 void InitState() {

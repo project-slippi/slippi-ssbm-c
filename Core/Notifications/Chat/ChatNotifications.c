@@ -18,7 +18,7 @@ void FreeChatNotifications(void *ptr) {
 
 void ListenForChatNotifications() {
     if (GOBJ_IsAlive(_chatNotificationsGOBJ)) return;
-    OSReport("ListenForChatNotifications\n");
+    // OSReport("ListenForChatNotifications\n");
 
     ChatMessagesLocalCount = 0;
     ChatMessagesRemoteCount = 0;
@@ -54,7 +54,7 @@ void UpdateChatNotifications() {
     int groupId = messageId >> 4; // 18 >> 4 == 1
     int finalMessageId = (groupId << 4) ^ messageId; // 18 XOR 10 == 8
     if (!IsValidChatGroupId(groupId) || !IsValidChatMessageId(finalMessageId)) {
-        OSReport("Invalid Chat Command: %i!\n", messageId);
+        // OSReport("Invalid Chat Command: %i!\n", messageId);
         return;
     }
     CreateAndAddChatMessage(dt->SlpCSSDatAddress, msrb, playerIndex, messageId);

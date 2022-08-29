@@ -14,14 +14,14 @@ void minor_think() {
 void minor_load() {
     void (*CSS_load)() = (void *) 0x8026688C;
     CSS_load();
-    OSReport("CSS_load\n");
+    // OSReport("CSS_load\n");
 }
 
 //Runs when leaving CSS
 void minor_exit() {
     void (*CSS_exit)() = (void *) 0x80266D70;
     CSS_exit();
-    OSReport("CSS_exit\n");
+    // OSReport("CSS_exit\n");
 }
 
 #endif SLIPPI_CSS_SETUP_C

@@ -14,7 +14,7 @@ void FreeNotifications(void *ptr) {
 
 void InitNotifications() {
     if (GOBJ_IsAlive(_notificationsGOBJ)) return;
-    OSReport("Initializing Notifications Listener.... 0x%x\n", _notificationsGOBJ);
+    // OSReport("Initializing Notifications Listener.... 0x%x\n", _notificationsGOBJ);
 
 
     for (int i = 0; i < NOTIFICATION_MESSAGE_SET_LENGTH; i++)
