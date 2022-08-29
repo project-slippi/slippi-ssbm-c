@@ -1,20 +1,19 @@
 #include "GameSetup.h"
 
-#include "./Components/Button.h"
-#include "./Components/CharStageBoxSelector.h"
-#include "./Components/CharStageIcon.h"
-#include "./Components/StockIcon.h"
-#include "./Game/Characters.h"
-#include "./Game/Sounds.h"
-#include "./m-ex/MexTK/mex.h"
-#include "Files.h"
+#include "../../Components/Button.h"
+#include "../../Components/CharStageBoxSelector.h"
+#include "../../Components/CharStageIcon.h"
+#include "../../Components/StockIcon.h"
+#include "../../Game/Characters.h"
+#include "../../Game/Sounds.h"
+#include "../../Files.h"
 
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
-void Minor_Load(GameSetup_SceneData *minor_data) {
-  OSReport("minor load\n");
+void minor_load(GameSetup_SceneData *minor_data) {
+  // OSReport("minor load\n");
 
   data = calloc(sizeof(GameSetup_Data));
   data->scene_data = minor_data;
@@ -125,7 +124,7 @@ void Minor_Load(GameSetup_SceneData *minor_data) {
   UpdateTimeline();
 }
 
-void Minor_Think() {
+void minor_think() {
   // If current step is completed, process finished
   // TODO: Add some kind of delay/display to indicate which stage was selected
   if (data->state.should_terminate) {
@@ -158,8 +157,8 @@ void Minor_Think() {
   }
 }
 
-void Minor_Exit(GameSetup_SceneData *minor_data) {
-  OSReport("minor exit\n");
+void minor_exit(GameSetup_SceneData *minor_data) {
+  // OSReport("minor exit\n");
 }
 
 void InitState() {
