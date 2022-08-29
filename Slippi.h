@@ -123,8 +123,6 @@ typedef struct packed(MatchStateResponseBuffer) {
 typedef struct packed(SlippiCSSDataTable) {
 	MatchStateResponseBuffer* msrb;
 	void* SlpCSSDatAddress;
-	void* SlpFxFnArrayAddress;
-	void* SlpFxFnAddress;
 	Text* textStructAddress;
 	u8 spinner1;
 	u8 spinner2;

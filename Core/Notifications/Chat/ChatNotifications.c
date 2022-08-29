@@ -10,7 +10,7 @@
 int ChatMessagesLocalCount = 0;
 int ChatMessagesRemoteCount = 0;
 
-GOBJ *_chatNotificationsGOBJ;
+GOBJ *_chatNotificationsGOBJ = NULL;
 
 void FreeChatNotifications(void *ptr) {
     _chatNotificationsGOBJ = NULL;
