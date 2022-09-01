@@ -34,28 +34,28 @@ static GXColor MSG_COLORS[] = {
 enum CHAT_MSG_NAMES {
 
     CHAT_MSG_COMMON,
-    CHAT_MSG_GGS,
-    CHAT_MSG_ONE_MORE,
-    CHAT_MSG_BRB,
-    CHAT_MSG_GOOD_LUCK,
+    CHAT_MSG_COMMON_1,
+    CHAT_MSG_COMMON_2,
+    CHAT_MSG_COMMON_3,
+    CHAT_MSG_COMMON_4,
 
     CHAT_MSG_COMPLIMENTS,
-    CHAT_MSG_WELL_PLAYED,
-    CHAT_MSG_THAT_WAS_FUN,
-    CHAT_MSG_THANKS,
-    CHAT_MSG_TOO_GOOD,
+    CHAT_MSG_COMPLIMENTS_1,
+    CHAT_MSG_COMPLIMENTS_2,
+    CHAT_MSG_COMPLIMENTS_3,
+    CHAT_MSG_COMPLIMENTS_4,
 
     CHAT_MSG_REACTIONS,
-    CHAT_MSG_OOF,
-    CHAT_MSG_MY_B,
-    CHAT_MSG_LOL,
-    CHAT_MSG_WOW,
+    CHAT_MSG_REACTIONS_1,
+    CHAT_MSG_REACTIONS_2,
+    CHAT_MSG_REACTIONS_3,
+    CHAT_MSG_REACTIONS_4,
 
     CHAT_MSG_MISC,
-    CHAT_MSG_OKAY,
-    CHAT_MSG_THINKING,
-    CHAT_MSG_LETS_PLAY_AGAIN_LATER,
-    CHAT_MSG_BAD_CONNECTION,
+    CHAT_MSG_MISC_1,
+    CHAT_MSG_MISC_2,
+    CHAT_MSG_MISC_3,
+    CHAT_MSG_MISC_4,
 };
 
 static char* CHAT_MSG_STRINGS[] = {
@@ -72,14 +72,14 @@ static char* CHAT_MSG_STRINGS[] = {
         "too good",
 
         "Reactions",
-        "oof",
+        "sorry",
         "my b",
         "lol",
         "wow",
 
         "Misc",
-        "okay",
-        "thinking",
+        "gotta go",
+        "one sec",
         "let's play again later",
         "bad connection",
 };
@@ -87,62 +87,32 @@ static char* CHAT_MSG_STRINGS[] = {
 int ChatGroups[4][5] = {
         {
                 CHAT_MSG_COMMON,
-                CHAT_MSG_GGS,
-                CHAT_MSG_ONE_MORE,
-                CHAT_MSG_BRB,
-                CHAT_MSG_GOOD_LUCK
+                CHAT_MSG_COMMON_1,
+                CHAT_MSG_COMMON_2,
+                CHAT_MSG_COMMON_3,
+                CHAT_MSG_COMMON_4,
         },
         {
                 CHAT_MSG_COMPLIMENTS,
-                CHAT_MSG_WELL_PLAYED,
-                CHAT_MSG_THAT_WAS_FUN,
-                CHAT_MSG_THANKS,
-                CHAT_MSG_TOO_GOOD
+                CHAT_MSG_COMPLIMENTS_1,
+                CHAT_MSG_COMPLIMENTS_2,
+                CHAT_MSG_COMPLIMENTS_3,
+                CHAT_MSG_COMPLIMENTS_4,
         },
         {
                 CHAT_MSG_REACTIONS,
-                CHAT_MSG_OOF,
-                CHAT_MSG_MY_B,
-                CHAT_MSG_LOL,
-                CHAT_MSG_WOW
+                CHAT_MSG_REACTIONS_1,
+                CHAT_MSG_REACTIONS_2,
+                CHAT_MSG_REACTIONS_3,
+                CHAT_MSG_REACTIONS_4,
         },
         {
                 CHAT_MSG_MISC,
-                CHAT_MSG_OKAY,
-                CHAT_MSG_THINKING,
-                CHAT_MSG_LETS_PLAY_AGAIN_LATER,
-                CHAT_MSG_BAD_CONNECTION
+                CHAT_MSG_MISC_1,
+                CHAT_MSG_MISC_2,
+                CHAT_MSG_MISC_3,
+                CHAT_MSG_MISC_4,
         }
 };
 
-//char ChatGroups[4][5][45] = {
-//        {
-//                "Common",
-//                "ggs",
-//                "one more",
-//                "brb",
-//                "good luck"
-//        },
-//        {
-//                "Compliments",
-//                "well played",
-//                "that was fun",
-//                "thanks",
-//                "too good"
-//        },
-//        {
-//                "Reactions",
-//                "oof",
-//                "my b",
-//                "lol",
-//                "wow"
-//        },
-//        {
-//                "Misc",
-//                "okay",
-//                "thinking",
-//                "let's play again later",
-//                "bad connection"
-//        }
-//};
 #endif SLIPPI_CSS_CHAT_TEXT_H

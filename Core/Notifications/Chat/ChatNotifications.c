@@ -85,7 +85,7 @@ void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb,
     NotificationMessage *chatMessage = CreateChatMessage(playerIndex, messageId);
     CreateAndAddNotificationMessage(slpCss, chatMessage);
 //	chatMessage->text = CreateChatMessageText(chatMessage);
-    chatMessage->text = CreateChatMessageText2(chatMessage);
+    chatMessage->text = CreateChatMessageTextFromEXIDevice(chatMessage);
     SFX_Play(CHAT_SOUND_NEW_MESSAGE);
 
     if (isLocalMessage) {
@@ -130,7 +130,7 @@ Text *CreateChatMessageText(NotificationMessage *msg) {
     return text;
 }
 
-Text *CreateChatMessageText2(NotificationMessage *msg) {
+Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg) {
     // Hack the text alloc info to use a different gx
     stc_textcanvas_first[0]->gx_link = 3;
     stc_textcanvas_first[0]->gx_pri = 129;

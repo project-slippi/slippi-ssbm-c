@@ -26,7 +26,7 @@ void UpdateChatMessage(GOBJ *gobj);
 
 Text *CreateChatMessageText(NotificationMessage *msg);
 
-Text *CreateChatMessageText2(NotificationMessage *msg);
+Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg);
 
 bool IsValidChatGroupId(int groupId);
 
