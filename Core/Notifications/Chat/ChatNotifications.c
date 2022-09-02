@@ -53,7 +53,9 @@ void UpdateChatNotifications() {
 
     int groupId = messageId >> 4; // 18 >> 4 == 1
     int finalMessageId = (groupId << 4) ^ messageId; // 18 XOR 10 == 8
-    if (!IsValidChatGroupId(groupId) || !IsValidChatMessageId(finalMessageId)) {
+    bool isValidStandardMsg = IsValidChatGroupId(groupId) && IsValidChatMessageId(finalMessageId);
+    bool isSpecialMessage = messageId == 0x10;
+    if (!isValidStandardMsg && !isSpecialMessage) {
         // OSReport("Invalid Chat Command: %i!\n", messageId);
         return;
     }
