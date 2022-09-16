@@ -116,7 +116,6 @@ void UpdateChatWindow(GOBJ *gobj) {
 
     // Close Chat Window if B button pressed
     if (chatInput->input == PAD_BUTTON_B) {
-        SFX_PlayCommon(CHAT_SOUND_CANCEL_MESSAGE);
         CloseChatWindow(jobj, data);
         return;
     }
