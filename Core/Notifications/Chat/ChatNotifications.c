@@ -136,7 +136,8 @@ Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg) {
     // Hack the text alloc info to use a different gx
     stc_textcanvas_first[0]->gx_link = 3;
     stc_textcanvas_first[0]->gx_pri = 129;
-    Text *text = createSlippiPremadeText(msg->playerIndex + 1, msg->messageId, 2, 0, -29.5f, -23.25f + (msg->id * 3.2f),
+    float x = isWidescreen() ?  -44.5f : -29.5f ;
+    Text *text = createSlippiPremadeText(msg->playerIndex + 1, msg->messageId, 2, 0, x, -23.25f + (msg->id * 3.2f),
                                          5.0f, 0.04f);
     stc_textcanvas_first[0]->gx_link = 1;
     stc_textcanvas_first[0]->gx_pri = 0x80;
