@@ -108,6 +108,7 @@ typedef struct ExiSlippi_MatchState_Response {
   char p4_uid[29];
   char err_msg[241];
   u8 game_info_block[0x138];
+  char matchmake_id[51];
 } ExiSlippi_MatchState_Response;
 
 typedef struct ExiSlippi_CleanupConnection_Query {
