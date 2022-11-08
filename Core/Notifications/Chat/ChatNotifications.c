@@ -5,6 +5,8 @@
 #include "Text.c"
 
 #include "../../../Common.h"
+#include "../../../Game/SysText.c"
+
 #include "../Notifications.c"
 
 int ChatMessagesLocalCount = 0;
@@ -54,7 +56,7 @@ void UpdateChatNotifications() {
     int groupId = messageId >> 4; // 18 >> 4 == 1
     int finalMessageId = (groupId << 4) ^ messageId; // 18 XOR 10 == 8
     bool isValidStandardMsg = IsValidChatGroupId(groupId) && IsValidChatMessageId(finalMessageId);
-    bool isSpecialMessage = messageId == 0x10;
+    bool isSpecialMessage = IsSpecialChatMessageId(messageId);
     if (!isValidStandardMsg && !isSpecialMessage) {
         // OSReport("Invalid Chat Command: %i!\n", messageId);
         return;
@@ -86,8 +88,7 @@ void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb,
 
     NotificationMessage *chatMessage = CreateChatMessage(playerIndex, messageId);
     CreateAndAddNotificationMessage(slpCss, chatMessage);
-//	chatMessage->text = CreateChatMessageText(chatMessage);
-    chatMessage->text = CreateChatMessageTextFromEXIDevice(chatMessage);
+    chatMessage->text = CreateChatMessageText(chatMessage);
     SFX_Play(CHAT_SOUND_NEW_MESSAGE);
 
     if (isLocalMessage) {
@@ -98,7 +99,76 @@ void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb,
     //OSReport("Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
 }
 
+
+//{SPT_CHAT_P1, "<LEFT><KERN><COLOR, 229, 76, 76>%s:<S><COLOR, 255, 255, 255>%s<END>"},
+//{SPT_CHAT_P2, "<LEFT><KERN><COLOR, 59, 189, 255>%s:<S><COLOR, 255, 255, 255>%s<END>"},
+//{SPT_CHAT_P3, "<LEFT><KERN><COLOR, 255, 203, 4>%s:<S><COLOR, 255, 255, 255>%s<END>"},
+//{SPT_CHAT_P4, "<LEFT><KERN><COLOR, 0, 178, 2>%s:<S><COLOR, 255, 255, 255>%s<END>"},
+//{SPT_LOGOUT, "<FIT><COLOR, 243, 75, 75>Are<S>You<COLOR, 0, 175, 75><S>Sure?<END>"},
+//{SPT_CHAT_DISABLED, "<LEFT><KERN><COLOR, 0, 178, 2>%s<S><COLOR, 255, 255, 255>has<S>chat<S>disabled<S><END>"},
+char *BuildChatTextData(char *playerName, u8 playerIndex, u8 groupId, u8 messageId) {
+    char *message;
+    SysText *color;
+
+    //OSReport("BuildChatTextData 0x%x \n", messageId);
+
+    switch (messageId) {
+        case CHAT_MESSAGE_ID_DISABLED: // DISABLED CHAT MESSAGE
+            return st_build(7,
+                            st_left(), st_kern(), st_color(0, 178, 2),
+                            st_sjis_text(playerName), st_space(),
+                            st_color(255, 255, 255),
+                            st_text("has chat disabled"));
+        default:
+            message = GetChatText(groupId, messageId, false);
+    }
+
+    switch (playerIndex) {
+        case 1:
+            color = st_color(59, 189, 255);
+            break;
+        case 2:
+            color = st_color(255, 203, 4);
+            break;
+        case 3:
+            color = st_color(0, 178, 2);
+            break;
+        default:
+            color = st_color(229, 76, 76);
+            break;
+    }
+
+
+    return st_build(8,
+                    st_left(), st_kern(), color,
+                    st_sjis_text(playerName), st_text(":"), st_space(),
+                    st_color(255, 255, 255),
+                    st_text(message));
+}
+
 Text *CreateChatMessageText(NotificationMessage *msg) {
+    Text *text = NULL;
+    switch (CHAT_MESSAGE_GEN_TYPE) {
+        case CHAT_MESSAGE_GEN_TYPE_SUBTEXT:
+            text = CreateChatMessageTextFromSubText(msg);
+            break;
+        case CHAT_MESSAGE_GEN_TYPE_SYSTEXT:
+            text = CreateChatMessageTextFromLocalSysText(msg);
+            break;
+        case CHAT_MESSAGE_GEN_TYPE_EXI:
+            text = CreateChatMessageTextFromEXIDevice(msg);
+            break;
+        default:
+            text = CreateChatMessageTextFromLocalSysText(msg);
+            break;
+
+    }
+
+    return text;
+}
+
+
+Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
     MatchStateResponseBuffer *msrb = MSRB();
     bool isLocalMessage = msg->playerIndex == msrb->localPlayerIndex;
 
@@ -128,7 +198,42 @@ Text *CreateChatMessageText(NotificationMessage *msg) {
     createSubtext(text, &MSG_COLORS[colorIndex], 0x0, 0, (char **) {name}, scale, xPos, yPos, 0.0f, 0.0f);
     createSubtext(text, &MSG_COLORS[0], 0x0, 0, (char **) {message}, scale, strlen(name) * 6.8f + xPos, yPos, 0.0f,
                   0.0f);
+    return text;
+}
 
+Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
+    MatchStateResponseBuffer *msrb = MSRB();
+    bool isLocalMessage = msg->playerIndex == msrb->localPlayerIndex;
+
+    // Dolphin returns the group and message id joined together so we need to split them
+    int groupId = msg->messageId >> 4;
+    int messageId = (groupId << 4) ^ msg->messageId;
+
+    // Special Chat Message Ids need to be kept intact so restore it if it is and let
+    // BuildChatTextData return proper sys text buffer
+    if (IsSpecialChatMessageId(msg->messageId))
+        messageId = msg->messageId;
+
+    char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
+    int *textData = BuildChatTextData(playerName, msg->playerIndex, groupId, messageId);
+
+    float x = isWidescreen() ? -44.5f : -29.5f;
+    float y = -23.25f + (msg->id * 3.2f);
+
+    // Hack the text alloc info to use a different gx
+    stc_textcanvas_first[0]->gx_link = 3;
+    stc_textcanvas_first[0]->gx_pri = 129;
+
+    Text *text = Text_CreateText2(0, 0, x, y, 5.0f, 20.0f, 20.0f);
+    text->hidden = true; // hide by default
+    text->stretch.X = 0.04f;
+    text->stretch.Y = 0.04f;
+    Text_SetSisText(text, 0);
+    text->text_start = textData;
+
+    // Restore original gx
+    stc_textcanvas_first[0]->gx_link = 1;
+    stc_textcanvas_first[0]->gx_pri = 0x80;
     return text;
 }
 
@@ -136,7 +241,7 @@ Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg) {
     // Hack the text alloc info to use a different gx
     stc_textcanvas_first[0]->gx_link = 3;
     stc_textcanvas_first[0]->gx_pri = 129;
-    float x = isWidescreen() ?  -44.5f : -29.5f ;
+    float x = isWidescreen() ? -44.5f : -29.5f;
     Text *text = createSlippiPremadeText(msg->playerIndex + 1, msg->messageId, 2, 0, x, -23.25f + (msg->id * 3.2f),
                                          5.0f, 0.04f);
     stc_textcanvas_first[0]->gx_link = 1;
@@ -174,6 +279,14 @@ bool IsValidChatGroupId(int groupId) {
 
     return false;
 };
+
+bool IsSpecialChatMessageId(int messageId) {
+    switch (messageId) {
+        case CHAT_MESSAGE_ID_DISABLED:
+            return true;
+    }
+    return false;
+}
 
 bool IsValidChatMessageId(int messageId) {
     // For now use same logic

@@ -98,7 +98,6 @@ typedef struct packed(MatchStateResponseBuffer) {
 	u8 userChatMsgId;
 	u8 oppChatMsgId;
 	u8 chatMsgPlayerIndex;
-	u8 remotePlayerCount;
 	u32* VSLeftPlayers;
 	u32* VSRightPlayers;
 	char localName[31];
@@ -111,6 +110,10 @@ typedef struct packed(MatchStateResponseBuffer) {
 	char p2ConnectCode[10];
 	char p3ConnectCode[10];
 	char p4ConnectCode[10];
+    char p1UID[29];
+    char p2UID[29];
+    char p3UID[29];
+    char p4UID[29];
 	char errorMessage[241];
 	MatchInit gameInfoBlock;
 } MatchStateResponseBuffer;
@@ -186,9 +189,16 @@ MatchStateResponseBuffer* MSRB(){
 
 /**
  * Finds the number of remote players connected
+ * TODO: do this smarter (make MSRB return remote player count from dolphin)
  * */
 int GetRemotePlayerCount(){
- 	return MSRB()->remotePlayerCount;
+    u8 i = 0;
+    if(strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0) i++;
+    if(strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0) i++;
+    if(strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0) i++;
+    if(strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0) i++;
+    return i;
+// 	return MSRB()->remotePlayerCount;
 }
 
 /**
