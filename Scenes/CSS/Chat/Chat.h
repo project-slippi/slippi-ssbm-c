@@ -29,6 +29,8 @@ typedef struct ChatInput {
 /** functions **/
 void FreeChat(void *ptr);
 
+void SendOutgoingChatCommand(int messageId);
+
 void FreeChatWindow(void *ptr);
 
 void ListenForChatInput();

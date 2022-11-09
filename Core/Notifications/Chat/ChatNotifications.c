@@ -215,7 +215,7 @@ Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
         messageId = msg->messageId;
 
     char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
-    int *textData = BuildChatTextData(playerName, msg->playerIndex, groupId, messageId);
+    char *textData = BuildChatTextData(playerName, msg->playerIndex, groupId, messageId);
 
     float x = isWidescreen() ? -44.5f : -29.5f;
     float y = -23.25f + (msg->id * 3.2f);

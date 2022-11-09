@@ -40,7 +40,6 @@ SysText *st_push(SysText *tb, int charCount, ...) {
     return tb;
 }
 
-
 SysText *st_color(u8 r, u8 g, u8 b) {
     return st_push(st_create(), 4, TEXT_OP_CODE_COLOR, r, g, b);
 }

@@ -215,6 +215,7 @@ ChatInput *PadGetChatInput(bool checkForCommands) {
 
     return input;
 }
+//#define LOCAL_TESTING
 
 /**
  * Sends EXI Command to Dolphin for a new chat message
@@ -225,6 +226,12 @@ void SendOutgoingChatCommand(int messageId) {
     buffer->messageId = messageId;
 //    OSReport("SendOutgoingChatCommand buffer cmd:%i, msgId:%i size: %i\n", buffer->cmd, buffer->messageId, sizeof(OutgoingChatMessageBuffer));
     EXITransferBuffer(buffer, sizeof(OutgoingChatMessageBuffer), EXI_TX_WRITE);
+
+//#ifdef LOCAL_TESTING
+//    SlippiCSSDataTable *dt = GetSlpCSSDT();
+//    MatchStateResponseBuffer *msrb = dt->msrb;
+//    CreateAndAddChatMessage(dt->SlpCSSDatAddress, msrb, 0, messageId);
+//#endif
 }
 
 #endif SLIPPI_CSS_CHAT_C
