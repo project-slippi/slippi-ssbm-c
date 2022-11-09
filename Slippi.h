@@ -110,10 +110,10 @@ typedef struct packed(MatchStateResponseBuffer) {
 	char p2ConnectCode[10];
 	char p3ConnectCode[10];
 	char p4ConnectCode[10];
-    char p1UID[29];
-    char p2UID[29];
-    char p3UID[29];
-    char p4UID[29];
+	char p1UID[29];
+	char p2UID[29];
+	char p3UID[29];
+	char p4UID[29];
 	char errorMessage[241];
 	MatchInit gameInfoBlock;
 } MatchStateResponseBuffer;
