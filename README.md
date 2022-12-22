@@ -10,7 +10,7 @@ git submodule update
 ```
 ## Build Instructions
 ### Windows
-1. In order to build this project you will need to [download](https://github.com/devkitPro/installer/releases) the `devkitPro` tools for Gamecube / Wii.
+1. In order to build this project you will need to [download](https://github.com/devkitPro/installer/releases) the devkitPro tools for Gamecube / Wii.
 2. Before running the build command you need to create an output directory for m-ex .dat files
 ```
 mkdir build
