@@ -7,10 +7,9 @@ Initialize the m-ex submodule in your local project
 git submodule init
 git submodule update
 ```
-
 # Requirements
-devkitPro tools for Gamecube / Wii
-https://devkitpro.org/wiki/Getting_Started
+devkitPro tools for Gamecube / Wii:
+[Getting Started](https://devkitpro.org/wiki/Getting_Started)
 
 # Build Instructions
 ## Windows
