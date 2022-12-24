@@ -19,12 +19,14 @@ typedef struct CharPickerDialog {
   GOBJ *gobj;
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
-  CSIcon *char_icons[CKIND_GANONDORF + 1];
+  CSIcon *char_icons[CKIND_GANONDORF + 2];
   CharPickerDialog_State state;
 
   void (*on_close)();
   u8 (*get_next_color)();
 } CharPickerDialog;
+
+void SelectRandomChar();
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color);
 void CharPickerDialog_Free(CharPickerDialog *cpd);
