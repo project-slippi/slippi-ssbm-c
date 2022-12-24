@@ -85,9 +85,7 @@ static void _InputsThink(GOBJ *gobj) {
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
-    if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_GANONDORF + 1) {
-      cpd->state.char_selection_idx -= 21;
-    } else if (cpd->state.char_selection_idx >= CKIND_FALCO) {
+    if (cpd->state.char_selection_idx % 7 >= 6 && cpd->state.char_selection_idx > CKIND_SHEIK) {
       cpd->state.char_selection_idx -= 14;
     } else if (cpd->state.char_selection_idx >= CKIND_YOUNGLINK) {
       cpd->state.char_selection_idx -= 21;
