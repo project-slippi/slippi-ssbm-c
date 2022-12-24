@@ -34,7 +34,7 @@ static void _InputsThink(GOBJ *gobj) {
 
   if (downInputs & HSD_BUTTON_A) {
     SFX_PlayCommon(CommonSound_ACCEPT);  // Play "accept" sound
-    if (cpd->state.char_selection_idx == CPD_LAST_INDEX) { // Select random
+    if (cpd->state.char_selection_idx == CKIND_RANDOM) { // Select random
       SelectRandomChar(cpd);
     }
     CharPickerDialog_CloseDialog(cpd);
