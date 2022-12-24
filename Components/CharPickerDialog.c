@@ -36,7 +36,6 @@ static void _InputsThink(GOBJ *gobj) {
     SFX_PlayCommon(CommonSound_ACCEPT);  // Play "accept" sound
     if (cpd->state.char_selection_idx == 26) { // Select random
       SelectRandomChar(cpd);
-      return;
     }
     CharPickerDialog_CloseDialog(cpd);
     cpd->on_close(cpd, true);
