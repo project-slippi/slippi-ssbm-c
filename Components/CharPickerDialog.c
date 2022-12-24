@@ -146,6 +146,7 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void
   for (int i = CKIND_FALCON; i <= CKIND_GANONDORF + 1; i++) {
     cpd->char_icons[i] = CSIcon_Init(gui);
     CSIcon_SetMaterial(cpd->char_icons[i], i < 26 ? CSIcon_ConvertCharToMat(i): CSIcon_Material_Question);
+
     // Attach icon to cur joint and move to next joint
     JOBJ_AddChild(cur_joint, cpd->char_icons[i]->root_jobj);
     cur_joint = cur_joint->sibling;
