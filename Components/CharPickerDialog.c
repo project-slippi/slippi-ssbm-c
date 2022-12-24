@@ -130,7 +130,6 @@ static void _InputsThink(GOBJ *gobj) {
     }
     CSIcon_SetSelectState(cpd->char_icons[i], state);
   }
-  OSReport("%d\n", cpd->state.char_selection_idx);
 }
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color) {
