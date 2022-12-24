@@ -112,7 +112,7 @@ static void _InputsThink(GOBJ *gobj) {
   }
 
   // Update which icon shows up selected
-  for (int i = CKIND_FALCON; i <= CPD_LAST_INDEX; i++) {
+  for (int i = CKIND_FALCON; i <= CKIND_RANDOM; i++) {
     CSIcon_Select_State state = CSIcon_Select_State_NotSelected;
     u8 colorId = 0;
     if (i == cpd->state.char_selection_idx) {
@@ -121,7 +121,7 @@ static void _InputsThink(GOBJ *gobj) {
     }
 
     // Only show stock icons on characters
-    if (i < CPD_LAST_INDEX) {
+    if (i < CKIND_RANDOM) {
       CSIcon_SetStockIconVisibility(cpd->char_icons[i], i == cpd->state.char_selection_idx);
       StockIcon_SetIcon(cpd->char_icons[i]->stock_icon, i, colorId);
     }
@@ -143,7 +143,7 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void
 
   // Connect CharStageIcons for each character to the dialog
   JOBJ *cur_joint = cpd->root_jobj->child->child->sibling->child;
-  for (int i = CKIND_FALCON; i <= CPD_LAST_INDEX; i++) {
+  for (int i = CKIND_FALCON; i <= CKIND_RANDOM; i++) {
     cpd->char_icons[i] = CSIcon_Init(gui);
     CSIcon_Material material;
     // Assign material to chars / random
