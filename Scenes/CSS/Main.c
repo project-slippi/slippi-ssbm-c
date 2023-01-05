@@ -5,6 +5,7 @@
 
 #include "../../Core/Notifications/Notifications.c"
 #include "Chat/Chat.c"
+#include "RankInfo/RankInfo.c"
 
 void UpdateOnlineCSS() {
     if (!IsSlippiOnlineCSS()) return;
