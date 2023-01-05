@@ -200,10 +200,6 @@ MatchStateResponseBuffer* MSRB(){
 }
 
 /**
- * Gets Rank Info Response Buffer
- * */
-
-/**
  * Finds the number of remote players connected
  * */
 int GetRemotePlayerCount(){
