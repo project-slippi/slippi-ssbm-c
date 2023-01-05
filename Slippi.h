@@ -58,6 +58,7 @@
 #define SLIPPI_CMD_ReportMatch 0xBD
 #define SLIPPI_CMD_SendNameEntryIndex 0xBE
 #define SLIPPI_CMD_NameEntryAutoComplete 0xBF
+#define SLIPPI_CMD_GetRankInfo 0xC3
 // For Slippi file loads
 #define SLIPPI_CMD_FileLength 0xD1
 #define SLIPPI_CMD_FileLoad 0xD2
@@ -146,14 +147,32 @@ typedef struct SlippiCSSDataTableRef {
 
 const SlippiCSSDataTableRef* SLIPPI_CSS_DATA_REF = (SlippiCSSDataTableRef*) CSS_DATA_TABLE_BUFFER_ADDRESS; 
 
+// ################################################################################
+// # Rank Info Response Buffer
+// ################################################################################
+
+typedef struct packed(RankInfoResponseBuffer) {
+	u8 localPlayerRank;
+	float localPlayerRating;
+	u8 localPlayerGlobal;
+	u8 localPlayerRegional;
+} RankInfoResponseBuffer;
+
 /** DAT Descriptors **/
 typedef struct ChatWindowDesc {
 	JOBJDesc* jobj;
 } ChatWindowDesc;
 
+typedef struct RankIconDesc {
+	JOBJDesc* jobj;
+} RankIconDesc;
+
 typedef struct SlpCSSDesc {
 	ChatWindowDesc* chatWindow;
 	JOBJSet* chatMessage;
+	MatAnimJointDesc* mode; // This is not a desc but the struct is identical
+	JOBJ* connectHelp;
+	JOBJSet* rankIcons;
 } SlpCSSDesc;
 
 // EXI Transfer Modes
@@ -183,6 +202,10 @@ SlippiCSSDataTable* GetSlpCSSDT(){
 MatchStateResponseBuffer* MSRB(){
 	return GetSlpCSSDT()->msrb;
 }
+
+/**
+ * Gets Rank Info Response Buffer
+ * */
 
 /**
  * Finds the number of remote players connected
