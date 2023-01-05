@@ -163,10 +163,6 @@ typedef struct ChatWindowDesc {
 	JOBJDesc* jobj;
 } ChatWindowDesc;
 
-typedef struct RankIconDesc {
-	JOBJDesc* jobj;
-} RankIconDesc;
-
 typedef struct SlpCSSDesc {
 	ChatWindowDesc* chatWindow;
 	JOBJSet* chatMessage;

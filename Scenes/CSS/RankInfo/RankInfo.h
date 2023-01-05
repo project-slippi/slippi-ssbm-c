@@ -5,13 +5,6 @@ typedef struct packed(GetRankInfoBuffer) {
     u8 cmd;            // SLIPPI EXI COMMAND
 } GetRankInfoBuffer;
 
-typedef struct RankInfoData {
-    Text *text;            // Text Struct to show rating
-    // u8 rank;
-
-    // SlpCSSDesc *slpCss; // Slp CSS to pass around
-} RankInfoData;
-
 enum RANKS {
 	RANK_UNRANKED,
     RANK_BRONZE_1,
