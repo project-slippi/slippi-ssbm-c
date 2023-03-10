@@ -734,6 +734,12 @@ void InputsThink(GOBJ *gobj) {
   data->match_state = ExiSlippi_LoadMatchState(data->match_state);
   u8 isConnected = data->match_state->mm_state == ExiSlippi_MmState_CONNECTION_SUCCESS;
   if (!isConnected) {
+    // Report disconnect completion
+    ExiSlippi_ReportCompletion_Query *rcq = calloc(sizeof(ExiSlippi_ReportCompletion_Query));
+    rcq->command = ExiSlippi_Command_REPORT_SET_COMPLETE;
+    rcq->end_mode = 1;
+    ExiSlippi_Transfer(rcq, sizeof(ExiSlippi_ReportCompletion_Query), ExiSlippi_TransferMode_WRITE);
+
     // This will show the error and wait for user to press a button to return to CSS
     ShowDisconnectedMessage();
     return;

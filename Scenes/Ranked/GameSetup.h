@@ -22,7 +22,7 @@
 #pragma pack(1)
 typedef struct GameSetup_SceneData {
   u8 max_games;
-  u8 cur_game;
+  u16 cur_game;
   u8 score_by_player[2];
   u8 prev_winner;
   u8 tiebreak_game_num;
