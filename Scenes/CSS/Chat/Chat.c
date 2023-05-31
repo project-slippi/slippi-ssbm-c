@@ -184,15 +184,15 @@ ChatInput *PadGetChatInput(bool checkForCommands) {
 
     //  inputs to be checked normally
     int normalInputs[4] = {
-            PAD_BUTTON_DPAD_UP,
-            PAD_BUTTON_DPAD_LEFT,
-            PAD_BUTTON_DPAD_RIGHT,
-            PAD_BUTTON_DPAD_DOWN,
+        PAD_BUTTON_DPAD_UP,
+        PAD_BUTTON_DPAD_LEFT,
+        PAD_BUTTON_DPAD_RIGHT,
+        PAD_BUTTON_DPAD_DOWN,
     };
 
     // Inputs to be check additionally when window is open
     int *windowCommands[1] = {
-            PAD_BUTTON_B,
+        PAD_BUTTON_B,
     };
 
 

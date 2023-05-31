@@ -143,7 +143,7 @@ char *BuildChatTextData(char *playerName, u8 playerIndex, u8 groupId, u8 message
                     st_left(), st_kern(), color,
                     st_sjis_text(playerName), st_text(":"), st_space(),
                     st_color(255, 255, 255),
-                    st_text(message));
+                    st_sjis_text(message));
 }
 
 Text *CreateChatMessageText(NotificationMessage *msg) {
