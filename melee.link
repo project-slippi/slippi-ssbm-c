@@ -1,5 +1,7 @@
 800055F0:ExiSlippi_Transfer
 80005610:ExiSlippi_LoadMatchState
+800056b4:_internal_createSlippiPremadeText
+800056b4:_internal_createSubtext
 80388220:__assert
 80323938:memmove
 80323DC8:_vsprintf

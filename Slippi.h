@@ -87,7 +87,9 @@ typedef enum MatchmakingConnectionState {
 // # Match State Response Buffer
 // ################################################################################
 
-typedef struct packed(MatchStateResponseBuffer) {
+#pragma pack(1)
+
+typedef struct MatchStateResponseBuffer {
 	u8 connectionState;             // Matchmaking State defined above
 	bool isLocalPlayerReady;
 	bool isRemotePlayerReady;
@@ -123,7 +125,7 @@ typedef struct packed(MatchStateResponseBuffer) {
 // ################################################################################
 #define CSS_DATA_TABLE_BUFFER_ADDRESS 0x80005614
 
-typedef struct packed(SlippiCSSDataTable) {
+typedef struct SlippiCSSDataTable {
 	MatchStateResponseBuffer* msrb;
 	void* SlpCSSDatAddress;
 	Text* textStructAddress;
@@ -143,6 +145,8 @@ typedef struct packed(SlippiCSSDataTable) {
 	u8 teamCostumeIndex;
 } SlippiCSSDataTable;
 
+#pragma pack()
+
 typedef struct SlippiCSSDataTableRef {
 	SlippiCSSDataTable* dt;
 } SlippiCSSDataTableRef;
@@ -159,17 +163,21 @@ typedef struct SlpCSSDesc {
 	JOBJSet* chatMessage;
 } SlpCSSDesc;
 
-// EXI Transfer Modes
-typedef enum EXI_TX_MODE { 
-	EXI_TX_READ,
-	EXI_TX_WRITE,
-} EXI_TX_MODE;
+// Static Overloaded Text Functions, dont call these directly
+Text* _internal_createSlippiPremadeText(int playerIndex, int messageId, int textType, int gx_pri, float x, float y, float z, float scale);
+int _internal_createSubtext(Text* text, GXColor* color, int textType, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize);
 
-// Static Functions
-// TODO: deprecate in favor of ExiSlippi_Transfer
-void* (*EXITransferBuffer)(void* buffer, int bufferSize, EXI_TX_MODE txMode) = (void *)0x800055f0;
-Text* (*createSlippiPremadeText)(int playerIndex, int messageId, int textType, int gx_pri, float x, float y, float z, float scale) = (void *)0x800056b4;
-int (*createSubtext)(Text* text, GXColor* color, int textType, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize) = (void *)0x800056b4;
+// These two functions actually both call the same function. When calling CreateSlippiPremadeText, textType MUST be 2
+Text* CreateSlippiPremadeText(int playerIndex, int messageId, int gx_pri, float x, float y, float z, float scale) {
+	_internal_createSlippiPremadeText(playerIndex, messageId, 2, gx_pri, x, y, z, scale);
+}
+int CreateSubtext(Text* text, GXColor* color, bool includeOutline, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize) {
+	if (includeOutline) {
+		_internal_createSubtext(text, color, 1, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
+	} else {
+		_internal_createSubtext(text, color, 0, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
+	}
+}
 
 
 /** Functions **/

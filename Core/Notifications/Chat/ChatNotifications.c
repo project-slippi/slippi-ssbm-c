@@ -120,7 +120,7 @@ char *BuildChatTextData(char *playerName, u8 playerIndex, u8 groupId, u8 message
                             st_color(255, 255, 255),
                             st_text("has chat disabled"));
         default:
-            message = GetChatText(groupId, messageId, false);
+            message = GetChatText(groupId, messageId, playerIndex, false);
     }
 
     switch (playerIndex) {
@@ -189,14 +189,14 @@ Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
     char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
 
     char *name = strcat(playerName, ": ");
-    char *message = GetChatText(groupId, messageId, false);
+    char *message = GetChatText(groupId, messageId, msg->playerIndex, false);
     float xPos = isWidescreen() ? -446.0f : -296.0f;
     float yPos = -252.0f + ((msg->id) * 32.0f);
     int colorIndex = msrb->localPlayerIndex + 1;
     float scale = 0.4f;
 
-    createSubtext(text, &MSG_COLORS[colorIndex], 0x0, 0, (char **) {name}, scale, xPos, yPos, 0.0f, 0.0f);
-    createSubtext(text, &MSG_COLORS[0], 0x0, 0, (char **) {message}, scale, strlen(name) * 6.8f + xPos, yPos, 0.0f,
+    CreateSubtext(text, &MSG_COLORS[colorIndex], false, 0, (char **) {name}, scale, xPos, yPos, 0.0f, 0.0f);
+    CreateSubtext(text, &MSG_COLORS[0], false, 0, (char **) {message}, scale, strlen(name) * 6.8f + xPos, yPos, 0.0f,
                   0.0f);
     return text;
 }
@@ -242,7 +242,7 @@ Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg) {
     stc_textcanvas_first[0]->gx_link = 3;
     stc_textcanvas_first[0]->gx_pri = 129;
     float x = isWidescreen() ? -44.5f : -29.5f;
-    Text *text = createSlippiPremadeText(msg->playerIndex + 1, msg->messageId, 2, 0, x, -23.25f + (msg->id * 3.2f),
+    Text *text = CreateSlippiPremadeText(msg->playerIndex + 1, msg->messageId, 0, x, -23.25f + (msg->id * 3.2f),
                                          5.0f, 0.04f);
     stc_textcanvas_first[0]->gx_link = 1;
     stc_textcanvas_first[0]->gx_pri = 0x80;

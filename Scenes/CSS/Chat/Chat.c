@@ -2,6 +2,7 @@
 #define SLIPPI_CSS_CHAT_C
 
 #include "Chat.h"
+#include "../../../ExiSlippi.h"
 #include "../../../Common.h"
 
 #include "../../../Core/Notifications/Notifications.c"
@@ -14,6 +15,7 @@
 GOBJ *_chatMainGOBJ = NULL;
 GOBJ *_chatWindowGOBJ = NULL;
 
+ExiSlippi_GetPlayerSettings_Response *playerSettingsResp = NULL;
 
 void FreeChat(void *ptr) {
     _chatMainGOBJ = NULL;
@@ -23,6 +25,16 @@ void FreeChat(void *ptr) {
 void FreeChatWindow(void *ptr) {
     _chatWindowGOBJ = NULL;
     if (ptr) HSD_Free(ptr);
+}
+
+void InitChatMessages() {
+    playerSettingsResp = calloc(sizeof(ExiSlippi_GetPlayerSettings_Response));
+
+    // Let's fetch the settings
+    ExiSlippi_GetPlayerSettings_Query *q = calloc(sizeof(ExiSlippi_GetPlayerSettings_Query));
+    q->command = ExiSlippi_Command_GET_PLAYER_SETTINGS;
+    ExiSlippi_Transfer(q, sizeof(ExiSlippi_GetPlayerSettings_Query), ExiSlippi_TransferMode_WRITE);
+    ExiSlippi_Transfer(playerSettingsResp, sizeof(ExiSlippi_GetPlayerSettings_Response), ExiSlippi_TransferMode_READ);
 }
 
 /**
@@ -225,7 +237,7 @@ void SendOutgoingChatCommand(int messageId) {
     buffer->cmd = SLIPPI_CMD_SendChatMessage;
     buffer->messageId = messageId;
 //    OSReport("SendOutgoingChatCommand buffer cmd:%i, msgId:%i size: %i\n", buffer->cmd, buffer->messageId, sizeof(OutgoingChatMessageBuffer));
-    EXITransferBuffer(buffer, sizeof(OutgoingChatMessageBuffer), EXI_TX_WRITE);
+    ExiSlippi_Transfer(buffer, sizeof(OutgoingChatMessageBuffer), ExiSlippi_TransferMode_WRITE);
 
 //#ifdef LOCAL_TESTING
 //    SlippiCSSDataTable *dt = GetSlpCSSDT();
