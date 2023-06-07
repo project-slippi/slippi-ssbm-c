@@ -17,4 +17,10 @@ void UpdateOnlineCSS() {
     ListenForChatInput();
 }
 
+void InitOnlineCSS() {
+    if (!IsSlippiOnlineCSS()) return;
+
+    InitChatMessages();
+}
+
 #endif SLIPPI_CSS_MAIN_C

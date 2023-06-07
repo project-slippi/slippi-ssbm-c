@@ -10,6 +10,7 @@ typedef enum ExiSlippi_Command {
   ExiSlippi_Command_GP_COMPLETE_STEP = 0xC0,
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
   ExiSlippi_Command_REPORT_SET_COMPLETE = 0xC2,
+  ExiSlippi_Command_GET_PLAYER_SETTINGS = 0xC3,
 } ExiSlippi_Command;
 
 typedef enum ExiSlippi_TransferMode {
@@ -120,6 +121,18 @@ typedef struct ExiSlippi_ReportCompletion_Query {
   u8 command;
   u8 end_mode;
 } ExiSlippi_ReportCompletion_Query;
+
+typedef struct ExiSlippi_GetPlayerSettings_Query {
+  u8 command;
+} ExiSlippi_GetPlayerSettings_Query;
+
+typedef struct PlayerSettings {
+  char chatMessages[16][51];
+} PlayerSettings;
+
+typedef struct ExiSlippi_GetPlayerSettings_Response {
+  PlayerSettings settings[4];
+} ExiSlippi_GetPlayerSettings_Response;
 
 // Not sure if resetting is strictly needed, might be contained to the file
 #pragma pack()

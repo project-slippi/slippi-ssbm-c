@@ -14,6 +14,7 @@ void minor_think() {
 void minor_load() {
     void (*CSS_load)() = (void *) 0x8026688C;
     CSS_load();
+    InitOnlineCSS();
     // OSReport("CSS_load\n");
 }
 
