@@ -59,7 +59,7 @@ void CreateAndAddNotificationMessage(SlpCSSDesc *slpCss, NotificationMessage *me
     JOBJ_AddSetAnim(jobj, slpCss->chatMessage, 0);
     JOBJ_ReqAnimAll(jobj, 0.0f);
 
-    void *destructor = message->desctructorFunc ? message->desctructorFunc : HSD_Free;
+    void *destructor = message->desctructorFunc ? message->desctructorFunc : DestroyNotificationMessage;
 
     GObj_AddUserData(gobj, 0x4, destructor, message);
     GObj_AddObject(gobj, 0x4, jobj);
@@ -96,9 +96,7 @@ void UpdateNotificationMessage(GOBJ *gobj) {
 
             // Destroy/Hide Text Here
             // OSReport("UpdateChatMessage.Idle: ptr: 0x%x", (void*)(msg->text+0x5c));
-            // HSD_Free((void*)(msg->text+0x5c));
-            if (msg->text)
-                Text_Destroy(msg->text);
+            if (msg->text) msg->text->hidden = true;
 
             // Animate chat message to hide
             JOBJ_AddSetAnim(jobj, msg->jobjSet, 1);

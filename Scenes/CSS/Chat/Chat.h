@@ -46,8 +46,23 @@ void UpdateChat();
 
 void UpdateChatWindow(GOBJ *gobj);
 
+void CreateAndOpenChatWindow();
+
 void CloseChatWindow(JOBJ *jobj, ChatWindowData *data);
 
+
+/**
+ * Checks if any player has pressed a button that toggles
+ * the chat window or a chat command
+ */
 ChatInput *PadGetChatInput(bool checkForCommands);
+
+/**
+ * Retrieves the ChatInput#input value directly
+ * @param checkForCommands
+ * @return ChatInput#input value
+ */
+int PadGetChatEffectiveInput(bool checkForCommands);
+
 
 #endif SLIPPI_CSS_CHAT_H
