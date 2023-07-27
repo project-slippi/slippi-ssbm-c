@@ -123,6 +123,38 @@ typedef struct ExiSlippi_ReportCompletion_Query {
   u8 end_mode;
 } ExiSlippi_ReportCompletion_Query;
 
+typedef struct ExiSlippi_GetPlayerSettings_Query {
+  u8 command;
+} ExiSlippi_GetPlayerSettings_Query;
+
+typedef struct PlayerSettings {
+  char chatMessages[16][51];
+} PlayerSettings;
+
+typedef struct ExiSlippi_GetPlayerSettings_Response {
+  PlayerSettings settings[4];
+} ExiSlippi_GetPlayerSettings_Response;
+
+typedef struct ExiSlippi_GetRank_Query {
+  u8 command;
+} ExiSlippi_GetRank_Query;
+
+typedef struct RankInfo {
+	u8 rank;
+	float ratingOrdinal;
+	u8 global;
+	u8 regional;
+  u8 ratingUpdateCount;
+} RankInfo;
+
+typedef struct ExiSlippi_GetRank_Response {
+	u8 rank;
+	float ratingOrdinal;
+	u8 global;
+	u8 regional;
+  u8 ratingUpdateCount;
+} ExiSlippi_GetRank_Response;
+
 // Not sure if resetting is strictly needed, might be contained to the file
 #pragma pack()
 
