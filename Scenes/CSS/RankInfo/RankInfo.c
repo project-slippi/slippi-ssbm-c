@@ -4,19 +4,25 @@
 #include "RankInfo.h"
 #include "../../../Common.h"
 #include "../../../Slippi.h"
+#include "../../../ExiSlippi.h"
 #include "../../../Files.h"
 
+ExiSlippi_GetRank_Response *rankInfoResp = NULL;
+
 void InitRankInfo() {
+    rankInfoResp = calloc(sizeof(ExiSlippi_GetRank_Response));
+
     // Send dolphin command to pull rank data
-    SendGetRankInfoCommand();
+    ExiSlippi_GetRank_Query *q = calloc(sizeof(ExiSlippi_GetRank_Query));
+    q->command = ExiSlippi_Command_GET_RANK;
+    ExiSlippi_Transfer(q, sizeof(ExiSlippi_GetRank_Query), ExiSlippi_TransferMode_WRITE);
+    ExiSlippi_Transfer(rankInfoResp, sizeof(ExiSlippi_GetRank_Response), ExiSlippi_TransferMode_READ);
 
     // Receieve rank data from dolphin
-    RankInfoResponseBuffer *rirb = ReceiveRankInfo();
-    // Create text and write rank info
-    InitRankInfoText(rirb);
+    InitRankInfoText(rankInfoResp);
 
     SlippiCSSDataTable *dt = GetSlpCSSDT();
-    u8 rank = rirb->localPlayerRank;
+    u8 rank = rankInfoResp->rank;
 
     // Select the correct icon for player
     InitRankIcon(dt->SlpCSSDatAddress, rank);
@@ -27,7 +33,7 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank) {
     JOBJ *jobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
 
     jobj->trans.X = -7.3f;
-    jobj->trans.Y = -10.5f;
+    jobj->trans.Y = -11.0f;
 
     JOBJ_AddSetAnim(jobj, slpCss->rankIcons, 0);
     // Set rank icon
@@ -38,39 +44,46 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank) {
     GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
 }
 
-void InitRankInfoText(RankInfoResponseBuffer *rirb) {
-    // Convert rating ordinal float to string
-    char* ratingString[20];
-    sprintf(ratingString, "%0.1f", rirb->localPlayerRating);
+void InitRankInfoText(RankInfo *rankInfo) {
+    // Check if user has completed their placement matches
+    if (rankInfo->ratingUpdateCount >= 5) {
+        // Convert rating ordinal float to string
+        char* ratingString[20];
+        sprintf(ratingString, "%0.1f", rankInfo->ratingOrdinal);
 
-    Text *text = Text_CreateText(0, 0);
-    text->kerning = 1;
-    text->align = 0;
-    text->use_aspect = 1;
-    text->scale = (Vec2){0.01, 0.01};
-    text->aspect.X *= 2.5;
-    int rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rirb->localPlayerRank]);
-    Text_SetScale(text, rankSubtextId, 5, 5);
-    int ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
-    Text_SetScale(text, ratingSubtextId, 4, 4);
-    GXColor col = (GXColor){255, 255, 255, 155};
-    Text_SetColor(text, rankSubtextId, &col);
-}
+        // Create rating ordinal text
+        Text *text = Text_CreateText(0, 0);
+        text->kerning = 1;
+        text->align = 0;
+        text->use_aspect = 1;
+        text->scale = (Vec2){0.01, 0.01};
+        text->aspect.X *= 2.5;
+        int rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
+        Text_SetScale(text, rankSubtextId, 5, 5);
+        int ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
+        Text_SetScale(text, ratingSubtextId, 4.5, 4.5);
+        GXColor col = (GXColor){255, 255, 255, 155};
+        Text_SetColor(text, rankSubtextId, &col);
+    }
+    else {
+        // Get string to show remaining placement matches
+        char* placementString[15];
+        sprintf(placementString, "%d SETS REQUIRED", 5 - rankInfo->ratingUpdateCount);
 
-/**
- * Sends EXI Command to Dolphin for getting rank info
- */
-void SendGetRankInfoCommand() {
-    GetRankInfoBuffer *buffer = HSD_MemAlloc(sizeof(GetRankInfoBuffer));
-    buffer->cmd = SLIPPI_CMD_GetRankInfo;
-//    OSReport("SendOutgoingChatCommand buffer cmd:%i, msgId:%i size: %i\n", buffer->cmd, buffer->messageId, sizeof(OutgoingChatMessageBuffer));
-    EXITransferBuffer(buffer, sizeof(GetRankInfoBuffer), EXI_TX_WRITE);
-}
-
-RankInfoResponseBuffer* ReceiveRankInfo() {
-    RankInfoResponseBuffer *buffer = HSD_MemAlloc(sizeof(RankInfoResponseBuffer));
-    EXITransferBuffer(buffer, sizeof(RankInfoResponseBuffer), EXI_TX_READ);
-    return buffer;
+        // Create rating ordinal text
+        Text *text = Text_CreateText(0, 0);
+        text->kerning = 1;
+        text->align = 0;
+        text->use_aspect = 1;
+        text->scale = (Vec2){0.01, 0.01};
+        text->aspect.X *= 2.5;
+        int rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
+        Text_SetScale(text, rankSubtextId, 5, 5);
+        int ratingSubtextId = Text_AddSubtext(text, -1100, 1740, placementString);
+        Text_SetScale(text, ratingSubtextId, 4, 4);
+        GXColor col = (GXColor){255, 255, 255, 155};
+        Text_SetColor(text, rankSubtextId, &col);
+    }
 }
 
 #endif SLIPPI_CSS_RANK_INFO_C

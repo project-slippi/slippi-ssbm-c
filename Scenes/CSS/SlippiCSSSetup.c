@@ -14,7 +14,7 @@ void minor_think() {
 void minor_load() {
     void (*CSS_load)() = (void *) 0x8026688C;
     CSS_load();
-
+    InitOnlineCSS();
     // Only request rank info if this is ranked
     u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
     if (onlineMode == 0) {

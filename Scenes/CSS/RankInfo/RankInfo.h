@@ -1,10 +1,6 @@
 #ifndef SLIPPI_CSS_RANK_INFO_H
 #define SLIPPI_CSS_RANK_INFO_H
 
-typedef struct packed(GetRankInfoBuffer) {
-    u8 cmd;            // SLIPPI EXI COMMAND
-} GetRankInfoBuffer;
-
 enum RANKS {
 	RANK_UNRANKED,
     RANK_BRONZE_1,
@@ -29,7 +25,7 @@ enum RANKS {
 };
 
 static char* RANK_STRINGS[] = {
-    "UNRANKED",
+    "PENDING",
     "BRONZE 1",
     "BRONZE 2",
     "BRONZE 3",
@@ -51,10 +47,8 @@ static char* RANK_STRINGS[] = {
     "GRANDMASTER",
 };
 
-void InitRankInfoText(RankInfoResponseBuffer *rirb);
+void InitRankInfoText(RankInfo *rirb);
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void SendGetRankInfoCommand();
-RankInfoResponseBuffer* ReceiveRankInfo();
 
 #endif SLIPPI_CSS_RANK_INFO_H
-
