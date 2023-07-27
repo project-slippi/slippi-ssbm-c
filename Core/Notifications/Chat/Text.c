@@ -3,12 +3,10 @@
 
 #include "../../../Slippi.h"
 #include "Text.h"
+#include "../../Scenes/CSS/Chat/Chat.h"
 
-char *GetChatText(int groupId, int messageId, bool useMessageIndex) {
-//	OSReport("GetChatText groupId: %i, msgId: %i \n", groupId, messageId);
-
+int GetGroupIndex(int groupId) {
     int groupIndex = 0;
-    int index = 0;
 
     switch (groupId) {
         case PAD_BUTTON_DPAD_UP:
@@ -28,6 +26,19 @@ char *GetChatText(int groupId, int messageId, bool useMessageIndex) {
             break;
     }
 
+    return groupIndex;
+}
+
+char *GetHeaderText(int groupId) {
+    int groupIndex = GetGroupIndex(groupId);
+    return HEADER_STRINGS[groupIndex];
+}
+
+char *GetChatText(int groupId, int messageId, int playerIdx, bool useMessageIndex) {
+	// OSReport("GetChatText groupId: %i, msgId: %i \n", groupId, messageId);
+
+    int groupIndex = GetGroupIndex(groupId);
+    int index = 0;
 
     if (useMessageIndex) {
         index = messageId;
@@ -53,10 +64,13 @@ char *GetChatText(int groupId, int messageId, bool useMessageIndex) {
 
 
 //	OSReport("GetChatText s: %s\n", ChatGroups[groupIndex][index]);
-    return CHAT_MSG_STRINGS[ChatGroups[groupIndex][index]];
+    return playerSettingsResp->settings[playerIdx].chatMessages[(groupIndex * 4) + (index - 1)];
 };
 
 Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
+    MatchStateResponseBuffer *msrb = MSRB();
+    // OSReport("Idx: %d\n", msrb->localPlayerIndex);
+
     Text *text = Text_CreateText(0, 0);
     // OSReport("text.gxLink: %i gxPri: %i", text->gobj->gx_link, text->gobj->gx_pri);
 
@@ -72,18 +86,18 @@ Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
     float offset = 0; // should change if widescreen
 
     char title[30];
-    sprintf(title, "Chat: %s", GetChatText(groupId, CHAT_STR_HEADER, true));
+    sprintf(title, "%s", GetHeaderText(groupId));
     // Create  Header
     int titleColor = isConnected() ? MSG_COLOR_CHAT_WINDOW : MSG_COLOR_CHAT_WINDOW_IDLE;
-    createSubtext(text, &MSG_COLORS[titleColor], 0x0, 0, (char **) {title}, 0.45f, x + offset, 79.0f, 0.0f, 0.0f);
+    CreateSubtext(text, &MSG_COLORS[titleColor], false, 0, (char **) {title}, 0.45f, x + offset, 79.0f, 0.0f, 0.0f);
 
     // Create Labels
     for (int i = CHAT_STR_UP; i <= CHAT_STR_DOWN; i++) {
         float margin = 25.0f * (i + 1); // starts with 2 lines from header
         float yPos = 79.0f + margin;
-        char *label = GetChatText(groupId, i, true);
+        char *label = GetChatText(groupId, i, msrb->localPlayerIndex, true);
 
-        createSubtext(text, &MSG_COLORS[MSG_COLOR_WHITE], 0x0, 0, (char **) {label}, 0.45f, labelX + offset, yPos, 0.0f,
+        CreateSubtext(text, &MSG_COLORS[MSG_COLOR_WHITE], false, 0, (char **) {label}, 0.45f, labelX + offset, yPos, 0.0f,
                       0.0f);
     }
 

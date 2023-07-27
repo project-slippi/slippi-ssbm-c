@@ -63,6 +63,35 @@ Text* Text_CreateTextWithGX(int SisIndex, int canvasID, u8 gx_link, u8 gx_pri){
     return text;
 }
 
+/**
+ * Updates a Text color attributes
+ * @param text  Text* pointer
+ * @param colorOffset Offset of text->text_start where encoded <Color> starts
+ * @param color 0x00RRGGBB
+ * @return
+ */
+void Text_UpdateColor(Text* text, u8 colorOffset, u8 r, u8 g, u8 b){
+    text->color.r = r;
+    text->color.g = g;
+    text->color.b = b;
+
+    *(text->text_start+colorOffset+0x1) = text->color.r;
+    *(text->text_start+colorOffset+0x2) = text->color.g;
+    *(text->text_start+colorOffset+0x3) = text->color.b;
+}
+
+void Text_UpdateColor2(Text* text, u8 colorOffset, u32 color){
+    text->color.r = color >> 10; // ff
+    text->color.g = (color >> 8) ^ (text->color.r << 8) ; // ffff ^ ff00 = ff
+    text->color.b = (((text->color.r << 8)+text->color.g) << 8) ^ color;
+    // (ff00 + ff) ^ ffff00
+
+    // OSReport("Text_UpdateColor2 r=0x%x g=0x%x b=0x%x\n", text->color.r, text->color.b, text->color.g);
+
+    *(text->text_start+colorOffset+0x1) = text->color.r;
+    *(text->text_start+colorOffset+0x2) = text->color.g;
+    *(text->text_start+colorOffset+0x3) = text->color.b;
+}
 
 
 #endif SLIPPI_COMMON_H
