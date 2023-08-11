@@ -16,11 +16,6 @@ void minor_load() {
     CSS_load();
     InitOnlineCSS();
     // OSReport("CSS_load\n");
-    // Only request rank info if this is ranked
-    u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
-    if (onlineMode == 0) {
-        InitRankInfo();
-    }
 }
 
 //Runs when leaving CSS

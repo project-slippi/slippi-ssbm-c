@@ -2,7 +2,7 @@
 #define SLIPPI_CSS_RANK_INFO_H
 
 enum RANKS {
-    RANK_UNRANKED,
+	RANK_UNRANKED,
     RANK_BRONZE_1,
     RANK_BRONZE_2,
     RANK_BRONZE_3,
@@ -47,8 +47,39 @@ static char* RANK_STRINGS[] = {
     "GRANDMASTER",
 };
 
+ExiSlippi_GetRank_Response *rankInfoResp = NULL;
+Text *text;
+int ratingChangeSubtextId;
+int rankSubtextId;
+int ratingSubtextId;
+int placementSubtextId;
+
+// SFX
+const int RANK_UP_SMALL = 0xAA;
+const int RANK_UP_BIG = 0xAB;
+const int RANK_DOWN_SMALL = 0xBE;
+const int RANK_DOWN_BIG = 0xBF;
+
+const int RATING_INCREASE = 0x69;
+const int RATING_DECREASE = 0x19E;
+
+const int TICK_UP = 0xBB;
+const int TICK_DOWN = 0xEA;
+
+// ANIMATION
+const int RATING_CHANGE_LEN = 60;
+const int RANK_CHANGE_LEN = 10;
+const int FADE_OUT_LEN = 10;
+const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
+int framesLeft;
+
+JOBJ *rankIconJobj;
+
 void InitRankInfoText(RankInfo *rirb);
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
+void UpdateRatingChange();
+void UpdateRankChange();
+void UpdateRankInfo();
 void SendGetRankInfoCommand();
 
 #endif SLIPPI_CSS_RANK_INFO_H

@@ -145,6 +145,8 @@ typedef struct RankInfo {
 	u8 global;
 	u8 regional;
   u8 ratingUpdateCount;
+  float ratingChange;
+  int rankChange;
 } RankInfo;
 
 typedef struct ExiSlippi_GetRank_Response {
@@ -153,6 +155,8 @@ typedef struct ExiSlippi_GetRank_Response {
 	u8 global;
 	u8 regional;
   u8 ratingUpdateCount;
+  float ratingChange;
+  int rankChange;
 } ExiSlippi_GetRank_Response;
 
 // Not sure if resetting is strictly needed, might be contained to the file

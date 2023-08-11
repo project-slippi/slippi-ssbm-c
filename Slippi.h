@@ -58,7 +58,7 @@
 #define SLIPPI_CMD_ReportMatch 0xBD
 #define SLIPPI_CMD_SendNameEntryIndex 0xBE
 #define SLIPPI_CMD_NameEntryAutoComplete 0xBF
-#define SLIPPI_CMD_GetRank 0xC4
+#define SLIPPI_CMD_GetRankInfo 0xC4
 // For Slippi file loads
 #define SLIPPI_CMD_FileLength 0xD1
 #define SLIPPI_CMD_FileLoad 0xD2
