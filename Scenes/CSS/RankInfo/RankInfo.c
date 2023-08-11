@@ -98,13 +98,26 @@ void UpdateRankInfo() {
     }
 }
 
+float incrementRating(float ratingOrdinal, float ratingChange, int framesLeft) {
+    // Rating to increment toward
+    float newRating = ratingChange + ratingOrdinal;
+    // Rating increment
+    float delta = ((ratingChange * framesLeft) / -NARRATOR_LEN);
+    return newRating + delta;
+}
+
 void UpdateRatingChange() {
     // Colors
     GXColor green = (GXColor) {3, 252, 28, 255};
     GXColor red = (GXColor) {255, 0, 0, 255};
     GXColor none = (GXColor) {0, 0, 0, 255};
 
-    float displayRating = ((rankInfoResp->ratingChange * framesLeft) / -NARRATOR_LEN) + rankInfoResp->ratingChange + rankInfoResp->ratingOrdinal;
+    float displayRating = incrementRating(
+            rankInfoResp->ratingOrdinal,
+            rankInfoResp->ratingChange,
+            framesLeft
+        );
+
     char* ratingString[6];
     sprintf(ratingString, "%0.1f", displayRating);
     Text_SetText(text, ratingSubtextId, ratingString);
@@ -129,13 +142,16 @@ void UpdateRatingChange() {
     }
 
     if (framesLeft < RANK_CHANGE_LEN && framesLeft > 0) {
-        if (framesLeft > (int) (RANK_CHANGE_LEN / 2)) {
-            rankIconJobj->trans.Y = (float) (1 / (float) (RANK_CHANGE_LEN) * (float)(framesLeft - RANK_CHANGE_LEN / 2)) - 11.5f;
-            JOBJ_SetMtxDirtySub(rankIconJobj);
-        }
-        else {
-            rankIconJobj->trans.Y = (float) (1 / (float) (RANK_CHANGE_LEN) * (float)(-framesLeft - RANK_CHANGE_LEN / 2)) - 10.5f;
-            JOBJ_SetMtxDirtySub(rankIconJobj);
+        if (rankInfoResp->rankChange != 0) { 
+            // Rank icon bob animation
+            if (framesLeft > (int) (RANK_CHANGE_LEN / 2)) {
+                rankIconJobj->trans.Y = (float) (1 / (float) (RANK_CHANGE_LEN) * (float)(framesLeft - RANK_CHANGE_LEN / 2)) - 11.5f;
+                JOBJ_SetMtxDirtySub(rankIconJobj);
+            }
+            else {
+                rankIconJobj->trans.Y = (float) (1 / (float) (RANK_CHANGE_LEN) * (float)(-framesLeft - RANK_CHANGE_LEN / 2)) - 10.5f;
+                JOBJ_SetMtxDirtySub(rankIconJobj);
+            }
         }
 
         if (framesLeft == (int) (RANK_CHANGE_LEN / 2) + 1) {
