@@ -120,7 +120,7 @@ int getRatingChangeSFX(float ratingChange) {
 
 int getRankChangeSFX(float rankChange) {
     if (rankInfoResp->rankChange > 0) {
-        return RANK_DOWN_BIG;
+        return RANK_UP_SMALL;
     }
     else if (rankInfoResp->rankChange < 0) {
         return RANK_DOWN_SMALL;
@@ -157,12 +157,8 @@ void UpdateRatingChange() {
     }
 
     if (framesLeft == (NARRATOR_LEN + RANK_CHANGE_LEN) - NARRATOR_LEN) {
-        if (rankInfoResp->rankChange > 0) {
-            SFX_PlayRaw(RANK_UP_SMALL, 255, 64, 0, 0);
-        }
-        else if (rankInfoResp->rankChange < 0) {
-            SFX_PlayRaw(RANK_DOWN_SMALL, 255, 64, 0, 0);
-        }
+        // Play sound for rank up / down
+        SFX_PlayRaw(getRankChangeSFX(rankInfoResp->ratingOrdinal), 255, 64, 0, 0);
     }
 
     if (framesLeft < RANK_CHANGE_LEN && framesLeft > 0) {
