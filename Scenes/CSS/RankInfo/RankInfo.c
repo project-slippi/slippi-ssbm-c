@@ -106,29 +106,53 @@ float incrementRating(float ratingOrdinal, float ratingChange, int framesLeft) {
     return newRating + delta;
 }
 
+int getRatingChangeSFX(float ratingChange) {
+    if (rankInfoResp->ratingChange > 0) {
+        return TICK_UP;
+    }
+    if (rankInfoResp->ratingChange < 0) {
+        return TICK_DOWN;
+    }
+    else {
+        return 0xD0;
+    }
+}
+
+int getRankChangeSFX(float rankChange) {
+    if (rankInfoResp->rankChange > 0) {
+        return RANK_DOWN_BIG;
+    }
+    else if (rankInfoResp->rankChange < 0) {
+        return RANK_DOWN_SMALL;
+    }
+    else {
+        return 0xD0;
+    }
+}
+
 void UpdateRatingChange() {
     // Colors
     GXColor green = (GXColor) {3, 252, 28, 255};
     GXColor red = (GXColor) {255, 0, 0, 255};
-    GXColor none = (GXColor) {0, 0, 0, 255};
+    GXColor white = (GXColor) {255, 255, 255, 255};
 
+    // Calculate rating increment for counting effect
     float displayRating = incrementRating(
             rankInfoResp->ratingOrdinal,
             rankInfoResp->ratingChange,
             framesLeft
         );
-
     char* ratingString[6];
     sprintf(ratingString, "%0.1f", displayRating);
     Text_SetText(text, ratingSubtextId, ratingString);
 
     if (framesLeft % 2 == 1 && framesLeft > RANK_CHANGE_LEN) {
+        // Play tick sound effect when counting up / down
         SFX_PlayRaw(
-            (rankInfoResp->ratingChange > 0) ? TICK_UP : 
-            (rankInfoResp->ratingChange < 0) ? TICK_DOWN : 0xD0, 
-            (rankInfoResp->ratingChange > 0) ? 150: 
-            (rankInfoResp->ratingChange < 0) ? 125 : 0, 
-            64, 0, 0
+                getRatingChangeSFX(rankInfoResp->ratingChange), 
+                (rankInfoResp->ratingChange > 0) ? 150 : 
+                (rankInfoResp->ratingChange < 0) ? 100 : 0, 
+                64, 0, 0
             );
     }
 
@@ -163,11 +187,16 @@ void UpdateRatingChange() {
                 // Create new subtext for rating change
                 ratingChangeSubtextId = Text_AddSubtext(text, -650, 1750, changeString);
                 Text_SetScale(text, ratingChangeSubtextId, 4, 4);
+                // Determine text color
                 if (rankInfoResp->ratingChange > 0) {
                     Text_SetColor(text, ratingChangeSubtextId, &green);
+                    // Play sfx for end of counting
+                    SFX_PlayRaw(RATING_INCREASE, 255, 64, 0, 0);
                 }
                 if (rankInfoResp->ratingChange < 0) {
                     Text_SetColor(text, ratingChangeSubtextId, &red);
+                    // Play sfx for end of counting
+                    SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
                 }
             }
             if (rankInfoResp->rankChange != 0) {
