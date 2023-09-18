@@ -122,6 +122,9 @@ void minor_load(GameSetup_SceneData *minor_data) {
   InitState();
   PrepareCurrentStep();
   UpdateTimeline();
+
+  // Start music. Will play one of the two tournament mode themes
+  BGM_Play(93 + HSD_Randi(2));
 }
 
 void minor_think() {
