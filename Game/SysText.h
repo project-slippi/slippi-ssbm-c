@@ -3,6 +3,7 @@
 
 #include "../MexTK/mex.h"
 #include <stdbool.h>
+#include "../Common.h"
 
 #define CHAR_MAP_SIZE 287
 
@@ -105,5 +106,7 @@ typedef struct SysText  {
     int charsCount;
 } SysText ;
 
+SysText *st_create();
+void st_destroy(SysText* component);
 
 #endif GAME_SYS_TEXT_H

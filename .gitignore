@@ -1,5 +1,8 @@
+# IDE things
 .vscode
 .idea
+cmake-build-debug/
+
 vanilla-melee/fix-ssm.mp4
 install.bat
 output/*
@@ -8,3 +11,6 @@ build/*
 # ignore output files
 *.d
 *.o
+
+# Ignore Test Dolphin dir
+Dolphin/*

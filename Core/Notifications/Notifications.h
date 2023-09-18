@@ -1,6 +1,7 @@
 #ifndef SLIPPI_CORE_NOTIFICATION_H
 #define SLIPPI_CORE_NOTIFICATION_H
 
+#include "../../Game/SysText.h"
 #include "../../Slippi.h"
 
 #define DEFAULT_ANIM_FRAMES 20                                    // Frames that notification message animations live for
@@ -28,6 +29,7 @@ typedef struct NotificationMessage {
     JOBJSet *jobjSet;
     SlippiNotificationType type;    // Slippi Notification Type			
     SlippiNotificationState state;    // Initial message state
+    SysText *textData;              // SysText data if this message uses it
     Text *text;                        // Created Text Object
     void *desctructorFunc;          // Function used to destroy this object (Default to HSD_Free)
     int id;                        // ID of this message
@@ -46,7 +48,26 @@ NotificationMessage *CreateNotificationMessage(int messageId, SlippiNotification
     msg->animationFrames = DEFAULT_ANIM_FRAMES;
     msg->messageId = messageId;
     msg->desctructorFunc = HSD_Free;
+    msg->textData = NULL;
     return msg;
+}
+
+void DestroyNotificationMessage(NotificationMessage* message) {
+    if(!message) {
+        return;
+    }
+
+    message->jobjSet = NULL;
+
+    if(message->textData) {
+        st_destroy(message->textData);
+    }
+
+    if(message->text) {
+        Text_Destroy(message->text);
+    }
+
+    HSD_Free(message);
 }
 
 /** Functions **/

@@ -3,10 +3,21 @@
 
 #include "SysText.h"
 
-SysText *st_create() {
+SysText *st_create(){
     SysText *component = calloc(sizeof(SysText));
-
+    component->chars = NULL;
+    component->charsCount = 0;
     return component;
+}
+
+void st_destroy(SysText* component){
+    if(!component) return;
+
+    if(component->chars){
+        HSD_Free(component->chars);
+    }
+
+    HSD_Free(component);
 }
 
 /**
@@ -202,6 +213,7 @@ SysText *st_build_text(char *str, bool isShiftJis) {
         for (int j = 0; j < char_component->charsCount; j++) {
             st_push(component, 1, char_component->chars[j]);
         }
+        st_destroy(char_component);
     }
 
     return component;
@@ -215,22 +227,30 @@ SysText *st_sjis_text(char *str) {
     return st_build_text(str, true);
 };
 
-char *st_build(int componentsCount, ...) {
-    int fixedSize = 400;
-    char *placeholder = calloc(fixedSize);
+/**
+ * Joins together multiple SysText components into a single one, freeing all the others.
+ * @param componentsCount
+ * @param List of SysText
+ * @return SysText with the data in #chars attribute
+ */
+SysText *st_build(int componentsCount, ...) {
+    int fixedSize = 400; // TODO: make this dynamic?
+    SysText *sysText = st_create();
+    sysText->chars = calloc(fixedSize);
+
     va_list args;
     va_start(args, componentsCount);
 
     int offset = 0;
     for (int i = 0; i < componentsCount; i++) {
         SysText *component = va_arg(args, SysText*);
-        memcpy(placeholder + (offset), component->chars, component->charsCount);
-        HSD_Free(component->chars);
-        HSD_Free(component);
+        memcpy(sysText->chars + (offset), component->chars, component->charsCount);
         offset += component->charsCount;
+        st_destroy(component);
     }
+    sysText->charsCount = offset;
     va_end(args);
-    return placeholder;
+    return sysText;
 }
 
 #endif GAME_SYS_TEXT_C
