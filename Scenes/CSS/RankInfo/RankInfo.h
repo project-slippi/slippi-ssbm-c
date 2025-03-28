@@ -1,7 +1,7 @@
 #ifndef SLIPPI_CSS_RANK_INFO_H
 #define SLIPPI_CSS_RANK_INFO_H
 
-enum RANKS {
+enum SlippiRank {
 	RANK_UNRANKED,
     RANK_BRONZE_1,
     RANK_BRONZE_2,
@@ -54,6 +54,11 @@ int rankSubtextId;
 int ratingSubtextId;
 int placementSubtextId;
 
+const float HIGH_RATING_THRESHOLD= 35.f;
+const float MED_RATING_THRESHOLD = 20.f;
+const float LOW_RATING_THRESHOLD = 10.f;
+const u8 PLACEMENT_THRESHOLD = 5;
+
 // SFX
 const int RANK_UP_SMALL = 0xAA;
 const int RANK_UP_BIG = 0xAB;
@@ -63,17 +68,15 @@ const int RANK_DOWN_BIG = 0xBF;
 const int RATING_INCREASE = 0x69;
 const int RATING_DECREASE = 0x19E;
 
+const int TICK_UP_VOL = 150;
+const int TICK_DOWN_VOL = 100;
 const int TICK_UP = 0xBB;
 const int TICK_DOWN = 0xEA;
 
 // ANIMATION
-const int RATING_CHANGE_LEN = 60;
+const int RATING_CHANGE_LEN = 140;
 const int RANK_CHANGE_LEN = 10;
-const int FADE_OUT_LEN = 10;
 const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
-int framesLeft;
-
-JOBJ *rankIconJobj;
 
 void InitRankInfoText(RankInfo *rirb);
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
