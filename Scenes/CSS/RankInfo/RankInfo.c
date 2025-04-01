@@ -14,35 +14,30 @@ int currentFrame = 0;
 int ratingChangeLen; // Rating change sequence length
 
 void InitRankInfo() {
-	// framesLeft = NARRATOR_LEN + RATING_CHANGE_LEN + FADE_OUT_LEN;
-	// framesLeft = NARRATOR_LEN + RANK_CHANGE_LEN;
-
-	/*
-	 * START_DELAY + RATING_CHANGE_LEN + RANK_CHANGE_LEN
-	 * change start delay depending on amount gained
-		 * low rating gain -> high start delay (RATING_CHANGE_LEN * 0.33)
-		 * med rating gain -> med start delay (RATING_CHANGE_LEN * 0.66)
-		 * high rating gain -> no start delay (RATING_CHANGE_LEN * 1.0)
-	 */
-
 	rankInfoResp = calloc(sizeof(ExiSlippi_GetRank_Response));
 
 	// Send dolphin command to pull rank data
-	/*
 	ExiSlippi_GetRank_Query *q = calloc(sizeof(ExiSlippi_GetRank_Query));
 	q->command = ExiSlippi_Command_GET_RANK;
 	ExiSlippi_Transfer(q, sizeof(ExiSlippi_GetRank_Query), ExiSlippi_TransferMode_WRITE);
 	ExiSlippi_Transfer(rankInfoResp, sizeof(ExiSlippi_GetRank_Response), ExiSlippi_TransferMode_READ);
-	*/
 
-	u8 rank = RANK_GOLD_1;
-	rankInfoResp->rank = rank;
-	rankInfoResp->ratingOrdinal = 1500.f;
-	rankInfoResp->global = 0;
-	rankInfoResp->regional = 0;
-	rankInfoResp->ratingUpdateCount = 234;
-	rankInfoResp->ratingChange = 5.3f;
-	rankInfoResp->rankChange = 1;
+	OSReport("rank: %d\n", rankInfoResp->rank);
+	OSReport("ratingOrdinal: %f\n", rankInfoResp->ratingOrdinal);
+	OSReport("global: %d\n", rankInfoResp->global);
+	OSReport("regional: %d\n", rankInfoResp->regional);
+	OSReport("ratingUpdateCount: %d\n", rankInfoResp->ratingUpdateCount);
+	OSReport("ratingChange: %f\n", rankInfoResp->ratingChange);
+	OSReport("rankChange: %d\n", rankInfoResp->rankChange);
+
+	// u8 rank = RANK_GOLD_1;
+	// rankInfoResp->rank = rank;
+	// rankInfoResp->ratingOrdinal = 1500.f;
+	// rankInfoResp->global = 0;
+	// rankInfoResp->regional = 0;
+	// rankInfoResp->ratingUpdateCount = 234;
+	// rankInfoResp->ratingChange = 50.3f;
+	// rankInfoResp->rankChange = 1;
 
 	float change = rankInfoResp->ratingChange;
 	if (abs(change) < LOW_RATING_THRESHOLD) {
@@ -55,12 +50,10 @@ void InitRankInfo() {
 		ratingChangeLen = RATING_CHANGE_LEN;
 	}
 
-	OSReport("ratingChangeLen: %d\n", ratingChangeLen);
-
     InitRankInfoText(rankInfoResp);
 
     SlippiCSSDataTable *dt = GetSlpCSSDT();
-	InitRankIcon(dt->SlpCSSDatAddress, rank);
+	InitRankIcon(dt->SlpCSSDatAddress, rankInfoResp->rank);
 }
 
 void SetRankIcon(u8 rank) {
@@ -226,7 +219,14 @@ void UpdateRatingChange() {
         SFX_PlayRaw(getRankChangeSFX(rankInfoResp->ratingOrdinal), 255, 64, 0, 0);
     }
 
-    if (currentFrame < ratingChangeLen + RANK_CHANGE_LEN) {
+    if (currentFrame < ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFCATION_LEN) {
+        if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFCATION_LEN - 1)
+        {
+            // Clear rating notification string
+            if (ratingChangeSubtextId != 0) {
+                Text_SetText(text, ratingChangeSubtextId, "");
+            }
+        }
         if (currentFrame == ratingChangeLen + (int) (RANK_CHANGE_LEN / 2) + 1) {
             if (rankInfoResp->ratingChange != 0) {
                 // Create rating change text

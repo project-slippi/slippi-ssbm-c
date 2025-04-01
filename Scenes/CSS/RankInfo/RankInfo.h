@@ -76,6 +76,8 @@ const int TICK_DOWN = 0xEA;
 // ANIMATION
 const int RATING_CHANGE_LEN = 140;
 const int RANK_CHANGE_LEN = 10;
+// TODO :: give this a better name
+const int RATING_NOTIFCATION_LEN = 200;
 const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
 
 void InitRankInfoText(RankInfo *rirb);
