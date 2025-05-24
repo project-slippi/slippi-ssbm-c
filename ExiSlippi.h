@@ -11,7 +11,7 @@ typedef enum ExiSlippi_Command {
   ExiSlippi_Command_GP_FETCH_STEP = 0xC1,
   ExiSlippi_Command_REPORT_SET_COMPLETE = 0xC2,
   ExiSlippi_Command_GET_PLAYER_SETTINGS = 0xC3,
-  ExiSlippi_Command_GET_RANK = 0xC4,
+  ExiSlippi_Command_GET_RANK = 0xE3,
 } ExiSlippi_Command;
 
 typedef enum ExiSlippi_TransferMode {
@@ -140,21 +140,21 @@ typedef struct ExiSlippi_GetRank_Query {
 } ExiSlippi_GetRank_Query;
 
 typedef struct RankInfo {
-	u8 rank;
-	float ratingOrdinal;
-	u8 global;
-	u8 regional;
-  u8 ratingUpdateCount;
+  u8 rank;
+  float ratingOrdinal;
+  u8 global;
+  u8 regional;
+  u32 ratingUpdateCount;
   float ratingChange;
   int rankChange;
 } RankInfo;
 
 typedef struct ExiSlippi_GetRank_Response {
-	u8 rank;
-	float ratingOrdinal;
-	u8 global;
-	u8 regional;
-  u8 ratingUpdateCount;
+  u8 rank;
+  float ratingOrdinal;
+  u8 global;
+  u8 regional;
+  u32 ratingUpdateCount;
   float ratingChange;
   int rankChange;
 } ExiSlippi_GetRank_Response;

@@ -29,15 +29,16 @@ void InitRankInfo() {
 	OSReport("ratingUpdateCount: %d\n", rankInfoResp->ratingUpdateCount);
 	OSReport("ratingChange: %f\n", rankInfoResp->ratingChange);
 	OSReport("rankChange: %d\n", rankInfoResp->rankChange);
+    // TODO :: rank doesnt count all the way up or down to number
 
-	// u8 rank = RANK_GOLD_1;
-	// rankInfoResp->rank = rank;
-	// rankInfoResp->ratingOrdinal = 1500.f;
-	// rankInfoResp->global = 0;
-	// rankInfoResp->regional = 0;
-	// rankInfoResp->ratingUpdateCount = 234;
-	// rankInfoResp->ratingChange = 50.3f;
-	// rankInfoResp->rankChange = 1;
+	u8 rank = RANK_GOLD_1;
+	rankInfoResp->rank = rank;
+	rankInfoResp->ratingOrdinal = 1445.6f;
+	rankInfoResp->global = 0;
+	rankInfoResp->regional = 0;
+	rankInfoResp->ratingUpdateCount = 10;
+	rankInfoResp->ratingChange = 24.3f;
+	rankInfoResp->rankChange = 0;
 
 	float change = rankInfoResp->ratingChange;
 	if (abs(change) < LOW_RATING_THRESHOLD) {
@@ -90,9 +91,6 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank) {
 }
 
 void InitRankInfoText(RankInfo *rankInfo) {
-    // Colors
-    GXColor white = (GXColor){255, 255, 255, 255};
-
     // Create text object for rank info
     text = Text_CreateText(0, 0);
     text->kerning = 1;
@@ -101,47 +99,47 @@ void InitRankInfoText(RankInfo *rankInfo) {
     text->scale = (Vec2){0.01, 0.01};
     text->aspect.X *= 2.5;
 
-    // Check if placement matches have been completed
-    if (rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD) {
-        // Get rating ordinal as string
-        char* ratingString[6];
+    bool isPlaced = rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD;
+    // Create string to show rating / remaining placement matches
+    char* ratingString[15];
+
+    // Create Subtext objects
+    rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
+    Text_SetScale(text, rankSubtextId, 5, 5);
+
+    if (isPlaced) {
+        // Show rating if placed
         sprintf(ratingString, "%0.1f", rankInfo->ratingOrdinal);
-
-        // Create Subtext objects
-        rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
-        Text_SetScale(text, rankSubtextId, 5, 5);
-        ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
-        Text_SetScale(text, ratingSubtextId, 4.5, 4.5);
-
-        // Set color
-        Text_SetColor(text, rankSubtextId, &white);
-        Text_SetColor(text, ratingSubtextId, &white);
     }
     else {
-        // Get string to show remaining placement matches
-        char* placementString[15];
-        sprintf(placementString, "%d SETS REQUIRED", 5 - rankInfo->ratingUpdateCount);
-
-        // Create Subtext objects
-        rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
-        Text_SetScale(text, rankSubtextId, 5, 5);
-        placementSubtextId = Text_AddSubtext(text, -1100, 1740, placementString);
-        Text_SetScale(text, placementSubtextId, 4, 4);
-
-        // Set color
-        Text_SetColor(text, rankSubtextId, &white);
-        Text_SetColor(text, placementSubtextId, &white);
+        // Show remaining number of sets if not placed
+        sprintf(ratingString, "%d SETS REQUIRED", 5 - rankInfo->ratingUpdateCount);
     }
+
+    // Set info text
+    ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
+
+    // Set color
+    GXColor white = (GXColor){255, 255, 255, 255};
+    Text_SetColor(text, rankSubtextId, &white);
+    Text_SetColor(text, ratingSubtextId, &white);
+
+    // Set scale of info text
+    float infoTextScale = isPlaced ? 4.5 : 4;
+    Text_SetScale(text, ratingSubtextId, infoTextScale, infoTextScale);
 }
 
 void UpdateRankInfo() {
-    if (rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0) {
+    bool hasRankChanged = rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0;
+    bool isPlaced = rankInfoResp->ratingUpdateCount > 5;
+
+    if (hasRankChanged && isPlaced) {
         UpdateRatingChange();
         UpdateRankChangeAnim();
     }
 }
 
-float incrementRating(float ratingOrdinal, float ratingChange) {
+float interpRating(float ratingOrdinal, float ratingChange) {
     // Percent completion of rating increment
     float completion = currentFrame / (float) ratingChangeLen;
     return ratingOrdinal + ratingChange * completion;
@@ -187,9 +185,10 @@ void UpdateRatingChange() {
     GXColor red = (GXColor) {255, 0, 0, 255};
     GXColor white = (GXColor) {255, 255, 255, 255};
 
+    // Increment rating ordinal text
     if (currentFrame % 2 == 1 && currentFrame < ratingChangeLen) {
 		// Calculate rating increment for counting effect
-		float displayRating = incrementRating(
+		float displayRating = interpRating(
 				rankInfoResp->ratingOrdinal,
 				rankInfoResp->ratingChange
 			);
@@ -212,22 +211,21 @@ void UpdateRatingChange() {
 			64, 0, 0
 		);
     }
+    else if (currentFrame == ratingChangeLen) {
+        // Set rating text to exact amount to prevent interp inaccuracies
+		char* ratingString[6];
+		sprintf(ratingString, "%0.1f", rankInfoResp->ratingOrdinal + rankInfoResp->ratingChange);
+		Text_SetText(text, ratingSubtextId, ratingString);
+    }
 
-    // TODO :: Adjust this timing by 1 or 2 frames
     if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN) {
         // Play sound for rank up / down
         SFX_PlayRaw(getRankChangeSFX(rankInfoResp->ratingOrdinal), 255, 64, 0, 0);
     }
 
-    if (currentFrame < ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFCATION_LEN) {
-        if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFCATION_LEN - 1)
-        {
-            // Clear rating notification string
-            if (ratingChangeSubtextId != 0) {
-                Text_SetText(text, ratingChangeSubtextId, "");
-            }
-        }
+    if (currentFrame < ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFICATION_LEN) {
         if (currentFrame == ratingChangeLen + (int) (RANK_CHANGE_LEN / 2) + 1) {
+            // Handle rank-up SFX and show rating change notification
             if (rankInfoResp->ratingChange != 0) {
                 // Create rating change text
                 char* changeString[7];
@@ -248,12 +246,22 @@ void UpdateRatingChange() {
                     SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
                 }
             }
+
+            // Set new rank icon and text
             if (rankInfoResp->rankChange != 0) {
                 // Update rank icon
                 u8 newRank = (int) rankInfoResp->rank + rankInfoResp->rankChange;
                 SetRankIcon(newRank);
                 // Update rank text
                 Text_SetText(text, rankSubtextId, RANK_STRINGS[(int) rankInfoResp->rank + rankInfoResp->rankChange]);
+            }
+        }
+
+        // Clear notification string after rating change
+        if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFICATION_LEN - 1)
+        {
+            if (ratingChangeSubtextId != 0) {
+                Text_SetText(text, ratingChangeSubtextId, "");
             }
         }
     }

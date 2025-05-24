@@ -52,7 +52,6 @@ Text *text;
 int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
-int placementSubtextId;
 
 const float HIGH_RATING_THRESHOLD= 35.f;
 const float MED_RATING_THRESHOLD = 20.f;
@@ -77,7 +76,7 @@ const int TICK_DOWN = 0xEA;
 const int RATING_CHANGE_LEN = 140;
 const int RANK_CHANGE_LEN = 10;
 // TODO :: give this a better name
-const int RATING_NOTIFCATION_LEN = 200;
+const int RATING_NOTIFICATION_LEN = 200;
 const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
 
 void InitRankInfoText(RankInfo *rirb);
