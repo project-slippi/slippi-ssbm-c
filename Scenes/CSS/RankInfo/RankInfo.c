@@ -29,17 +29,17 @@ void InitRankInfo() {
 	OSReport("ratingUpdateCount: %d\n", rankInfoResp->ratingUpdateCount);
 	OSReport("ratingChange: %f\n", rankInfoResp->ratingChange);
 	OSReport("rankChange: %d\n", rankInfoResp->rankChange);
-    // TODO :: rank doesnt count all the way up or down to number
 
-	u8 rank = RANK_GOLD_1;
-	rankInfoResp->rank = rank;
-	rankInfoResp->ratingOrdinal = 1445.6f;
-	rankInfoResp->global = 0;
-	rankInfoResp->regional = 0;
-	rankInfoResp->ratingUpdateCount = 10;
-	rankInfoResp->ratingChange = 24.3f;
-	rankInfoResp->rankChange = 0;
+	// u8 rank = RANK_SILVER_3;
+	// rankInfoResp->rank = rank;
+	// rankInfoResp->ratingOrdinal = 1423.7f;
+	// rankInfoResp->global = 0;
+	// rankInfoResp->regional = 0;
+	// rankInfoResp->ratingUpdateCount = 11;
+	// rankInfoResp->ratingChange = 24.3f;
+	// rankInfoResp->rankChange = 1;
 
+    // Determine the duration of the rating increase / decrease
 	float change = rankInfoResp->ratingChange;
 	if (abs(change) < LOW_RATING_THRESHOLD) {
 		ratingChangeLen = RATING_CHANGE_LEN * 0.25f;
@@ -51,10 +51,9 @@ void InitRankInfo() {
 		ratingChangeLen = RATING_CHANGE_LEN;
 	}
 
-    InitRankInfoText(rankInfoResp);
-
     SlippiCSSDataTable *dt = GetSlpCSSDT();
 	InitRankIcon(dt->SlpCSSDatAddress, rankInfoResp->rank);
+    InitRankInfoText(rankInfoResp);
 }
 
 void SetRankIcon(u8 rank) {
@@ -78,8 +77,14 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank) {
     JOBJ_AddSetAnim(rankIconJobj, slpCss->rankIcons, 0);
     JOBJ_ReqAnimAll(rankIconJobj, 0.0);
 
-    // Set rank icon
-    SetRankIcon(rank);
+    // Check if the rank response is valid
+    bool requestFailed = rank >= RANK_COUNT;
+    if ( requestFailed ) {
+        SetRankIcon(RANK_UNRANKED);
+    }
+    else {
+        SetRankIcon(rank);
+    }
 
     // Initialize bob animation
     JOBJ_ForEachAnim(rankIconJobj, 6, 0x20, AOBJ_ReqAnim, 1, 0.f); // HSD_TypeMask::JOBJ 0x20
@@ -99,15 +104,23 @@ void InitRankInfoText(RankInfo *rankInfo) {
     text->scale = (Vec2){0.01, 0.01};
     text->aspect.X *= 2.5;
 
-    bool isPlaced = rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD;
     // Create string to show rating / remaining placement matches
     char* ratingString[15];
 
+    // Check if the rank in the response is valid
+    bool requestFailed = rankInfo->rank >= RANK_COUNT;
+
     // Create Subtext objects
-    rankSubtextId = Text_AddSubtext(text, -1100, 1540, RANK_STRINGS[rankInfo->rank]);
+    rankSubtextId = Text_AddSubtext(text, -1100, 1540, requestFailed ? "Error" : RANK_STRINGS[rankInfo->rank]);
     Text_SetScale(text, rankSubtextId, 5, 5);
 
-    if (isPlaced) {
+    // Check if the user has completed their placement matches
+    bool isPlaced = rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD;
+    if (requestFailed) {
+        // Show rank fetch has failed
+        sprintf(ratingString, "Failed to get rank");
+    }
+    else if (isPlaced) {
         // Show rating if placed
         sprintf(ratingString, "%0.1f", rankInfo->ratingOrdinal);
     }
@@ -117,16 +130,18 @@ void InitRankInfoText(RankInfo *rankInfo) {
     }
 
     // Set info text
-    ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
+    float ratingTextHeight = requestFailed ? 1850 : 1740;
+    ratingSubtextId = Text_AddSubtext(text, -1100, ratingTextHeight, ratingString);
 
     // Set color
     GXColor white = (GXColor){255, 255, 255, 255};
+    GXColor red = (GXColor) {255, 0, 0, 255};
     Text_SetColor(text, rankSubtextId, &white);
-    Text_SetColor(text, ratingSubtextId, &white);
+    Text_SetColor(text, ratingSubtextId, requestFailed ? &red : &white);
 
     // Set scale of info text
-    float infoTextScale = isPlaced ? 4.5 : 4;
-    Text_SetScale(text, ratingSubtextId, infoTextScale, infoTextScale);
+    float ratingTextScale = isPlaced ? 4.5 : 4;
+    Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
 }
 
 void UpdateRankInfo() {
@@ -193,6 +208,7 @@ void UpdateRatingChange() {
 				rankInfoResp->ratingChange
 			);
 		char* ratingString[6];
+
 		sprintf(ratingString, "%0.1f", displayRating);
 		Text_SetText(text, ratingSubtextId, ratingString);
 
@@ -229,18 +245,30 @@ void UpdateRatingChange() {
             if (rankInfoResp->ratingChange != 0) {
                 // Create rating change text
                 char* changeString[7];
-                sprintf(changeString, "%0.1f", rankInfoResp->ratingChange);
+                sprintf(changeString, "%0.1f", fabs(rankInfoResp->ratingChange));
 
-                // Create new subtext for rating change
-                ratingChangeSubtextId = Text_AddSubtext(text, -650, 1750, changeString);
+                // Chars for + / - with null terminator
+                int plus = 0x817B0000;
+                int minus = 0x817C0000;
+                int* signString = rankInfoResp->ratingChange > 0 ? &plus : &minus;
+
+                // Create subtext for sign
+                changeSignSubtextId = Text_AddSubtext(text, -600, 1750, signString);
+
+                // Create subtext for rating change
+                ratingChangeSubtextId = Text_AddSubtext(text, -475, 1750, changeString);
+                Text_SetScale(text, changeSignSubtextId, 4, 4);
                 Text_SetScale(text, ratingChangeSubtextId, 4, 4);
+
                 // Determine text color
                 if (rankInfoResp->ratingChange > 0) {
+                    Text_SetColor(text, changeSignSubtextId, &green);
                     Text_SetColor(text, ratingChangeSubtextId, &green);
                     // Play sfx for end of counting
                     SFX_PlayRaw(RATING_INCREASE, 255, 64, 0, 0);
                 }
                 if (rankInfoResp->ratingChange < 0) {
+                    Text_SetColor(text, changeSignSubtextId, &red);
                     Text_SetColor(text, ratingChangeSubtextId, &red);
                     // Play sfx for end of counting
                     SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
@@ -261,6 +289,7 @@ void UpdateRatingChange() {
         if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFICATION_LEN - 1)
         {
             if (ratingChangeSubtextId != 0) {
+                Text_SetText(text, changeSignSubtextId, "");
                 Text_SetText(text, ratingChangeSubtextId, "");
             }
         }

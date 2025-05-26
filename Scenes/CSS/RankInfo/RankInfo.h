@@ -22,6 +22,7 @@ enum SlippiRank {
     RANK_MASTER_2,
     RANK_MASTER_3,
     RANK_GRANDMASTER,
+    RANK_COUNT
 };
 
 static char* RANK_STRINGS[] = {
@@ -49,6 +50,7 @@ static char* RANK_STRINGS[] = {
 
 ExiSlippi_GetRank_Response *rankInfoResp = NULL;
 Text *text;
+int changeSignSubtextId;
 int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
