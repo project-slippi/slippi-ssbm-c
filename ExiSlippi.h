@@ -135,11 +135,18 @@ typedef struct ExiSlippi_GetPlayerSettings_Response {
   PlayerSettings settings[4];
 } ExiSlippi_GetPlayerSettings_Response;
 
+typedef enum RankInfo_ResponseStatus {
+  RankInfo_ResponseStatus_ERROR = 0,
+  RankInfo_ResponseStatus_UNREPORTED = 1,
+  RankInfo_ResponseStatus_SUCCESS= 2,
+} RankInfo_ResponseStatus;
+
 typedef struct ExiSlippi_GetRank_Query {
   u8 command;
 } ExiSlippi_GetRank_Query;
 
 typedef struct RankInfo {
+  u8 status;
   u8 rank;
   float ratingOrdinal;
   u8 global;
@@ -150,6 +157,7 @@ typedef struct RankInfo {
 } RankInfo;
 
 typedef struct ExiSlippi_GetRank_Response {
+  u8 status;
   u8 rank;
   float ratingOrdinal;
   u8 global;

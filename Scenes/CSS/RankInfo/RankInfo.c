@@ -22,6 +22,7 @@ void InitRankInfo() {
 	ExiSlippi_Transfer(q, sizeof(ExiSlippi_GetRank_Query), ExiSlippi_TransferMode_WRITE);
 	ExiSlippi_Transfer(rankInfoResp, sizeof(ExiSlippi_GetRank_Response), ExiSlippi_TransferMode_READ);
 
+	OSReport("status: %d\n", rankInfoResp->status);
 	OSReport("rank: %d\n", rankInfoResp->rank);
 	OSReport("ratingOrdinal: %f\n", rankInfoResp->ratingOrdinal);
 	OSReport("global: %d\n", rankInfoResp->global);
@@ -78,8 +79,7 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank) {
     JOBJ_ReqAnimAll(rankIconJobj, 0.0);
 
     // Check if the rank response is valid
-    bool requestFailed = rank >= RANK_COUNT;
-    if ( requestFailed ) {
+    if ( rankInfoResp->status == RankInfo_ResponseStatus_ERROR ) {
         SetRankIcon(RANK_UNRANKED);
     }
     else {
@@ -104,63 +104,95 @@ void InitRankInfoText(RankInfo *rankInfo) {
     text->scale = (Vec2){0.01, 0.01};
     text->aspect.X *= 2.5;
 
-    // Create string to show rating / remaining placement matches
-    char* ratingString[15];
-
-    // Check if the rank in the response is valid
-    bool requestFailed = rankInfo->rank >= RANK_COUNT;
-
-    // Create Subtext objects
-    rankSubtextId = Text_AddSubtext(text, -1100, 1540, requestFailed ? "Error" : RANK_STRINGS[rankInfo->rank]);
-    Text_SetScale(text, rankSubtextId, 5, 5);
-
-    // Check if the user has completed their placement matches
-    bool isPlaced = rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD;
-    if (requestFailed) {
-        // Show rank fetch has failed
-        sprintf(ratingString, "Failed to get rank");
-    }
-    else if (isPlaced) {
-        // Show rating if placed
-        sprintf(ratingString, "%0.1f", rankInfo->ratingOrdinal);
-    }
-    else {
-        // Show remaining number of sets if not placed
-        sprintf(ratingString, "%d SETS REQUIRED", 5 - rankInfo->ratingUpdateCount);
-    }
-
-    // Set info text
-    float ratingTextHeight = requestFailed ? 1850 : 1740;
-    ratingSubtextId = Text_AddSubtext(text, -1100, ratingTextHeight, ratingString);
-
-    // Set color
     GXColor white = (GXColor){255, 255, 255, 255};
+    GXColor gray = (GXColor){150, 150, 150, 255};
     GXColor red = (GXColor) {255, 0, 0, 255};
-    Text_SetColor(text, rankSubtextId, &white);
-    Text_SetColor(text, ratingSubtextId, requestFailed ? &red : &white);
+    GXColor yellow = (GXColor) {255, 200, 0, 255};
+    GXColor blue = (GXColor) {60, 188, 255, 255};
 
-    // Set scale of info text
-    float ratingTextScale = isPlaced ? 4.5 : 4;
-    Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
+    // TODO :: Make this into an if statement again
+    switch (rankInfo->status)
+    {
+        case RankInfo_ResponseStatus_ERROR:
+            char* errorString[6];
+            char* errorMsgString[19];
+
+            sprintf(errorString, "Error");
+            sprintf(errorMsgString, "Failed to get rank");
+
+            int errorSubtextId = Text_AddSubtext(text, -1100, 1540, errorString);
+            Text_SetScale(text, errorSubtextId, 5, 5);
+            Text_SetColor(text, errorSubtextId, &white);
+
+            int errorMsgSubtextId = Text_AddSubtext(text, -1100, 1790, errorMsgString);
+            Text_SetScale(text, errorMsgSubtextId, 4, 4);
+            Text_SetColor(text, errorMsgSubtextId, &red);
+            break;
+        case RankInfo_ResponseStatus_UNREPORTED:
+        case RankInfo_ResponseStatus_SUCCESS:
+            char* ratingString[15];
+            char* rankString[15];
+
+            // Check if the user has completed their placement matches
+            bool isPlaced = rankInfo->ratingUpdateCount >= PLACEMENT_THRESHOLD;
+            if (isPlaced) {
+                // Show rating if placed
+                sprintf(ratingString, "%0.1f", rankInfo->ratingOrdinal);
+            }
+            else {
+                // Show remaining number of sets if not placed
+                sprintf(ratingString, "%d SETS REQUIRED", 5 - rankInfo->ratingUpdateCount);
+            }
+            // Set rank name string
+            sprintf(rankString, RANK_STRINGS[rankInfo->rank]);
+
+            // Create rank text
+            rankSubtextId = Text_AddSubtext(text, -1100, 1540, rankString);
+            Text_SetScale(text, rankSubtextId, 5, 5);
+            Text_SetColor(text, rankSubtextId, &white);
+
+            // Set info text
+            ratingSubtextId = Text_AddSubtext(text, -1100, 1740, ratingString);
+            // Set scale of info text
+            float ratingTextScale = isPlaced ? 4.5 : 4;
+            Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
+            Text_SetColor(text, ratingSubtextId, &gray);
+
+            // Create question mark if match data is unreported
+            if ( rankInfo->status == RankInfo_ResponseStatus_UNREPORTED )
+            {
+                int question = 0x81480000;
+                // int asterisk = 0x81960000;
+                int unkSubtextId = Text_AddSubtext(text, -650, 1740, &question);
+                Text_SetScale(text, unkSubtextId, 4.5, 4.5);
+                Text_SetColor(text, unkSubtextId, &yellow);
+
+                // int waitSubtextId = Text_AddSubtext(text, -1100, 1980, "Awaiting match report");
+                // Text_SetScale(text, waitSubtextId, 4, 4);
+                // Text_SetColor(text, waitSubtextId, &yellow);
+            }
+            break;
+    }
 }
 
 void UpdateRankInfo() {
+    bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
     bool hasRankChanged = rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0;
     bool isPlaced = rankInfoResp->ratingUpdateCount > 5;
 
-    if (hasRankChanged && isPlaced) {
+    if (!error && hasRankChanged && isPlaced) {
         UpdateRatingChange();
         UpdateRankChangeAnim();
     }
 }
 
-float interpRating(float ratingOrdinal, float ratingChange) {
+float InterpRating(float ratingOrdinal, float ratingChange) {
     // Percent completion of rating increment
     float completion = currentFrame / (float) ratingChangeLen;
     return ratingOrdinal + ratingChange * completion;
 }
 
-int getRatingChangeSFX(float ratingChange) {
+int GetRatingChangeSFX(float ratingChange) {
     if (rankInfoResp->ratingChange > 0) {
         return TICK_UP;
     }
@@ -172,7 +204,7 @@ int getRatingChangeSFX(float ratingChange) {
     }
 }
 
-int getRankChangeSFX(float rankChange) {
+int GetRankChangeSFX(float rankChange) {
     if (rankInfoResp->rankChange > 0) {
         return RANK_UP_SMALL;
     }
@@ -203,7 +235,7 @@ void UpdateRatingChange() {
     // Increment rating ordinal text
     if (currentFrame % 2 == 1 && currentFrame < ratingChangeLen) {
 		// Calculate rating increment for counting effect
-		float displayRating = interpRating(
+		float displayRating = InterpRating(
 				rankInfoResp->ratingOrdinal,
 				rankInfoResp->ratingChange
 			);
@@ -222,7 +254,7 @@ void UpdateRatingChange() {
 
         // Play tick sound effect during rating change
         SFX_PlayRaw(
-			getRatingChangeSFX(rankInfoResp->ratingChange),
+			GetRatingChangeSFX(rankInfoResp->ratingChange),
 			tickVolume,
 			64, 0, 0
 		);
@@ -236,7 +268,7 @@ void UpdateRatingChange() {
 
     if (currentFrame == ratingChangeLen + RANK_CHANGE_LEN) {
         // Play sound for rank up / down
-        SFX_PlayRaw(getRankChangeSFX(rankInfoResp->ratingOrdinal), 255, 64, 0, 0);
+        SFX_PlayRaw(GetRankChangeSFX(rankInfoResp->ratingOrdinal), 255, 64, 0, 0);
     }
 
     if (currentFrame < ratingChangeLen + RANK_CHANGE_LEN + RATING_NOTIFICATION_LEN) {
