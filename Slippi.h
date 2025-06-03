@@ -58,6 +58,7 @@
 #define SLIPPI_CMD_ReportMatch 0xBD
 #define SLIPPI_CMD_SendNameEntryIndex 0xBE
 #define SLIPPI_CMD_NameEntryAutoComplete 0xBF
+#define SLIPPI_CMD_GetRankInfo 0xC4
 // For Slippi file loads
 #define SLIPPI_CMD_FileLength 0xD1
 #define SLIPPI_CMD_FileLoad 0xD2
@@ -161,6 +162,9 @@ typedef struct ChatWindowDesc {
 typedef struct SlpCSSDesc {
 	ChatWindowDesc* chatWindow;
 	JOBJSet* chatMessage;
+	MatAnimJointDesc* mode; // This is not a desc but the struct is identical
+	JOBJ* connectHelp;
+	JOBJSet* rankIcons;
 } SlpCSSDesc;
 
 // Static Overloaded Text Functions, dont call these directly

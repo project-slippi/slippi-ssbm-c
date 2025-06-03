@@ -5,6 +5,7 @@
 
 #include "../../Core/Notifications/Notifications.c"
 #include "Chat/Chat.c"
+#include "RankInfo/RankInfo.c"
 
 void UpdateOnlineCSS() {
     if (!IsSlippiOnlineCSS()) return;
@@ -15,12 +16,19 @@ void UpdateOnlineCSS() {
 
     ListenForNotifications();
     ListenForChatInput();
+    UpdateRankInfo();
 }
 
 void InitOnlineCSS() {
     if (!IsSlippiOnlineCSS()) return;
 
     InitChatMessages();
+
+    // Only request rank info if this is ranked
+    u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
+    if (onlineMode == 0) {
+        InitRankInfo();
+    }
 }
 
 #endif SLIPPI_CSS_MAIN_C
