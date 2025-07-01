@@ -456,7 +456,7 @@ void InitAllSelectorJobjs() {
         CSIcon_Material_Fountain,
         CSIcon_Material_Dreamland,
         CSIcon_Material_Yoshis,
-        CSIcon_Material_Pokemon,
+        CSIcon_Material_FinalDestination,
         CSIcon_Material_Battlefield,
     };
     InitSelectorJobjs(stageStrikeMats, data->stage_strike_selectors, STRIKE_STAGE_SELECTOR_COUNT);
@@ -467,9 +467,9 @@ void InitAllSelectorJobjs() {
         CSIcon_Material_Fountain,
         CSIcon_Material_Dreamland,
         CSIcon_Material_Yoshis,
-        CSIcon_Material_Pokemon,
         CSIcon_Material_Battlefield,
         CSIcon_Material_FinalDestination,
+        CSIcon_Material_Pokemon,
     };
     InitSelectorJobjs(stageCpMats, data->stage_cp_selectors, CP_STAGE_SELECTOR_COUNT);
   }
@@ -928,34 +928,39 @@ void CompleteCurrentStep(int committed_count) {
 void CompleteGamePrep() {
   ExiSlippi_OverwriteSelections_Query *osq = calloc(sizeof(ExiSlippi_OverwriteSelections_Query));
 
-  int stages[] = {
-      GRKINDEXT_IZUMI,
-      GRKINDEXT_OLDPU,
-      GRKINDEXT_STORY,
-      GRKINDEXT_PSTAD,
-      GRKINDEXT_BATTLE,
-  };
+  // Init empty stages array to populate with stage ids
+  int stages[STRIKE_STAGE_SELECTOR_COUNT] = {0};
+
+  // Iterate through stage_strike_selectors and convert the mats to stage ids into new array
+  for (int i = 0; i < STRIKE_STAGE_SELECTOR_COUNT; i++) {
+    CSBoxSelector *selector = data->stage_strike_selectors[i];
+    stages[i] = CSIcon_ConvertMatToStage(selector->icon->state.material);
+  }
 
   u8 localCharId;
   u8 localCharColor;
 
+  // Handle stage striking. Remove stages that were struck by setting them to -1
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
     if (step->type != GameSetup_Step_Type_REMOVE_STAGE) {
       continue;
     }
 
-    for (int j = 0; j < 5; j++) {
+    // Go through all stages available for striking and remove the ones that were selected
+    // while tracking the last one remaining
+    for (int j = 0; j < STRIKE_STAGE_SELECTOR_COUNT; j++) {
       if (step->stage_selections[0] == stages[j]) {
-        stages[j] = -1;
+        stages[j] = -1; // If first selection, remove stage
       } else if (step->required_selection_count > 1 && step->stage_selections[1] == stages[j]) {
-        stages[j] = -1;
+        stages[j] = -1; // If second selection, remove stage
       } else if (stages[j] >= 0) {
         osq->stage_id = (u16)stages[j];
       }
     }
   }
 
+  // Handle stage selection
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
     if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
@@ -1354,7 +1359,7 @@ u8 GetNextColor(u8 charId, u8 colorId, int incr) {
 
   int newCol = colorId + incr;
 
-  int maxColor = CSS_GetCostumeNum(charId);
+  int maxColor = GetVanilaMaxColors(charId);
   newCol = newCol % maxColor;
   if (newCol < 0) {
     newCol += maxColor;
@@ -1367,6 +1372,45 @@ u8 GetNextColor(u8 charId, u8 colorId, int incr) {
   }
 
   return newCol;
+}
+
+u8 GetVanilaMaxColors(u8 charId) {
+  // Returns the maximum number of colors for a character in vanilla Melee. We do this because since we display icons
+  // for a selected color on the opponent's side, we have to show a color they actually have. Additionally giving one side
+  // more colors sort of messes up the "force only one player per color" rule
+  switch (charId) {
+    case CKIND_FALCON:
+    case CKIND_KIRBY:
+    case CKIND_YOSHI:
+      return 6;
+    case CKIND_DK:
+    case CKIND_LINK:
+    case CKIND_MARIO:
+    case CKIND_MARTH:
+    case CKIND_PEACH:
+    case CKIND_JIGGLYPUFF:
+    case CKIND_SAMUS:
+    case CKIND_ZELDA:
+    case CKIND_SHEIK:
+    case CKIND_YOUNGLINK:
+    case CKIND_DRMARIO:
+    case CKIND_ROY:
+    case CKIND_GANONDORF:
+      return 5;
+    case CKIND_FOX:
+    case CKIND_GAW:
+    case CKIND_BOWSER:
+    case CKIND_LUIGI:
+    case CKIND_MEWTWO:
+    case CKIND_NESS:
+    case CKIND_PIKACHU:
+    case CKIND_ICECLIMBERS:
+    case CKIND_FALCO:
+    case CKIND_PICHU:
+      return 4;
+    default:
+      return 1;  // All other characters have only one color
+  }
 }
 
 u8 IsColorAllowed(u8 charId, u8 colorId, u8 playerIdx) {
