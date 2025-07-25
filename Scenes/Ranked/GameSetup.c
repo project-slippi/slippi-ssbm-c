@@ -4,9 +4,9 @@
 #include "../../Components/CharStageBoxSelector.h"
 #include "../../Components/CharStageIcon.h"
 #include "../../Components/StockIcon.h"
+#include "../../Files.h"
 #include "../../Game/Characters.h"
 #include "../../Game/Sounds.h"
-#include "../../Files.h"
 
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
@@ -37,6 +37,12 @@ void minor_load(GameSetup_SceneData *minor_data) {
   } else {
     data->process_type = GameSetup_Process_Type_COUNTERPICKING;
   }
+
+  // Execute a match status report asynchronously
+  ExiSlippi_ReportMatchStatus_Query *rmsq = calloc(sizeof(ExiSlippi_ReportMatchStatus_Query));
+  rmsq->command = ExiSlippi_Command_REPORT_MATCH_STATUS;
+  rmsq->statusIdx = 10 + (minor_data->cur_game - 1);  // 10 is the offset for game_setup_1
+  ExiSlippi_Transfer(rmsq, sizeof(ExiSlippi_ReportMatchStatus_Query), ExiSlippi_TransferMode_WRITE);
 
   // Allocate some memory used throughout
   data->match_state = ExiSlippi_LoadMatchState(0);  // Fetch initial match state
@@ -567,7 +573,7 @@ void HandleDisconnectInputs() {
 
   if (downInputs & HSD_BUTTON_A || downInputs & HSD_BUTTON_START) {
     data->state.should_terminate = true;
-  }  
+  }
 }
 
 void HandleStageInputs(GameSetup_Step *step) {
@@ -951,9 +957,9 @@ void CompleteGamePrep() {
     // while tracking the last one remaining
     for (int j = 0; j < STRIKE_STAGE_SELECTOR_COUNT; j++) {
       if (step->stage_selections[0] == stages[j]) {
-        stages[j] = -1; // If first selection, remove stage
+        stages[j] = -1;  // If first selection, remove stage
       } else if (step->required_selection_count > 1 && step->stage_selections[1] == stages[j]) {
-        stages[j] = -1; // If second selection, remove stage
+        stages[j] = -1;  // If second selection, remove stage
       } else if (stages[j] >= 0) {
         osq->stage_id = (u16)stages[j];
       }
