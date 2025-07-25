@@ -5,6 +5,10 @@
 #include "../m-ex/MexTK/mex.h"
 #include "CharStageIcon.h"
 
+void SelectRandomChar(CharPickerDialog *cpd) {
+  cpd->state.char_selection_idx = HSD_Randi(CPD_LAST_INDEX);
+}
+
 static void _SetPos(CharPickerDialog *cpd, Vec3 pos) {
   cpd->root_jobj->trans = pos;
   JOBJ_SetMtxDirtySub(cpd->root_jobj);
@@ -30,6 +34,9 @@ static void _InputsThink(GOBJ *gobj) {
 
   if (downInputs & HSD_BUTTON_A) {
     SFX_PlayCommon(CommonSound_ACCEPT);  // Play "accept" sound
+    if (cpd->state.char_selection_idx == CKIND_RANDOM) { // Select random
+      SelectRandomChar(cpd);
+    }
     CharPickerDialog_CloseDialog(cpd);
     cpd->on_close(cpd, true);
     return;
@@ -52,7 +59,7 @@ static void _InputsThink(GOBJ *gobj) {
 
   if (scrollInputs & (HSD_BUTTON_RIGHT | HSD_BUTTON_DPAD_RIGHT)) {
     // Handle a right input
-    if (cpd->state.char_selection_idx >= CKIND_GANONDORF) {
+    if (cpd->state.char_selection_idx >= CKIND_RANDOM) {
       cpd->state.char_selection_idx = CKIND_YOUNGLINK;
     } else if ((cpd->state.char_selection_idx + 1) % 7 == 0) {
       cpd->state.char_selection_idx -= 6;
@@ -66,7 +73,7 @@ static void _InputsThink(GOBJ *gobj) {
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
     if (cpd->state.char_selection_idx == CKIND_YOUNGLINK) {
-      cpd->state.char_selection_idx = CKIND_GANONDORF;
+      cpd->state.char_selection_idx = CKIND_RANDOM;
     } else if (cpd->state.char_selection_idx % 7 == 0) {
       cpd->state.char_selection_idx += 6;
     } else {
@@ -78,7 +85,7 @@ static void _InputsThink(GOBJ *gobj) {
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
-    if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx >= CKIND_SHEIK) {
+    if (cpd->state.char_selection_idx % 7 >= 6 && cpd->state.char_selection_idx > CKIND_SHEIK) {
       cpd->state.char_selection_idx -= 14;
     } else if (cpd->state.char_selection_idx >= CKIND_YOUNGLINK) {
       cpd->state.char_selection_idx -= 21;
@@ -92,7 +99,7 @@ static void _InputsThink(GOBJ *gobj) {
   } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
     // Handle a up input
     if (cpd->state.char_selection_idx % 7 >= 5 && cpd->state.char_selection_idx <= CKIND_LINK) {
-      cpd->state.char_selection_idx += 14;
+      cpd->state.char_selection_idx += 21;
     } else if (cpd->state.char_selection_idx <= CKIND_LINK) {
       cpd->state.char_selection_idx += 21;
     } else {
@@ -105,7 +112,7 @@ static void _InputsThink(GOBJ *gobj) {
   }
 
   // Update which icon shows up selected
-  for (int i = CKIND_FALCON; i <= CKIND_GANONDORF; i++) {
+  for (int i = CKIND_FALCON; i <= CKIND_RANDOM; i++) {
     CSIcon_Select_State state = CSIcon_Select_State_NotSelected;
     u8 colorId = 0;
     if (i == cpd->state.char_selection_idx) {
@@ -113,8 +120,11 @@ static void _InputsThink(GOBJ *gobj) {
       colorId = cpd->state.char_color_idx;
     }
 
-    CSIcon_SetStockIconVisibility(cpd->char_icons[i], i == cpd->state.char_selection_idx);
-    StockIcon_SetIcon(cpd->char_icons[i]->stock_icon, i, colorId);
+    // Only show stock icons on characters
+    if (i < CKIND_RANDOM) {
+      CSIcon_SetStockIconVisibility(cpd->char_icons[i], i == cpd->state.char_selection_idx);
+      StockIcon_SetIcon(cpd->char_icons[i]->stock_icon, i, colorId);
+    }
     CSIcon_SetSelectState(cpd->char_icons[i], state);
   }
 }
@@ -133,9 +143,12 @@ CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void
 
   // Connect CharStageIcons for each character to the dialog
   JOBJ *cur_joint = cpd->root_jobj->child->child->sibling->child;
-  for (int i = CKIND_FALCON; i <= CKIND_GANONDORF; i++) {
+  for (int i = CKIND_FALCON; i <= CKIND_RANDOM; i++) {
     cpd->char_icons[i] = CSIcon_Init(gui);
-    CSIcon_SetMaterial(cpd->char_icons[i], CSIcon_ConvertCharToMat(i));
+    CSIcon_Material material;
+    // Assign material to chars / random
+    int matIdx = i < CKIND_RANDOM ? CSIcon_ConvertCharToMat(i) : CSIcon_Material_Question;
+    CSIcon_SetMaterial(cpd->char_icons[i], matIdx);
 
     // Attach icon to cur joint and move to next joint
     JOBJ_AddChild(cur_joint, cpd->char_icons[i]->root_jobj);
