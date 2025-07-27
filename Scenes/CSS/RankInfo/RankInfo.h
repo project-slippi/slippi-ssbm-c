@@ -60,7 +60,7 @@ static char* RANK_STRINGS[] = {
 };
 
 Text *text;
-int dotLoaderSubtextId;
+int loaderSubtextId;
 int changeSignSubtextId;
 int ratingChangeSubtextId;
 int rankSubtextId;
@@ -97,7 +97,7 @@ const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
 const int RETRY_FETCH_0_LEN = 120;
 const int RETRY_FETCH_1_LEN = 420;
 
-void InitRankInfoText();
+void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreported);
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void UpdateRatingChange();
 void UpdateRankChange();
