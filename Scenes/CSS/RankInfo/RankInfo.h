@@ -1,6 +1,17 @@
 #ifndef SLIPPI_CSS_RANK_INFO_H
 #define SLIPPI_CSS_RANK_INFO_H
 
+typedef struct RankInfo {
+  u8 status;
+  u8 rank;
+  float ratingOrdinal;
+  u8 global;
+  u8 regional;
+  u32 ratingUpdateCount;
+  float ratingChange;
+  int rankChange;
+} RankInfo;
+
 enum SlippiRank {
 	RANK_UNRANKED,
     RANK_BRONZE_1,
@@ -48,14 +59,16 @@ static char* RANK_STRINGS[] = {
     "GRANDMASTER",
 };
 
-ExiSlippi_GetRank_Response *rankInfoResp = NULL;
 Text *text;
+int dotLoaderSubtextId;
 int changeSignSubtextId;
 int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
 
-const float HIGH_RATING_THRESHOLD= 35.f;
+bool rankInitialized = false;
+
+const float HIGH_RATING_THRESHOLD = 35.f;
 const float MED_RATING_THRESHOLD = 20.f;
 const float LOW_RATING_THRESHOLD = 10.f;
 const u8 PLACEMENT_THRESHOLD = 5;
@@ -77,11 +90,14 @@ const int TICK_DOWN = 0xEA;
 // ANIMATION
 const int RATING_CHANGE_LEN = 140;
 const int RANK_CHANGE_LEN = 10;
-// TODO :: give this a better name
 const int RATING_NOTIFICATION_LEN = 200;
 const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
 
-void InitRankInfoText(RankInfo *rirb);
+// RANK FETCH DURATIONS
+const int RETRY_FETCH_0_LEN = 120;
+const int RETRY_FETCH_1_LEN = 420;
+
+void InitRankInfoText();
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void UpdateRatingChange();
 void UpdateRankChange();

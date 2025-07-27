@@ -7,6 +7,9 @@
 #include "../../Files.h"
 #include "../../Game/Characters.h"
 #include "../../Game/Sounds.h"
+#include "../../Files.h"
+#include "../../../Slippi.h"
+#include "../CSS/RankInfo/RankInfo.h"
 
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
@@ -391,8 +394,8 @@ void InitHeader() {
   Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
 
   // Init character name subtexts
-  InitPlayerInfo(0, -2800, data->match_state->p1_name, data->match_state->p1_connect_code);
-  InitPlayerInfo(2, 2800, data->match_state->p2_name, data->match_state->p2_connect_code);
+  InitPlayerInfo(0, -2445, data->match_state->p1_name, data->match_state->p1_connect_code);
+  InitPlayerInfo(2, 2445, data->match_state->p2_name, data->match_state->p2_connect_code);
 
   // Init arrows
   data->turn_indicators[0] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_LEFT);
@@ -427,6 +430,55 @@ void InitHeader() {
     data->game_results[i] = gr;
     xPos += gap;
   }
+
+  const float RANK_ICON_SCALE_X = 1.85f;
+  const float RANK_ICON_SCALE_Y = 1.75f;
+  const float RANK_ICON_HEIGHT = 17.85f;
+  const float RANK_ICON_POS_X = 27.5f;
+
+  // Initialize local player rank icon
+  SlippiCSSDataTable* dt = GetSlpCSSDT();
+  SlpCSSDesc* slpCss = dt->SlpCSSDatAddress;
+  GOBJ *gobj = GObj_Create(0x4, 0x5, 0x80);
+  JOBJ* rankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+
+  rankIconJobj->trans.X = -RANK_ICON_POS_X;
+  rankIconJobj->trans.Y = RANK_ICON_HEIGHT;
+
+  rankIconJobj->scale.X = RANK_ICON_SCALE_X;
+  rankIconJobj->scale.Y = RANK_ICON_SCALE_Y;
+  rankIconJobj->scale.Z = 1.f;
+  JOBJ_SetMtxDirtySub(rankIconJobj);
+
+  // Set rank icon
+  JOBJ_AddSetAnim(rankIconJobj, slpCss->rankIcons, 0);
+  JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float) data->match_state->local_rank); // HSD_TypeMask::TOBJ 0x400
+  JOBJ_AnimAll(rankIconJobj);
+  JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+
+  GObj_AddObject(gobj, 0x4, rankIconJobj);
+  GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
+
+  // Initialize oppoent rank icon
+  GOBJ *right_gobj = GObj_Create(0x4, 0x5, 0x80);
+  JOBJ* rightRankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+
+  rightRankIconJobj->trans.X = RANK_ICON_POS_X;
+  rightRankIconJobj->trans.Y = RANK_ICON_HEIGHT;
+
+  rightRankIconJobj->scale.X = RANK_ICON_SCALE_X;
+  rightRankIconJobj->scale.Y = RANK_ICON_SCALE_Y;
+  rightRankIconJobj->scale.Z = 1.f;
+  JOBJ_SetMtxDirtySub(rightRankIconJobj);
+
+  // Set rank icon
+  JOBJ_AddSetAnim(rightRankIconJobj, slpCss->rankIcons, 0);
+  JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float) data->match_state->opp_rank); // HSD_TypeMask::TOBJ 0x400
+  JOBJ_AnimAll(rightRankIconJobj);
+  JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+
+  GObj_AddObject(right_gobj, 0x4, rightRankIconJobj);
+  GObj_AddGXLink(right_gobj, GXLink_Common, 1, 129);
 }
 
 void InitSelectorJobjs(CSIcon_Material *iconMats, CSBoxSelector **selectors, int count) {
