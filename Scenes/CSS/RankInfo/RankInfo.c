@@ -28,6 +28,7 @@ void GetRankInfo(ExiSlippi_GetRank_Response *resp)
 
 void FetchRankInfo()
 {
+    OSReport("Fetching rank info...");
     // Send dolphin command to pull rank data
 	ExiSlippi_FetchRank_Query *q = calloc(sizeof(ExiSlippi_FetchRank_Query));
 	q->command = ExiSlippi_Command_FETCH_RANK;
@@ -49,14 +50,14 @@ void InitRankInfo() {
     }
 
     // DEBUG
-    rankInfoResp->status = RankInfo_ResponseStatus_UNREPORTED;
-    rankInfoResp->rank = RANK_MASTER_3;
-    rankInfoResp->ratingOrdinal = 1345.4f;
-    rankInfoResp->global = 0;
-    rankInfoResp->regional = 0;
-    rankInfoResp->ratingUpdateCount = 100;
-    rankInfoResp->rankChange = 0;
-    rankInfoResp->ratingChange = 0.f;
+    // rankInfoResp->status = RankInfo_ResponseStatus_UNREPORTED;
+    // rankInfoResp->rank = RANK_MASTER_3;
+    // rankInfoResp->ratingOrdinal = 1345.4f;
+    // rankInfoResp->global = 0;
+    // rankInfoResp->regional = 0;
+    // rankInfoResp->ratingUpdateCount = 100;
+    // rankInfoResp->rankChange = 0;
+    // rankInfoResp->ratingChange = 0.f;
 
     OSReport("InitRankInfo()\n");
     OSReport("user status: %d\n", rankInfoResp->status);
@@ -69,13 +70,14 @@ void InitRankInfo() {
 
     SlippiCSSDataTable *dt = GetSlpCSSDT();
     // Set rank icon as unranked by default
+   
+    s8 rank = rankInfoResp->rank;
     InitRankIcon(dt->SlpCSSDatAddress, rankInfoResp->rank);
     InitRankInfoText(
-        rankInfoResp->rank, 
+        rank < 0 ? rank + 1 : rank, // Show pending if rank is empty
         rankInfoResp->ratingOrdinal, 
         rankInfoResp->ratingUpdateCount, 
         rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED
-        // true
     );
 
     if (rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED) {
@@ -104,7 +106,7 @@ void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
     Text_SetText(text, rankSubtextId, rankString);
     Text_SetScale(text, rankSubtextId, 5, 5);
     Text_SetColor(text, rankSubtextId, &white);
-    // float RANK_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1540 : 1640;
+
     float RANK_TEXT_HEIGHT = 1620;
     Text_SetPosition(text, rankSubtextId, -1100, RANK_TEXT_HEIGHT);
 
@@ -124,7 +126,7 @@ void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
     float ratingTextScale = (isPlaced || unreported) ? 4.5f : 4.f;
     Text_SetText(text, ratingSubtextId, ratingString);
     Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
-    // float RATING_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1740 : 1840;
+
     float RATING_TEXT_HEIGHT = 1820;
     Text_SetPosition(text, ratingSubtextId, -1100, RATING_TEXT_HEIGHT);
     if (unreported)
@@ -187,11 +189,9 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreporte
     GXColor blue = (GXColor) {60, 188, 255, 255};
 
     // Create rank text
-    float RANK_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1540 : 1640;
-    rankSubtextId = Text_AddSubtext(text, -1100, RANK_TEXT_HEIGHT, "");
+    rankSubtextId = Text_AddSubtext(text, -1100, 1540, "");
     // Create rating text
-    float RATING_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1740 : 1840;
-    ratingSubtextId = Text_AddSubtext(text, -1100, RATING_TEXT_HEIGHT, "");
+    ratingSubtextId = Text_AddSubtext(text, -1100, 1740, "");
     // Set text
     SetRankText(rank, rating, matches_played, unreported);
 
@@ -214,7 +214,8 @@ void UpdateRankInfo() {
     bool timeout = loadTimer > (RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN);
 
     u8 responseStatus = rankInfoResp->status;
-    if (responseStatus != RankInfo_ResponseStatus_UNREPORTED) {
+    s8 rank = rankInfoResp->rank;
+    if (rank > 0 && responseStatus != RankInfo_ResponseStatus_UNREPORTED) {
         // bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
         bool hasRankChanged = rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0;
         bool isPlaced = rankInfoResp->ratingUpdateCount > PLACEMENT_THRESHOLD;
@@ -269,13 +270,13 @@ void UpdateRankInfo() {
         if (!timeout)
         {
             // Get rank data from rust
-            // GetRankInfo(rankInfoResp);
+            GetRankInfo(rankInfoResp);
 
-            // /*
+            /*
             // DEBUG
-            // if ( rankInfoResp->status != RankInfo_ResponseStatus_SUCCESS )
-            // {
-                // OSReport("loadTimer: %d\n", loadTimer);
+            if ( rankInfoResp->status != RankInfo_ResponseStatus_SUCCESS )
+            {
+                OSReport("loadTimer: %d\n", loadTimer);
                 rankInfoResp->status = RankInfo_ResponseStatus_SUCCESS;
                 rankInfoResp->rank = RANK_DIAMOND_3;
                 rankInfoResp->ratingOrdinal = 1345.4f;
@@ -283,11 +284,11 @@ void UpdateRankInfo() {
                 rankInfoResp->regional = 0;
                 rankInfoResp->rankChange = 1;
                 rankInfoResp->ratingChange = 102.f;
-            // }
-            // else {
-            //     rankInfoResp->ratingChange = rankInfoResp->ratingOrdinal - 1345.4f;
-            // }
-            // */
+            }
+            else {
+                rankInfoResp->ratingChange = rankInfoResp->ratingOrdinal - 1345.4f;
+            }
+            */
         }
         else if (loadTimer == RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN + 1)
         {
