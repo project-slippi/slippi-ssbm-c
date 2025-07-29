@@ -41,15 +41,22 @@ void InitRankInfo() {
 
     GetRankInfo(rankInfoResp);
 
+    bool localRankVisible = rankInfoResp->visibility & (1 << VISIBILITY_LOCAL);
+    if (!localRankVisible)
+    {
+        OSReport("rank info disabled %d\n", rankInfoResp->visibility);
+        return;
+    }
+
     // DEBUG
-    // rankInfoResp->status = RankInfo_ResponseStatus_SUCCESS;
-    // rankInfoResp->rank = RANK_UNRANKED;
-    // rankInfoResp->ratingOrdinal = 1345.4f;
-    // rankInfoResp->global = 0;
-    // rankInfoResp->regional = 0;
-    // rankInfoResp->ratingUpdateCount = 0;
-    // rankInfoResp->rankChange = 0;
-    // rankInfoResp->ratingChange = 0.f;
+    rankInfoResp->status = RankInfo_ResponseStatus_UNREPORTED;
+    rankInfoResp->rank = RANK_MASTER_3;
+    rankInfoResp->ratingOrdinal = 1345.4f;
+    rankInfoResp->global = 0;
+    rankInfoResp->regional = 0;
+    rankInfoResp->ratingUpdateCount = 100;
+    rankInfoResp->rankChange = 0;
+    rankInfoResp->ratingChange = 0.f;
 
     OSReport("InitRankInfo()\n");
     OSReport("user status: %d\n", rankInfoResp->status);
@@ -67,13 +74,13 @@ void InitRankInfo() {
         rankInfoResp->rank, 
         rankInfoResp->ratingOrdinal, 
         rankInfoResp->ratingUpdateCount, 
-        // rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED
-        true
+        rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED
+        // true
     );
 
-    if ( rankInfoResp->status == RankInfo_ResponseStatus_NONE || rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED ) {
+    if (rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED) {
         // Send dolphin command to pull rank data
-        // FetchRankInfo();
+        FetchRankInfo();
     }
 }
 
@@ -97,6 +104,9 @@ void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
     Text_SetText(text, rankSubtextId, rankString);
     Text_SetScale(text, rankSubtextId, 5, 5);
     Text_SetColor(text, rankSubtextId, &white);
+    // float RANK_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1540 : 1640;
+    float RANK_TEXT_HEIGHT = 1620;
+    Text_SetPosition(text, rankSubtextId, -1100, RANK_TEXT_HEIGHT);
 
     // Check if the user has completed their placement matches
     bool isPlaced = matches_played >= PLACEMENT_THRESHOLD;
@@ -114,12 +124,17 @@ void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
     float ratingTextScale = (isPlaced || unreported) ? 4.5f : 4.f;
     Text_SetText(text, ratingSubtextId, ratingString);
     Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
+    // float RATING_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1740 : 1840;
+    float RATING_TEXT_HEIGHT = 1820;
+    Text_SetPosition(text, ratingSubtextId, -1100, RATING_TEXT_HEIGHT);
     if (unreported)
     {
         // Create question mark if match data is unreported
-        unsigned int* questionMark = calloc(9);
-        questionMark[0] = 0x81488148; // '??'
-        questionMark[1] = 0x81488148; // '??'
+        unsigned short* questionMark = calloc(9);
+        questionMark[0] = 0x8148; // '?'
+        questionMark[1] = 0x8148; // '?'
+        questionMark[2] = 0x8148; // '?'
+        questionMark[3] = 0x8148; // '?'
 
         // Gray out rating text if elo is pending
         Text_SetText(text, ratingSubtextId, questionMark);
@@ -172,27 +187,35 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreporte
     GXColor blue = (GXColor) {60, 188, 255, 255};
 
     // Create rank text
-    rankSubtextId = Text_AddSubtext(text, -1100, 1540, "");
+    float RANK_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1540 : 1640;
+    rankSubtextId = Text_AddSubtext(text, -1100, RANK_TEXT_HEIGHT, "");
     // Create rating text
-    ratingSubtextId = Text_AddSubtext(text, -1100, 1740, "");
+    float RATING_TEXT_HEIGHT = rank < RANK_MASTER_1 ? 1740 : 1840;
+    ratingSubtextId = Text_AddSubtext(text, -1100, RATING_TEXT_HEIGHT, "");
     // Set text
     SetRankText(rank, rating, matches_played, unreported);
 
     // Initialize rank loader
     bool isPlaced = matches_played >= PLACEMENT_THRESHOLD;
     float loaderPosX = (!isPlaced && unreported) ? -700.f : -650.f;
-    loaderSubtextId = Text_AddSubtext(text, loaderPosX, 1740, "");
+    loaderSubtextId = Text_AddSubtext(text, loaderPosX, 1840, "");
     Text_SetScale(text, loaderSubtextId, 4.25, 4.25);
     Text_SetColor(text, loaderSubtextId, &yellow);
 }
 
 void UpdateRankInfo() {
+    bool enabled = rankInfoResp->visibility & (1 << VISIBILITY_LOCAL);
+    if (!enabled)
+    {
+        return;
+    }
+
     // Check if rank fetcher has timed out after retrying
     bool timeout = loadTimer > (RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN);
 
     u8 responseStatus = rankInfoResp->status;
-    if (responseStatus != RankInfo_ResponseStatus_NONE && responseStatus != RankInfo_ResponseStatus_UNREPORTED) {
-        bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
+    if (responseStatus != RankInfo_ResponseStatus_UNREPORTED) {
+        // bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
         bool hasRankChanged = rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0;
         bool isPlaced = rankInfoResp->ratingUpdateCount > PLACEMENT_THRESHOLD;
 
@@ -233,7 +256,7 @@ void UpdateRankInfo() {
             // Clear loader
             Text_SetText(text, loaderSubtextId, "");
         }
-        else if (!error && hasRankChanged && isPlaced) {
+        else if (hasRankChanged && isPlaced) {
             UpdateRatingChange();
             int rankChange = rankInfoResp->rankChange;
             if (rankChange != 0)
@@ -248,23 +271,23 @@ void UpdateRankInfo() {
             // Get rank data from rust
             // GetRankInfo(rankInfoResp);
 
-            /*
+            // /*
             // DEBUG
-            if ( rankInfoResp->status != RankInfo_ResponseStatus_SUCCESS )
-            {
+            // if ( rankInfoResp->status != RankInfo_ResponseStatus_SUCCESS )
+            // {
                 // OSReport("loadTimer: %d\n", loadTimer);
-                rankInfoResp->status = RankInfo_ResponseStatus_UNREPORTED;
-                rankInfoResp->rank = RANK_SILVER_3;
+                rankInfoResp->status = RankInfo_ResponseStatus_SUCCESS;
+                rankInfoResp->rank = RANK_DIAMOND_3;
                 rankInfoResp->ratingOrdinal = 1345.4f;
                 rankInfoResp->global = 0;
                 rankInfoResp->regional = 0;
-                rankInfoResp->rankChange = 0;
-                rankInfoResp->ratingChange = 12.f;
-            }
-            else {
-                rankInfoResp->ratingChange = rankInfoResp->ratingOrdinal - 1345.4f;
-            }
-            */
+                rankInfoResp->rankChange = 1;
+                rankInfoResp->ratingChange = 102.f;
+            // }
+            // else {
+            //     rankInfoResp->ratingChange = rankInfoResp->ratingOrdinal - 1345.4f;
+            // }
+            // */
         }
         else if (loadTimer == RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN + 1)
         {
@@ -293,7 +316,7 @@ void UpdateRankInfo() {
         }
     }
 
-    if ( rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED || rankInfoResp->status == RankInfo_ResponseStatus_NONE )
+    if (rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED)
     {
         // Update unreported loader
         if ( loadTimer % 15 == 0 && !timeout )
@@ -444,10 +467,10 @@ void UpdateRatingChange() {
                 int* signString = rankInfoResp->ratingChange > 0 ? &plus : &minus;
 
                 // Create subtext for sign
-                changeSignSubtextId = Text_AddSubtext(text, -600, 1750, signString);
+                changeSignSubtextId = Text_AddSubtext(text, -600, 1830, signString);
 
                 // Create subtext for rating change
-                ratingChangeSubtextId = Text_AddSubtext(text, -475, 1750, changeString);
+                ratingChangeSubtextId = Text_AddSubtext(text, -475, 1830, changeString);
                 Text_SetScale(text, changeSignSubtextId, 4, 4);
                 Text_SetScale(text, ratingChangeSubtextId, 4, 4);
 
@@ -472,7 +495,10 @@ void UpdateRatingChange() {
                 u8 newRank = (int) rankInfoResp->rank + rankInfoResp->rankChange;
                 SetRankIcon(newRank);
                 // Update rank text
-                Text_SetText(text, rankSubtextId, RANK_STRINGS[(int) rankInfoResp->rank + rankInfoResp->rankChange]);
+                float newRating = rankInfoResp->ratingOrdinal + rankInfoResp->ratingChange;
+                u8 matchesPlayed = rankInfoResp->ratingUpdateCount;
+                bool unreported = false;
+                SetRankText(newRank, newRating, matchesPlayed, unreported);
             }
         }
 

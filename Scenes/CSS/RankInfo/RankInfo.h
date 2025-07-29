@@ -2,6 +2,7 @@
 #define SLIPPI_CSS_RANK_INFO_H
 
 typedef struct RankInfo {
+  u8 visibility;
   u8 status;
   u8 rank;
   float ratingOrdinal;
@@ -9,8 +10,13 @@ typedef struct RankInfo {
   u8 regional;
   u32 ratingUpdateCount;
   float ratingChange;
-  int rankChange;
+  s8 rankChange;
 } RankInfo;
+
+enum RankVisibility {
+    VISIBILITY_LOCAL,
+    VISIBILITY_OPPONENT
+};
 
 enum SlippiRank {
 	RANK_UNRANKED,

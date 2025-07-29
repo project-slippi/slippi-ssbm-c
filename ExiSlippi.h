@@ -146,10 +146,8 @@ typedef struct ExiSlippi_GetPlayerSettings_Response {
 } ExiSlippi_GetPlayerSettings_Response;
 
 typedef enum RankInfo_ResponseStatus {
-  RankInfo_ResponseStatus_NONE = 0,
-  RankInfo_ResponseStatus_UNREPORTED = 1,
-  RankInfo_ResponseStatus_SUCCESS = 2,
-  RankInfo_ResponseStatus_ERROR = 3,
+  RankInfo_ResponseStatus_UNREPORTED = 0,
+  RankInfo_ResponseStatus_SUCCESS = 1,
 } RankInfo_ResponseStatus;
 
 typedef struct ExiSlippi_FetchRank_Query {
@@ -161,14 +159,15 @@ typedef struct ExiSlippi_GetRank_Query {
 } ExiSlippi_GetRank_Query;
 
 typedef struct ExiSlippi_GetRank_Response {
+  u8 visibility;
   u8 status;
-  u8 rank;
+  s8 rank;
   float ratingOrdinal;
   u8 global;
   u8 regional;
   u32 ratingUpdateCount;
   float ratingChange;
-  int rankChange;
+  s8 rankChange;
 } ExiSlippi_GetRank_Response;
 
 // Not sure if resetting is strictly needed, might be contained to the file
