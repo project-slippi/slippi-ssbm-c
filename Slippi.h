@@ -122,6 +122,7 @@ typedef struct MatchStateResponseBuffer {
 	char p4UID[29];
 	char errorMessage[241];
 	MatchInit gameInfoBlock;
+    char matchmakeID[51];
 } MatchStateResponseBuffer;
 
 // ################################################################################

@@ -3,6 +3,7 @@
 
 #include "../../../Slippi.h"
 #include "../Notifications.h"
+#include "../../../Game/SysText.c"
 
 #define CHAT_SOUND_NEW_MESSAGE 0xb7        // Global Sound ID
 #define CHAT_SOUND_BLOCK_MESSAGE 0x3    // Common Sound
@@ -45,7 +46,7 @@ Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg);
 
 Text *CreateChatMessageTextFromEXIDevice(NotificationMessage *msg);
 
-char* BuildChatTextData(char* playerName, u8 playerIndex, u8 groupId, u8 messageId);
+SysText* BuildChatTextData(char* playerName, u8 playerIndex, u8 groupId, u8 messageId);
 
 bool IsValidChatGroupId(int groupId);
 
