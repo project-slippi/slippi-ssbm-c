@@ -14,35 +14,35 @@ typedef struct RankInfo {
 } RankInfo;
 
 enum RankVisibility {
-    VISIBILITY_LOCAL,
-    VISIBILITY_OPPONENT
+  VISIBILITY_LOCAL,
+  VISIBILITY_OPPONENT
 };
 
 enum SlippiRank {
-	RANK_UNRANKED,
-    RANK_BRONZE_1,
-    RANK_BRONZE_2,
-    RANK_BRONZE_3,
-    RANK_SILVER_1,
-    RANK_SILVER_2,
-    RANK_SILVER_3,
-    RANK_GOLD_1,
-    RANK_GOLD_2,
-    RANK_GOLD_3,
-    RANK_PLATINUM_1,
-    RANK_PLATINUM_2,
-    RANK_PLATINUM_3,
-    RANK_DIAMOND_1,
-    RANK_DIAMOND_2,
-    RANK_DIAMOND_3,
-    RANK_MASTER_1,
-    RANK_MASTER_2,
-    RANK_MASTER_3,
-    RANK_GRANDMASTER,
-    RANK_COUNT
+  RANK_UNRANKED,
+  RANK_BRONZE_1,
+  RANK_BRONZE_2,
+  RANK_BRONZE_3,
+  RANK_SILVER_1,
+  RANK_SILVER_2,
+  RANK_SILVER_3,
+  RANK_GOLD_1,
+  RANK_GOLD_2,
+  RANK_GOLD_3,
+  RANK_PLATINUM_1,
+  RANK_PLATINUM_2,
+  RANK_PLATINUM_3,
+  RANK_DIAMOND_1,
+  RANK_DIAMOND_2,
+  RANK_DIAMOND_3,
+  RANK_MASTER_1,
+  RANK_MASTER_2,
+  RANK_MASTER_3,
+  RANK_GRANDMASTER,
+  RANK_COUNT
 };
 
-static char* RANK_STRINGS[] = {
+static char *RANK_STRINGS[] = {
     "PENDING",
     "BRONZE 1",
     "BRONZE 2",
@@ -97,7 +97,7 @@ const int TICK_DOWN = 0xEA;
 const int RATING_CHANGE_LEN = 140;
 const int RANK_CHANGE_LEN = 10;
 const int RATING_NOTIFICATION_LEN = 200;
-const int NARRATOR_LEN = 140; // 2 seconds of 'Choose your character!'
+const int NARRATOR_LEN = 140;  // 2 seconds of 'Choose your character!'
 
 // RANK FETCH DURATIONS
 const int RETRY_FETCH_0_LEN = 120;

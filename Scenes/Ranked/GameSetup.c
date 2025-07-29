@@ -1,5 +1,6 @@
 #include "GameSetup.h"
 
+#include "../../../Slippi.h"
 #include "../../Components/Button.h"
 #include "../../Components/CharStageBoxSelector.h"
 #include "../../Components/CharStageIcon.h"
@@ -7,8 +8,6 @@
 #include "../../Files.h"
 #include "../../Game/Characters.h"
 #include "../../Game/Sounds.h"
-#include "../../Files.h"
-#include "../../../Slippi.h"
 #include "../CSS/RankInfo/RankInfo.h"
 
 static HSD_Archive *gui_archive;
@@ -449,15 +448,12 @@ void InitHeader() {
   const float RANK_ICON_HEIGHT = 17.85f;
   const float RANK_ICON_POS_X = 27.5f;
 
-
-
-  SlippiCSSDataTable* dt = GetSlpCSSDT();
-  SlpCSSDesc* slpCss = dt->SlpCSSDatAddress;
-  if (localRankVisible)
-  {
+  SlippiCSSDataTable *dt = GetSlpCSSDT();
+  SlpCSSDesc *slpCss = dt->SlpCSSDatAddress;
+  if (localRankVisible) {
     // Initialize local player rank icon
     GOBJ *gobj = GObj_Create(0x4, 0x5, 0x80);
-    JOBJ* rankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+    JOBJ *rankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
 
     rankIconJobj->trans.X = -RANK_ICON_POS_X;
     rankIconJobj->trans.Y = RANK_ICON_HEIGHT;
@@ -469,7 +465,7 @@ void InitHeader() {
 
     // Set rank icon
     JOBJ_AddSetAnim(rankIconJobj, slpCss->rankIcons, 0);
-    JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float) data->match_state->local_rank); // HSD_TypeMask::TOBJ 0x400
+    JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float)data->match_state->local_rank);  // HSD_TypeMask::TOBJ 0x400
     JOBJ_AnimAll(rankIconJobj);
     JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
 
@@ -477,11 +473,10 @@ void InitHeader() {
     GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
   }
 
-  if (oppRankVisible)
-  {
+  if (oppRankVisible) {
     // Initialize oppoent rank icon
     GOBJ *right_gobj = GObj_Create(0x4, 0x5, 0x80);
-    JOBJ* rightRankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+    JOBJ *rightRankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
 
     rightRankIconJobj->trans.X = RANK_ICON_POS_X;
     rightRankIconJobj->trans.Y = RANK_ICON_HEIGHT;
@@ -493,7 +488,7 @@ void InitHeader() {
 
     // Set rank icon
     JOBJ_AddSetAnim(rightRankIconJobj, slpCss->rankIcons, 0);
-    JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float) data->match_state->opp_rank); // HSD_TypeMask::TOBJ 0x400
+    JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float)data->match_state->opp_rank);  // HSD_TypeMask::TOBJ 0x400
     JOBJ_AnimAll(rightRankIconJobj);
     JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
 

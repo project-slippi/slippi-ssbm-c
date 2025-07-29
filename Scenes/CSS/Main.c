@@ -7,36 +7,34 @@
 #include "Chat/Chat.c"
 #include "RankInfo/RankInfo.c"
 
-bool IsRankedMode()
-{
-    u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
-    return onlineMode == 0;
+bool IsRankedMode() {
+  u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
+  return onlineMode == 0;
 }
 
 void UpdateOnlineCSS() {
-    if (!IsSlippiOnlineCSS()) return;
-    //bp();
+  if (!IsSlippiOnlineCSS()) return;
+  // bp();
 
-    // Do not handle notifications or chat input if on Name Entry Screen
-    if (IsOnCSSNameEntryScreen()) return;
+  // Do not handle notifications or chat input if on Name Entry Screen
+  if (IsOnCSSNameEntryScreen()) return;
 
-    ListenForNotifications();
-    ListenForChatInput();
-    if (IsRankedMode()) {
-        UpdateRankInfo();
-    }
+  ListenForNotifications();
+  ListenForChatInput();
+  if (IsRankedMode()) {
+    UpdateRankInfo();
+  }
 }
 
 void InitOnlineCSS() {
-    if (!IsSlippiOnlineCSS()) return;
+  if (!IsSlippiOnlineCSS()) return;
 
-    InitChatMessages();
+  InitChatMessages();
 
-    // Only request rank info if this is ranked
-    if (IsRankedMode()) {
-        InitRankInfo();
-    }
+  // Only request rank info if this is ranked
+  if (IsRankedMode()) {
+    InitRankInfo();
+  }
 }
-
 
 #endif SLIPPI_CSS_MAIN_C
