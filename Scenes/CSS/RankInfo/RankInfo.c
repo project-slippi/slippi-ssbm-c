@@ -59,14 +59,14 @@ void InitRankInfo() {
     // rankInfoResp->rankChange = 0;
     // rankInfoResp->ratingChange = 0.f;
 
-    OSReport("InitRankInfo()\n");
-    OSReport("user status: %d\n", rankInfoResp->status);
-    OSReport("user rank: %d\n", rankInfoResp->rank);
-    OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
-    OSReport("user global: %d\n", rankInfoResp->global);
-    OSReport("user regional: %d\n", rankInfoResp->regional);
-    OSReport("user rank change: %d\n", rankInfoResp->rankChange);
-    OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
+    // OSReport("InitRankInfo()\n");
+    // OSReport("user status: %d\n", rankInfoResp->status);
+    // OSReport("user rank: %d\n", rankInfoResp->rank);
+    // OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
+    // OSReport("user global: %d\n", rankInfoResp->global);
+    // OSReport("user regional: %d\n", rankInfoResp->regional);
+    // OSReport("user rank change: %d\n", rankInfoResp->rankChange);
+    // OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
 
     SlippiCSSDataTable *dt = GetSlpCSSDT();
     // Set rank icon as unranked by default
@@ -224,14 +224,14 @@ void UpdateRankInfo() {
         if (!rankInitialized) {
             rankInitialized = true;
 
-            OSReport("UpdateRankInfo()\n");
-            OSReport("user status: %d\n", rankInfoResp->status);
-            OSReport("user rank: %d\n", rankInfoResp->rank);
-            OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
-            OSReport("user global: %d\n", rankInfoResp->global);
-            OSReport("user regional: %d\n", rankInfoResp->regional);
-            OSReport("user rank change: %d\n", rankInfoResp->rankChange);
-            OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
+            // OSReport("UpdateRankInfo()\n");
+            // OSReport("user status: %d\n", rankInfoResp->status);
+            // OSReport("user rank: %d\n", rankInfoResp->rank);
+            // OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
+            // OSReport("user global: %d\n", rankInfoResp->global);
+            // OSReport("user regional: %d\n", rankInfoResp->regional);
+            // OSReport("user rank change: %d\n", rankInfoResp->rankChange);
+            // OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
 
             // Determine the duration of the rating increase / decrease
             float change = rankInfoResp->ratingChange;
@@ -352,16 +352,16 @@ void UpdateRankInfo() {
         {
             FetchRankInfo();
 
-            OSReport("Fetching rank info after %.2f seconds...\n", (float) loadTimer / 60.f);
-            OSReport("status: %d\n", rankInfoResp->status);
-            OSReport("rank: %d\n", rankInfoResp->rank);
-            OSReport("ratingOrdinal: %f\n", rankInfoResp->ratingOrdinal);
-            OSReport("global: %d\n", rankInfoResp->global);
-            OSReport("regional: %d\n", rankInfoResp->regional);
-            OSReport("ratingUpdateCount: %d\n", rankInfoResp->ratingUpdateCount);
-            OSReport("ratingChange: %f\n", rankInfoResp->ratingChange);
-            OSReport("rankChange: %d\n", rankInfoResp->rankChange);
-            OSReport("\n");
+            // OSReport("Fetching rank info after %.2f seconds...\n", (float) loadTimer / 60.f);
+            // OSReport("status: %d\n", rankInfoResp->status);
+            // OSReport("rank: %d\n", rankInfoResp->rank);
+            // OSReport("ratingOrdinal: %f\n", rankInfoResp->ratingOrdinal);
+            // OSReport("global: %d\n", rankInfoResp->global);
+            // OSReport("regional: %d\n", rankInfoResp->regional);
+            // OSReport("ratingUpdateCount: %d\n", rankInfoResp->ratingUpdateCount);
+            // OSReport("ratingChange: %f\n", rankInfoResp->ratingChange);
+            // OSReport("rankChange: %d\n", rankInfoResp->rankChange);
+            // OSReport("\n");
 
             SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
         }

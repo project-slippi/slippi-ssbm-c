@@ -1,7 +1,6 @@
 #ifndef EXI_SLIPPI_H
 #define EXI_SLIPPI_H
 
-#include "../../Slippi.h"
 #include "./m-ex/MexTK/mex.h"
 
 typedef enum ExiSlippi_Command {
