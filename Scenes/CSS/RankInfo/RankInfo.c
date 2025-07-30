@@ -57,17 +57,16 @@ void InitRankInfo() {
   // rankInfoResp->rankChange = 0;
   // rankInfoResp->ratingChange = 0.f;
 
-  // OSReport("InitRankInfo()\n");
-  // OSReport("user status: %d\n", rankInfoResp->status);
-  // OSReport("user rank: %d\n", rankInfoResp->rank);
-  // OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
-  // OSReport("user global: %d\n", rankInfoResp->global);
-  // OSReport("user regional: %d\n", rankInfoResp->regional);
-  // OSReport("user rank change: %d\n", rankInfoResp->rankChange);
-  // OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
+  //   OSReport("InitRankInfo()\n");
+  //   OSReport("user status: %d\n", rankInfoResp->status);
+  //   OSReport("user rank: %d\n", rankInfoResp->rank);
+  //   OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
+  //   OSReport("user global: %d\n", rankInfoResp->global);
+  //   OSReport("user regional: %d\n", rankInfoResp->regional);
+  //   OSReport("user rank change: %d\n", rankInfoResp->rankChange);
+  //   OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
 
   SlippiCSSDataTable* dt = GetSlpCSSDT();
-  // Set rank icon as unranked by default
 
   s8 rank = rankInfoResp->rank;
   InitRankIcon(dt->SlpCSSDatAddress, rankInfoResp->rank);
@@ -77,10 +76,8 @@ void InitRankInfo() {
       rankInfoResp->ratingUpdateCount,
       rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED);
 
-  if (rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED) {
-    // Send dolphin command to pull rank data
-    FetchRankInfo();
-  }
+  // Send dolphin command to pull rank data
+  FetchRankInfo();
 }
 
 void SetRankIcon(u8 rank) {
