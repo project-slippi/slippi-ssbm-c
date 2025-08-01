@@ -1,6 +1,9 @@
 #ifndef SLIPPI_CSS_RANK_INFO_H
 #define SLIPPI_CSS_RANK_INFO_H
 
+#include "../../../Common.h"
+#include "../../../ExiSlippi.h"
+
 typedef struct RankInfo {
   u8 visibility;
   u8 status;
@@ -103,11 +106,9 @@ const int NARRATOR_LEN = 140;  // 2 seconds of 'Choose your character!'
 const int RETRY_FETCH_0_LEN = 120;
 const int RETRY_FETCH_1_LEN = 420;
 
-void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreported);
+void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status);
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void UpdateRatingChange();
-void UpdateRankChange();
 void UpdateRankInfo();
-void SendGetRankInfoCommand();
 
 #endif SLIPPI_CSS_RANK_INFO_H

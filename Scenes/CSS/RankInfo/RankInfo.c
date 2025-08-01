@@ -3,8 +3,6 @@
 
 #include "RankInfo.h"
 
-#include "../../../Common.h"
-#include "../../../ExiSlippi.h"
 #include "../../../Files.h"
 #include "../../../Game/Sounds.h"
 #include "../../../Game/SysText.c"
@@ -16,6 +14,7 @@ uint ratingUpdateTimer = 0;
 uint ratingChangeLen;  // Rating change sequence length
 uint loaderCount = 0;
 uint loadTimer = 0;
+uint frameCounter = 0;
 
 void GetRankInfo(ExiSlippi_GetRank_Response* resp) {
   // Get cached rank info from rust
@@ -27,7 +26,7 @@ void GetRankInfo(ExiSlippi_GetRank_Response* resp) {
 }
 
 void FetchRankInfo() {
-  OSReport("Fetching rank info...");
+  OSReport("Fetching rank info...\n");
   // Send dolphin command to pull rank data
   ExiSlippi_FetchRank_Query* q = calloc(sizeof(ExiSlippi_FetchRank_Query));
   q->command = ExiSlippi_Command_FETCH_RANK;
@@ -40,6 +39,10 @@ void InitRankInfo() {
   rankInfoResp = calloc(sizeof(ExiSlippi_GetRank_Response));
 
   GetRankInfo(rankInfoResp);
+
+  // Load byte from address 0x80479D34
+  u8 previousMinor = *(u8*)0x80479D34;
+  OSReport("Previous minor version: %d\n", previousMinor);
 
   bool localRankVisible = rankInfoResp->visibility & (1 << VISIBILITY_LOCAL);
   if (!localRankVisible) {
@@ -74,7 +77,7 @@ void InitRankInfo() {
       rank < 0 ? rank + 1 : rank,  // Show pending if rank is empty
       rankInfoResp->ratingOrdinal,
       rankInfoResp->ratingUpdateCount,
-      rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED);
+      rankInfoResp->status);
 
   // Send dolphin command to pull rank data
   FetchRankInfo();
@@ -89,7 +92,7 @@ void SetRankIcon(u8 rank) {
   }
 }
 
-void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
+void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
   GXColor white = (GXColor){255, 255, 255, 255};
   GXColor gray = (GXColor){150, 150, 150, 255};
   char* rankString[15];
@@ -116,13 +119,15 @@ void SetRankText(u8 rank, float rating, uint matches_played, bool unreported) {
     sprintf(ratingString, "%d SETS REQUIRED", 5 - matches_played);
   }
 
-  float ratingTextScale = (isPlaced || unreported) ? 4.5f : 4.f;
+  bool isFetching = status == RankInfo_FetchStatus_FETCHING;
+
+  float ratingTextScale = (isPlaced || isFetching) ? 4.5f : 4.f;
   Text_SetText(text, ratingSubtextId, ratingString);
   Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
 
   float RATING_TEXT_HEIGHT = 1820;
   Text_SetPosition(text, ratingSubtextId, -1100, RATING_TEXT_HEIGHT);
-  if (unreported) {
+  if (isFetching) {
     // Create question mark if match data is unreported
     unsigned short* questionMark = calloc(9);
     questionMark[0] = 0x8148;  // '?'
@@ -163,7 +168,7 @@ void InitRankIcon(SlpCSSDesc* slpCss, u8 rank) {
   GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
 }
 
-void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreported) {
+void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
   // Create text object for rank info
   text = Text_CreateText(0, 0);
   text->kerning = 1;
@@ -183,11 +188,11 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, bool unreporte
   // Create rating text
   ratingSubtextId = Text_AddSubtext(text, -1100, 1740, "");
   // Set text
-  SetRankText(rank, rating, matches_played, unreported);
+  SetRankText(rank, rating, matches_played, status);
 
   // Initialize rank loader
   bool isPlaced = matches_played >= PLACEMENT_THRESHOLD;
-  float loaderPosX = (!isPlaced && unreported) ? -700.f : -650.f;
+  float loaderPosX = !isPlaced ? -700.f : -650.f;
   loaderSubtextId = Text_AddSubtext(text, loaderPosX, 1840, "");
   Text_SetScale(text, loaderSubtextId, 4.25, 4.25);
   Text_SetColor(text, loaderSubtextId, &yellow);
@@ -199,14 +204,28 @@ void UpdateRankInfo() {
     return;
   }
 
+  // Make sure the rank info is up to date
+  GetRankInfo(rankInfoResp);
+
+  // if (frameCounter % 60 == 0) {
+  //   OSReport("UpdateRankInfo()\n");
+  //   OSReport("fetch status: %d\n", rankInfoResp->status);
+  //   OSReport("user rank: %d\n", rankInfoResp->rank);
+  //   OSReport("user rating: %f\n", rankInfoResp->ratingOrdinal);
+  //   OSReport("user matches played: %d\n", rankInfoResp->ratingUpdateCount);
+  //   OSReport("user rating change: %f\n", rankInfoResp->ratingChange);
+  // }
+  // frameCounter++;
+
   // Check if rank fetcher has timed out after retrying
   bool timeout = loadTimer > (RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN);
 
   u8 responseStatus = rankInfoResp->status;
   s8 rank = rankInfoResp->rank;
-  if (rank > 0 && responseStatus != RankInfo_ResponseStatus_UNREPORTED) {
+
+  if (rank > 0 && responseStatus == RankInfo_FetchStatus_FETCHED) {
     // bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
-    bool hasRankChanged = rankInfoResp->ratingChange != 0 | rankInfoResp->rankChange != 0;
+    bool hasRankChanged = rankInfoResp->ratingChange != 0 || rankInfoResp->rankChange != 0;
     bool isPlaced = rankInfoResp->ratingUpdateCount > PLACEMENT_THRESHOLD;
 
     // Only request rank info if this is ranked
@@ -237,9 +256,8 @@ void UpdateRankInfo() {
       u8 rank = rankInfoResp->rank;
       float rating = rankInfoResp->ratingOrdinal;
       uint matchesPlayed = rankInfoResp->ratingUpdateCount;
-      bool unreported = responseStatus == RankInfo_ResponseStatus_UNREPORTED;
       SetRankIcon(rank);
-      SetRankText(rank, rating, matchesPlayed, unreported);
+      SetRankText(rank, rating, matchesPlayed, responseStatus);
 
       // Clear loader
       Text_SetText(text, loaderSubtextId, "");
@@ -251,28 +269,7 @@ void UpdateRankInfo() {
       }
     }
   } else {
-    if (!timeout) {
-      // Get rank data from rust
-      GetRankInfo(rankInfoResp);
-
-      /*
-      // DEBUG
-      if ( rankInfoResp->status != RankInfo_ResponseStatus_SUCCESS )
-      {
-          OSReport("loadTimer: %d\n", loadTimer);
-          rankInfoResp->status = RankInfo_ResponseStatus_SUCCESS;
-          rankInfoResp->rank = RANK_DIAMOND_3;
-          rankInfoResp->ratingOrdinal = 1345.4f;
-          rankInfoResp->global = 0;
-          rankInfoResp->regional = 0;
-          rankInfoResp->rankChange = 1;
-          rankInfoResp->ratingChange = 102.f;
-      }
-      else {
-          rankInfoResp->ratingChange = rankInfoResp->ratingOrdinal - 1345.4f;
-      }
-      */
-    } else if (loadTimer == RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN + 1) {
+    if (loadTimer == RETRY_FETCH_0_LEN + RETRY_FETCH_1_LEN + 1) {
       // Clear any rank text
       Text_SetText(text, rankSubtextId, "");
       Text_SetText(text, ratingSubtextId, "");
@@ -298,7 +295,7 @@ void UpdateRankInfo() {
     }
   }
 
-  if (rankInfoResp->status == RankInfo_ResponseStatus_UNREPORTED) {
+  if (rankInfoResp->status == RankInfo_FetchStatus_FETCHING) {
     // Update unreported loader
     if (loadTimer % 15 == 0 && !timeout) {
       switch (loaderCount) {
@@ -325,7 +322,7 @@ void UpdateRankInfo() {
     // Periodically retry rank fetch to check for match report
     // Check first after 'Choose your character!', then 5 seconds after that
     if (loadTimer == RETRY_FETCH_0_LEN || loadTimer == RETRY_FETCH_1_LEN) {
-      FetchRankInfo();
+      // FetchRankInfo();
 
       // OSReport("Fetching rank info after %.2f seconds...\n", (float) loadTimer / 60.f);
       // OSReport("status: %d\n", rankInfoResp->status);
@@ -338,7 +335,7 @@ void UpdateRankInfo() {
       // OSReport("rankChange: %d\n", rankInfoResp->rankChange);
       // OSReport("\n");
 
-      SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
+      // SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
     }
     loadTimer++;
   }
@@ -347,7 +344,7 @@ void UpdateRankInfo() {
 float InterpRating(float ratingOrdinal, float ratingChange) {
   // Percent completion of rating increment
   float completion = ratingUpdateTimer / (float)ratingChangeLen;
-  return ratingOrdinal + ratingChange * completion;
+  return (ratingOrdinal - ratingChange) + (ratingChange * completion);
 }
 
 int GetRatingChangeSFX(float ratingChange) {
@@ -414,7 +411,7 @@ void UpdateRatingChange() {
   } else if (ratingUpdateTimer == ratingChangeLen) {
     // Set rating text to exact amount to prevent interp inaccuracies
     char* ratingString[6];
-    sprintf(ratingString, "%0.1f", rankInfoResp->ratingOrdinal + rankInfoResp->ratingChange);
+    sprintf(ratingString, "%0.1f", rankInfoResp->ratingOrdinal);
     Text_SetText(text, ratingSubtextId, ratingString);
   }
 
@@ -465,7 +462,7 @@ void UpdateRatingChange() {
         u8 newRank = (int)rankInfoResp->rank + rankInfoResp->rankChange;
         SetRankIcon(newRank);
         // Update rank text
-        float newRating = rankInfoResp->ratingOrdinal + rankInfoResp->ratingChange;
+        float newRating = rankInfoResp->ratingOrdinal;
         u8 matchesPlayed = rankInfoResp->ratingUpdateCount;
         bool unreported = false;
         SetRankText(newRank, newRating, matchesPlayed, unreported);
