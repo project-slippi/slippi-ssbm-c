@@ -79,8 +79,11 @@ void InitRankInfo() {
       rankInfoResp->ratingUpdateCount,
       rankInfoResp->status);
 
-  // Send dolphin command to pull rank data
-  FetchRankInfo();
+  // Send dolphin command to pull rank data. Only request a fetch when we transition from in-game / game setup.
+  // Previous minor version will be 0 only when transitioning from the menus, I think.
+  if (previousMinor != 0) {
+    FetchRankInfo();
+  }
 }
 
 void SetRankIcon(u8 rank) {
