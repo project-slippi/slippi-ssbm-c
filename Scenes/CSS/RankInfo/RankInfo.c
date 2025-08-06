@@ -97,18 +97,18 @@ void SetRankIcon(u8 rank) {
 
 void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
   GXColor white = (GXColor){255, 255, 255, 255};
-  GXColor gray = (GXColor){150, 150, 150, 255};
+  GXColor gray = (GXColor){142, 145, 150, 255};
   char* rankString[15];
 
   // Set rank name string
   sprintf(rankString, RANK_STRINGS[rank]);
 
   Text_SetText(text, rankSubtextId, rankString);
-  Text_SetScale(text, rankSubtextId, 5, 5);
+  Text_SetScale(text, rankSubtextId, 4, 4);
   Text_SetColor(text, rankSubtextId, &white);
 
-  float RANK_TEXT_HEIGHT = 1620;
-  Text_SetPosition(text, rankSubtextId, -1100, RANK_TEXT_HEIGHT);
+  float RANK_TEXT_HEIGHT = 1100;
+  Text_SetPosition(text, rankSubtextId, -640, RANK_TEXT_HEIGHT);
 
   // Check if the user has completed their placement matches
   bool isPlaced = matches_played >= PLACEMENT_THRESHOLD;
@@ -124,12 +124,12 @@ void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatu
 
   bool isFetching = status == RankInfo_FetchStatus_FETCHING;
 
-  float ratingTextScale = (isPlaced || isFetching) ? 4.5f : 4.f;
+  float ratingTextScale = (isPlaced || isFetching) ? 4.f : 3.5f;
   Text_SetText(text, ratingSubtextId, ratingString);
   Text_SetScale(text, ratingSubtextId, ratingTextScale, ratingTextScale);
 
-  float RATING_TEXT_HEIGHT = 1820;
-  Text_SetPosition(text, ratingSubtextId, -1100, RATING_TEXT_HEIGHT);
+  float RATING_TEXT_HEIGHT = 1250;
+  Text_SetPosition(text, ratingSubtextId, -640, RATING_TEXT_HEIGHT);
   if (isFetching) {
     // Create question mark if match data is unreported
     unsigned short* questionMark = calloc(9);
@@ -150,10 +150,10 @@ void InitRankIcon(SlpCSSDesc* slpCss, u8 rank) {
   GOBJ* gobj = GObj_Create(0x4, 0x5, 0x80);
   rankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
 
-  rankIconJobj->trans.X = -7.3f;
-  rankIconJobj->trans.Y = -11.0f;
-  rankIconJobj->scale.X = 3.15f;
-  rankIconJobj->scale.Y = 3.15f;
+  rankIconJobj->trans.X = -9.f;
+  rankIconJobj->trans.Y = -12.5f;
+  rankIconJobj->scale.X = 2.f;
+  rankIconJobj->scale.Y = 2.f;
   JOBJ_SetMtxDirtySub(rankIconJobj);
 
   // Get all animations
@@ -181,10 +181,15 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
   text->aspect.X *= 2.5;
 
   GXColor white = (GXColor){255, 255, 255, 255};
-  GXColor gray = (GXColor){150, 150, 150, 255};
+  GXColor gray = (GXColor){142, 145, 150, 255};
   GXColor red = (GXColor){255, 0, 0, 255};
   GXColor yellow = (GXColor){255, 200, 0, 255};
   GXColor blue = (GXColor){60, 188, 255, 255};
+
+  // Create rank label text
+  rankLabelSubtextId = Text_AddSubtext(text, -1110, 850, "Rank");
+  Text_SetScale(text, loaderSubtextId, 4, 4);
+  Text_SetColor(text, loaderSubtextId, &gray);
 
   // Create rank text
   rankSubtextId = Text_AddSubtext(text, -1100, 1540, "");
@@ -373,9 +378,9 @@ int GetRankChangeSFX() {
 
 void UpdateRankChangeAnim() {
   if (ratingUpdateTimer >= ratingChangeLen) {
-    float rankAnimFrame = RANK_CHANGE_LEN - (ratingUpdateTimer - ratingChangeLen);
-    if (rankAnimFrame > 0.f) {
-      JOBJ_ForEachAnim(rankIconJobj, 6, 0x20, AOBJ_ReqAnim, 1, rankAnimFrame);  // HSD_TypeMask::JOBJ 0x20
+    const int rankAnimFrame = ratingUpdateTimer - ratingChangeLen;
+    if (rankAnimFrame > 0 && rankAnimFrame < RANK_CHANGE_LEN) {
+      JOBJ_ForEachAnim(rankIconJobj, 6, 0x20, AOBJ_ReqAnim, 1, (float) rankAnimFrame);  // HSD_TypeMask::JOBJ 0x20
       JOBJ_AnimAll(rankIconJobj);
     }
   }
@@ -437,12 +442,12 @@ void UpdateRatingChange() {
         int* signString = rankInfoResp->ratingChange > 0 ? &plus : &minus;
 
         // Create subtext for sign
-        changeSignSubtextId = Text_AddSubtext(text, -600, 1830, signString);
+        changeSignSubtextId = Text_AddSubtext(text, -225, 1260, signString);
 
         // Create subtext for rating change
-        ratingChangeSubtextId = Text_AddSubtext(text, -475, 1830, changeString);
-        Text_SetScale(text, changeSignSubtextId, 4, 4);
-        Text_SetScale(text, ratingChangeSubtextId, 4, 4);
+        ratingChangeSubtextId = Text_AddSubtext(text, -130, 1260, changeString);
+        Text_SetScale(text, changeSignSubtextId, 3.25, 3.25);
+        Text_SetScale(text, ratingChangeSubtextId, 3.25, 3.25);
 
         // Determine text color
         if (rankInfoResp->ratingChange > 0) {

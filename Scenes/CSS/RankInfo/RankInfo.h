@@ -74,6 +74,7 @@ int changeSignSubtextId;
 int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
+int rankLabelSubtextId;
 
 bool rankInitialized = false;
 
