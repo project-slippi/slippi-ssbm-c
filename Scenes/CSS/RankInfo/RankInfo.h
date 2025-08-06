@@ -77,6 +77,7 @@ int ratingSubtextId;
 int rankLabelSubtextId;
 
 bool rankInitialized = false;
+bool rankErrorShown = false;
 
 const float HIGH_RATING_THRESHOLD = 35.f;
 const float MED_RATING_THRESHOLD = 20.f;
