@@ -4,6 +4,7 @@
 #include "../../../Slippi.h"
 #include "Text.h"
 #include "../../Scenes/CSS/Chat/Chat.h"
+#include "../../../Common.h"
 
 int GetGroupIndex(int groupId) {
     int groupIndex = 0;

@@ -1,0 +1,3 @@
+BasedOnStyle: Google  # or another base style that provides a good starting point
+BreakBeforeBraces: Attach # To keep braces on the same line
+ColumnLimit: 0        # To disable line length enforcement

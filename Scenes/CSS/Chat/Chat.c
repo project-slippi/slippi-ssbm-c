@@ -62,27 +62,24 @@ void ListenForChatInput() {
 void UpdateChat() {
     // if window is already created return
     if (GOBJ_IsAlive(_chatWindowGOBJ)) return;
+    CreateAndOpenChatWindow();
+}
 
-    ChatInput *chatInput = PadGetChatInput(false);
-    if (chatInput->input <= 0) {
-        HSD_Free(chatInput);
-        return; // Return if not input
-    }
+void CreateAndOpenChatWindow() {
+    int chatInput = PadGetChatEffectiveInput(false);
+    // Return if not input
+    if (chatInput <= 0) return;
 
-    // TODO: Move this back
     SlpCSSDesc *slpCss = GetSlpCSSDT()->SlpCSSDatAddress;// Archive_GetPublicAddress(archive, "slpCSS");
-//    HSD_Archive *archive = Archive_LoadFile("slpCSS.dat");
-//    SlpCSSDesc *slpCss = Archive_GetPublicAddress(archive, "slpCSS");
     ChatWindowData *data = calloc(sizeof(ChatWindowData));
 
     // create chat window with required group id
-    data->groupId = chatInput->input;
+    data->groupId = chatInput;
     data->slpCss = slpCss;
     data->framesLeft = CHAT_WINDOW_FRAMES;
     data->delayedFrames = CHAT_ALLOW_COMMAND_FRAMES; // Allow sending right away
 
     //OSReport("data->groupID = %i\n", data->groupId);
-
     GOBJ *gobj = _chatWindowGOBJ = GObj_Create(0x4, 0x5, 0x80);
     JOBJ *jobj = JOBJ_LoadJoint(slpCss->chatWindow->jobj);
 
@@ -96,9 +93,6 @@ void UpdateChat() {
 
     SFX_PlayCommon(CHAT_SOUND_OPEN_WINDOW);
     GetSlpCSSDT()->chatWindowOpened = true;
-
-    // cleanup
-    HSD_Free(chatInput);
 }
 
 /**
@@ -124,28 +118,28 @@ void UpdateChatWindow(GOBJ *gobj) {
     data->framesLeft--;
 
     // Check inputs with window commands
-    ChatInput *chatInput = PadGetChatInput(true);
+    int chatInput = PadGetChatEffectiveInput(true);
 
     // Close Chat Window if B button pressed
-    if (chatInput->input == PAD_BUTTON_B) {
+    if (chatInput == PAD_BUTTON_B) {
         CloseChatWindow(jobj, data);
         return;
     }
 
-    if (chatInput->input > 0) {
+    if (chatInput > 0) {
         // Should close and send chat message
         if (data->delayedFrames < CHAT_ALLOW_COMMAND_FRAMES) {
             return;
         } else if (CanAddNewChatMessage()) {
             data->delayedFrames = 0; // Reset frames counter since last message sent
-            int chatCommand = (data->groupId << 4) + chatInput->input;
-//            OSReport("chatInput->input: %i, a: 0x%x\n", chatInput->input, chatCommand);
+            int chatCommand = (data->groupId << 4) + chatInput;
+//            OSReport("chatInput: %i, a: 0x%x\n", chatInput->input, chatCommand);
             SendOutgoingChatCommand(chatCommand);
             CloseChatWindow(jobj, data);
             SFX_PlayRaw(0xb7, 127, 64, 0, 0); // Play a sound indicating a new message was sent
             return;
         } else {
-            data->delayedFrames = 0; // Reset frames counter 
+            data->delayedFrames = 0; // Reset frames counter
             SFX_PlayCommon(CHAT_SOUND_BLOCK_MESSAGE);
             return;
         }
@@ -173,10 +167,6 @@ void CloseChatWindow(JOBJ *jobj, ChatWindowData *data) {
     _chatWindowGOBJ = NULL;
 }
 
-/**
- * Checks if any player has pressed a button that toggles
- * the chat window or a chat command
- */
 ChatInput *PadGetChatInput(bool checkForCommands) {
     ChatInput *input = calloc(sizeof(ChatInput));
     input->input = -1;
@@ -194,7 +184,6 @@ ChatInput *PadGetChatInput(bool checkForCommands) {
     int *windowCommands[1] = {
         PAD_BUTTON_B,
     };
-
 
     // Check each player if matches any of the allowed commands
     // if found, return the ChatInput object with info on who
@@ -227,7 +216,13 @@ ChatInput *PadGetChatInput(bool checkForCommands) {
 
     return input;
 }
-//#define LOCAL_TESTING
+
+int PadGetChatEffectiveInput(bool checkForCommands) {
+    ChatInput *chatInput = PadGetChatInput(checkForCommands);
+    int res = chatInput->input;
+    HSD_Free(chatInput);
+    return res;
+}
 
 /**
  * Sends EXI Command to Dolphin for a new chat message
@@ -239,11 +234,13 @@ void SendOutgoingChatCommand(int messageId) {
 //    OSReport("SendOutgoingChatCommand buffer cmd:%i, msgId:%i size: %i\n", buffer->cmd, buffer->messageId, sizeof(OutgoingChatMessageBuffer));
     ExiSlippi_Transfer(buffer, sizeof(OutgoingChatMessageBuffer), ExiSlippi_TransferMode_WRITE);
 
-//#ifdef LOCAL_TESTING
-//    SlippiCSSDataTable *dt = GetSlpCSSDT();
-//    MatchStateResponseBuffer *msrb = dt->msrb;
-//    CreateAndAddChatMessage(dt->SlpCSSDatAddress, msrb, 0, messageId);
-//#endif
+    HSD_Free(buffer);
+
+#ifdef LOCAL_TESTING
+    SlippiCSSDataTable *dt = GetSlpCSSDT();
+    MatchStateResponseBuffer *msrb = dt->msrb;
+    CreateAndAddChatMessage(dt->SlpCSSDatAddress, msrb, 0, messageId);
+#endif
 }
 
 #endif SLIPPI_CSS_CHAT_C
