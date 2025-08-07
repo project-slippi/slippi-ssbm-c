@@ -98,7 +98,7 @@ int SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus
   Text_SetText(text, rankSubtextId, rankString);
   Text_SetColor(text, rankSubtextId, &white);
 
-  OSReport("Rank / rating text being set. Status: %d\n", status);
+  // OSReport("Rank / rating text being set. Status: %d\n", status);
 
   // If fetching and we have no rank yet, show question marks
   // This will show them both while we are in pending or if a fetch failed. That's fine
