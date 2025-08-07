@@ -5,7 +5,6 @@
 #include "Text.c"
 
 #include "../../../Common.h"
-#include "../../../Game/SysText.c"
 
 #include "../Notifications.c"
 
@@ -76,8 +75,7 @@ void FreeChatMessage(void *ptr) {
         ChatMessagesRemoteCount--;
     }
     //OSReport("Free -> Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
-
-    HSD_Free(ptr);
+    DestroyNotificationMessage(chatMessage);
 }
 
 void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb, int playerIndex, int messageId) {
@@ -99,14 +97,13 @@ void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb,
     //OSReport("Local: %i Remote: %i\n", ChatMessagesLocalCount, ChatMessagesRemoteCount);
 }
 
-
 //{SPT_CHAT_P1, "<LEFT><KERN><COLOR, 229, 76, 76>%s:<S><COLOR, 255, 255, 255>%s<END>"},
 //{SPT_CHAT_P2, "<LEFT><KERN><COLOR, 59, 189, 255>%s:<S><COLOR, 255, 255, 255>%s<END>"},
 //{SPT_CHAT_P3, "<LEFT><KERN><COLOR, 255, 203, 4>%s:<S><COLOR, 255, 255, 255>%s<END>"},
 //{SPT_CHAT_P4, "<LEFT><KERN><COLOR, 0, 178, 2>%s:<S><COLOR, 255, 255, 255>%s<END>"},
 //{SPT_LOGOUT, "<FIT><COLOR, 243, 75, 75>Are<S>You<COLOR, 0, 175, 75><S>Sure?<END>"},
 //{SPT_CHAT_DISABLED, "<LEFT><KERN><COLOR, 0, 178, 2>%s<S><COLOR, 255, 255, 255>has<S>chat<S>disabled<S><END>"},
-char *BuildChatTextData(char *playerName, u8 playerIndex, u8 groupId, u8 messageId) {
+SysText *BuildChatTextData(char *playerName, u8 playerIndex, u8 groupId, u8 messageId) {
     char *message;
     SysText *color;
 
@@ -167,7 +164,6 @@ Text *CreateChatMessageText(NotificationMessage *msg) {
     return text;
 }
 
-
 Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
     MatchStateResponseBuffer *msrb = MSRB();
     bool isLocalMessage = msg->playerIndex == msrb->localPlayerIndex;
@@ -215,7 +211,14 @@ Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
         messageId = msg->messageId;
 
     char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
-    char *textData = BuildChatTextData(playerName, msg->playerIndex, groupId, messageId);
+#ifdef LOCAL_TESTING
+    if(!playerName || strlen(playerName) == 0) {
+        playerName = "Player";
+    }
+#endif
+
+    SysText *textData = BuildChatTextData(playerName, msg->playerIndex, groupId, messageId);
+    msg->textData = textData;
 
     float x = isWidescreen() ? -44.5f : -29.5f;
     float y = -23.25f + (msg->id * 3.2f);
@@ -229,11 +232,12 @@ Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
     text->stretch.X = 0.04f;
     text->stretch.Y = 0.04f;
     Text_SetSisText(text, 0);
-    text->text_start = textData;
+    text->text_start = (u8*)textData->chars;
 
     // Restore original gx
     stc_textcanvas_first[0]->gx_link = 1;
     stc_textcanvas_first[0]->gx_pri = 0x80;
+
     return text;
 }
 
