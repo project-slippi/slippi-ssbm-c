@@ -163,6 +163,7 @@ void InitOnlineCSS()
         return;
 
     InitChatMessages();
+    InitSheikSelector();
 }
 
 #endif SLIPPI_CSS_MAIN_C
