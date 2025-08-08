@@ -247,7 +247,7 @@ void UpdateRankInfo() {
 
     // Allow error to be shown again?
     rankErrorShown = false;
-  } else if (!rankErrorShown && (responseStatus == RankInfo_FetchStatus_ERROR || responseStatus == RankInfo_FetchStatus_NOT_FETCHED)) {
+  } else if (!rankErrorShown && responseStatus == RankInfo_FetchStatus_ERROR) {
     // Clear loader
     Text_SetText(text, loaderSubtextId, "");
 
