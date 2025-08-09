@@ -165,6 +165,19 @@ typedef struct CSSData {
   VsModeData data;
 } CSSData;
 
+typedef struct CSSPlayerData {
+  GOBJ *gobj;
+  u8 port;
+  u8 state;
+  u8 held_puck;
+  u8 unk;
+  short unk1;
+  short exit_timer;
+  Vec2 position;
+} CSSPlayerData;
+
+int CSS_DATA_OFFSET = -0x49F0;
+
 JOBJ *selectorJobj;
 
 const float BUTTON_TOP = -20.f;

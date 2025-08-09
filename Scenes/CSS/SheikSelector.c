@@ -1,18 +1,5 @@
 #include "SheikSelector.h"
 
-typedef struct CSSPlayerData {
-  GOBJ *gobj;
-  u8 port;
-  u8 state;
-  u8 held_puck;
-  u8 unk;
-  short unk1;
-  short exit_timer;
-  Vec2 position;
-} CSSPlayerData;
-
-int CSS_DATA_OFFSET = -0x49F0;
-
 bool sheikSelected = true;
 bool zeldaSelected = false;
 
@@ -30,10 +17,8 @@ void SetSelectedChar(u8 ckind) {
   u8 playerIndex = GetPlayerIndex();
   u8 *selectedChar = GetPlayerSelections(playerIndex)->data.data.players[playerIndex].c_kind;
 
-  // Set character
   selectedChar = ckind;
 
-  bp();
   CSSIcon *iconData = 0x803f0cc8;
   iconData->char_kind = ckind;
 
@@ -148,11 +133,6 @@ void UpdateSheikSelector() {
       if (sheikSelected) {
         sheikAlpha = ACTIVE_ALPHA;
       }
-
-      //   OSReport("zeldaHovered: %d\n", zeldaHovered);
-      //   OSReport("sheikHovered: %d\n", sheikHovered);
-      //   OSReport("zeldaSelected: %d\n", zeldaSelected);
-      //   OSReport("sheikSelected: %d\n", sheikSelected);
 
       JOBJ_SetAllAlpha(zeldaIcon, zeldaAlpha);
       JOBJ_SetAllAlpha(sheikIcon, sheikAlpha);
