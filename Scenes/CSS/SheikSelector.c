@@ -15,17 +15,15 @@ CSSData *GetPlayerSelections(u8 playerIndex) {
 
 void SetSelectedChar(u8 ckind) {
   u8 playerIndex = GetPlayerIndex();
-  u8 *selectedChar = GetPlayerSelections(playerIndex)->data.data.players[playerIndex].c_kind;
-
-  selectedChar = ckind;
+  CSSData *CssData = GetPlayerSelections(playerIndex);
+  u8 *selectedChar = &CssData->data.data.players[playerIndex].c_kind;
+  *selectedChar = ckind;
 
   CSSIcon *iconData = 0x803f0cc8;
   iconData->char_kind = ckind;
 
   SFX_getCharacterNameAnnouncer(ckind);
-
-  u8 port = GetPlayerIndex();
-  CSS_CursorHighlightUpdateCSPInfo(port);
+  CSS_CursorHighlightUpdateCSPInfo(0);
 }
 
 u8 GetSelectedChar() {
@@ -74,7 +72,7 @@ void UpdateSheikSelector() {
   u64 downInputs = Pad_GetDown(port);
 
   Vec2 cursorPos = GetCursorPos();
-  u8 selectedChar = GetSelectedChar();  // Get selected character
+  u8 selectedChar = GetSelectedChar();
 
   if (selectedChar == CKIND_SHEIK || selectedChar == CKIND_ZELDA) {
     if (selectorJobj) {
@@ -100,14 +98,11 @@ void UpdateSheikSelector() {
             sheikHovered = isSheik;
             zeldaHovered = !isSheik;
 
-            // JOBJ_SetAllAlpha(buttons[i], HOVER_ALPHA);
             if (downInputs & HSD_BUTTON_A) {
               // Change character
               if (isSheik) {
-                // OSReport("Selecting Sheik\n");
                 SetSelectedChar(CKIND_SHEIK);
               } else {
-                // OSReport("Selecting Zelda\n");
                 SetSelectedChar(CKIND_ZELDA);
               }
               sheikSelected = isSheik;

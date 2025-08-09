@@ -178,8 +178,6 @@ typedef struct CSSPlayerData {
 
 int CSS_DATA_OFFSET = -0x49F0;
 
-JOBJ *selectorJobj;
-
 const float BUTTON_TOP = -20.f;
 const float BUTTON_CONTAINER_START_X = -15.75f;
 const float BUTTON_HEIGHT = 3.f;
@@ -189,6 +187,15 @@ const float ACTIVE_ALPHA = 1.0f;
 const float INACTIVE_ALPHA = 0.4f;
 const float HOVER_ALPHA = 0.75f;
 
+JOBJ *selectorJobj;
+
+Vec2 GetCursorPos();
+u8 GetPlayerIndex();
+CSSData *GetPlayerSelections(u8 playerIndex);
+u8 GetSelectedChar();
+void SetSelectedChar(u8 ckind);
+
+void InitSheikSelector();
 void UpdateSheikSelector();
 
 void *(*SFX_getCharacterNameAnnouncer)(int char_id) = 0x80168c5c;
