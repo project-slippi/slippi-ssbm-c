@@ -177,8 +177,8 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
 
   // Create rank label text
   rankLabelSubtextId = Text_AddSubtext(text, -1110, 850, "Rank");
-  Text_SetScale(text, loaderSubtextId, 4, 4);
-  Text_SetColor(text, loaderSubtextId, &gray);
+  Text_SetScale(text, rankLabelSubtextId, 4, 4);
+  Text_SetColor(text, rankLabelSubtextId, &gray);
 
   // Create rank text
   rankSubtextId = Text_AddSubtext(text, -640, 1100, "");
@@ -208,15 +208,13 @@ void UpdateRankInfo() {
   u8 responseStatus = rankInfoResp->status;
   s8 rank = rankInfoResp->rank;
 
-  if (rank > 0 && responseStatus == RankInfo_FetchStatus_FETCHED) {
+  if (responseStatus == RankInfo_FetchStatus_FETCHED) {
     // bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
     bool hasChanged = rankInfoResp->ratingChange != 0 || rankInfoResp->rankChange != 0;
     bool isPlaced = rankInfoResp->ratingUpdateCount > PLACEMENT_THRESHOLD;
 
-    // Only request rank info if this is ranked
-    if (!rankInitialized) {
-      rankInitialized = true;
-
+    // Only initialize the fetched status if we didn't previously process a fetched response status
+    if (lastExecutedStatus != LAST_EXECUTED_STATUS_FETCHED) {
       // Determine the duration of the rating increase / decrease
       float change = rankInfoResp->ratingChange;
       if (abs(change) < LOW_RATING_THRESHOLD) {
@@ -245,29 +243,44 @@ void UpdateRankInfo() {
       }
     }
 
-    // Allow error to be shown again?
-    rankErrorShown = false;
-  } else if (!rankErrorShown && responseStatus == RankInfo_FetchStatus_ERROR) {
-    // Clear loader
-    Text_SetText(text, loaderSubtextId, "");
+    // Allow other states to be initialized again
+    lastExecutedStatus = LAST_EXECUTED_STATUS_FETCHED;
+  } else if (responseStatus == RankInfo_FetchStatus_ERROR) {
+    // Initialize error state
+    if (lastExecutedStatus != LAST_EXECUTED_STATUS_ERROR) {
+      // Clear loader
+      Text_SetText(text, loaderSubtextId, "");
 
-    // Dislay rank fetch error
-    char* errorString[6];
-    char* errorMsgString[19];
+      // Dislay rank fetch error
+      char* errorString[6];
+      char* errorMsgString[19];
 
-    sprintf(errorString, "Error");
-    sprintf(errorMsgString, "Failed to get rank");
+      sprintf(errorString, "Error");
+      sprintf(errorMsgString, "Failed to get rank");
 
-    GXColor white = (GXColor){255, 255, 255, 255};
-    Text_SetText(text, rankSubtextId, errorString);
-    Text_SetColor(text, rankSubtextId, &white);
+      GXColor white = (GXColor){255, 255, 255, 255};
+      Text_SetText(text, rankSubtextId, errorString);
+      Text_SetColor(text, rankSubtextId, &white);
 
-    GXColor red = (GXColor){255, 0, 0, 255};
-    Text_SetText(text, ratingSubtextId, errorMsgString);
-    Text_SetColor(text, ratingSubtextId, &red);
+      GXColor red = (GXColor){255, 0, 0, 255};
+      Text_SetText(text, ratingSubtextId, errorMsgString);
+      Text_SetColor(text, ratingSubtextId, &red);
+    }
 
-    rankErrorShown = true;
+    // Prevent error logic from looping, allow rank initialization again
+    lastExecutedStatus = LAST_EXECUTED_STATUS_ERROR;
   } else if (rankInfoResp->status == RankInfo_FetchStatus_FETCHING) {
+    // Initialize fetching state
+    if (lastExecutedStatus != LAST_EXECUTED_STATUS_FETCHING) {
+      // Set the rank icon and text values based on what data we previously had. If we transitioned from
+      // error this should set the rating to something more sensible while we load.
+      u8 rank = rankInfoResp->rank;
+      float rating = rankInfoResp->ratingOrdinal;
+      uint matchesPlayed = rankInfoResp->ratingUpdateCount;
+      SetRankIcon(rank);
+      SetRankText(rank, rating - rankInfoResp->ratingChange, matchesPlayed, responseStatus);
+    }
+
     // Update unreported loader
     if (loadTimer % 15 == 0) {
       switch (loaderCount) {
@@ -292,6 +305,9 @@ void UpdateRankInfo() {
     }
 
     loadTimer++;
+
+    // Reset rank initialization and error shown flags
+    lastExecutedStatus = LAST_EXECUTED_STATUS_FETCHING;
   }
 }
 

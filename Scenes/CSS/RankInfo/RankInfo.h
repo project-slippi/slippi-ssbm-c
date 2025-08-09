@@ -45,6 +45,13 @@ enum SlippiRank {
   RANK_COUNT
 };
 
+enum LastExecutedStatus {
+  LAST_EXECUTED_STATUS_NONE,
+  LAST_EXECUTED_STATUS_FETCHING,
+  LAST_EXECUTED_STATUS_FETCHED,
+  LAST_EXECUTED_STATUS_ERROR
+};
+
 static char *RANK_STRINGS[] = {
     "PENDING",
     "BRONZE 1",
@@ -76,8 +83,7 @@ int rankSubtextId;
 int ratingSubtextId;
 int rankLabelSubtextId;
 
-bool rankInitialized = false;
-bool rankErrorShown = false;
+u8 lastExecutedStatus = LAST_EXECUTED_STATUS_NONE;
 
 const float HIGH_RATING_THRESHOLD = 35.f;
 const float MED_RATING_THRESHOLD = 20.f;
