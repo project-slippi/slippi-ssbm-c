@@ -82,6 +82,7 @@ int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
 int rankLabelSubtextId;
+int lastRatingTextLen;  // Used to offset loader
 
 u8 lastExecutedStatus = LAST_EXECUTED_STATUS_NONE;
 

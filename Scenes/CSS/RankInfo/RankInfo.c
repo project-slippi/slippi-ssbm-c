@@ -86,7 +86,7 @@ void SetRankIcon(u8 rank) {
 }
 
 // Returns length of the rating string
-int SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
+void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
   GXColor white = (GXColor){255, 255, 255, 255};
   GXColor lightGray = (GXColor){170, 173, 178, 255};
   GXColor gray = (GXColor){142, 145, 150, 255};
@@ -114,7 +114,10 @@ int SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus
     // Gray out rating text if elo is pending
     Text_SetText(text, ratingSubtextId, questionMark);
     Text_SetColor(text, ratingSubtextId, &gray);
-    return 6;  // Indicate the string is longer because the question marks are wide
+
+    // Indicate the string is longer because the question marks are wide
+    lastRatingTextLen = 6;
+    return;
   }
 
   // Check if the user has completed their placement matches
@@ -132,7 +135,7 @@ int SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus
   Text_SetText(text, ratingSubtextId, ratingString);
   Text_SetColor(text, ratingSubtextId, &lightGray);
 
-  return strlen(ratingString);
+  lastRatingTextLen = strlen(ratingString);
 }
 
 void InitRankIcon(SlpCSSDesc* slpCss, u8 rank) {
@@ -187,11 +190,10 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
   ratingSubtextId = Text_AddSubtext(text, -640, 1250, "");
   Text_SetScale(text, ratingSubtextId, 3.5, 3.5);
   // Set text
-  int ratingStringLength = SetRankText(rank, rating, matches_played, status);
+  SetRankText(rank, rating, matches_played, status);
 
   // Initialize rank loader
-  float loaderPosX = -640.f + (ratingStringLength * 60.f);
-  loaderSubtextId = Text_AddSubtext(text, loaderPosX, 1224, "");
+  loaderSubtextId = Text_AddSubtext(text, -640, 1224, "");
   Text_SetScale(text, loaderSubtextId, 4.25, 4.25);
   Text_SetColor(text, loaderSubtextId, &yellow);
 }
@@ -279,6 +281,10 @@ void UpdateRankInfo() {
       uint matchesPlayed = rankInfoResp->ratingUpdateCount;
       SetRankIcon(rank);
       SetRankText(rank, rating - rankInfoResp->ratingChange, matchesPlayed, responseStatus);
+
+      // Set loader position
+      float loaderPosX = -640.f + (lastRatingTextLen * 60.f);
+      Text_SetPosition(text, loaderSubtextId, loaderPosX, 1224);
     }
 
     // Update unreported loader
