@@ -1,8 +1,5 @@
 #include "SheikSelector.h"
 
-bool sheikSelected = true;
-bool zeldaSelected = false;
-
 u8 GetPlayerIndex() {
   return R13_U8(PLAYER_IDX_R13_OFFSET);
 }
@@ -66,72 +63,79 @@ void UpdateSheikSelector() {
     return;
   }
 
+  if (!selectorJobj) {
+    return;  // Selector not initialized
+  }
+
   u8 port = GetPlayerIndex();
   u64 downInputs = Pad_GetDown(port);
 
   Vec2 cursorPos = GetCursorPos();
   u8 selectedChar = GetSelectedChar();
 
-  if (selectedChar == CKIND_SHEIK || selectedChar == CKIND_ZELDA) {
-    if (selectorJobj) {
-      // Show selector UI
-      JOBJ_SetAllAlpha(selectorJobj, 1.f);
-
-      JOBJ *zeldaIcon = selectorJobj->child;
-      JOBJ *sheikIcon = selectorJobj->child->sibling;
-
-      bool sheikHovered = false;
-      bool zeldaHovered = false;
-
-      JOBJ *buttons[2] = {zeldaIcon, sheikIcon};
-      for (int i = 0; i < 2; i++) {
-        bool isSheik = i == 1;
-        const float BUTTON_BOTTOM = BUTTON_TOP - BUTTON_HEIGHT;
-        // Check if cursor is at the height of the selector
-        if (cursorPos.Y < BUTTON_TOP && cursorPos.Y >= BUTTON_BOTTOM) {
-          float buttonLeft = BUTTON_CONTAINER_START_X + i * BUTTON_WIDTH;
-          float buttonRight = buttonLeft + BUTTON_WIDTH;
-          // Check if cursor is within the bounds of this button
-          if (cursorPos.X > buttonLeft && cursorPos.X < buttonRight) {
-            sheikHovered = isSheik;
-            zeldaHovered = !isSheik;
-
-            if (downInputs & HSD_BUTTON_A) {
-              // Change character
-              if (isSheik) {
-                SetSelectedChar(CKIND_SHEIK);
-              } else {
-                SetSelectedChar(CKIND_ZELDA);
-              }
-              sheikSelected = isSheik;
-              zeldaSelected = !isSheik;
-            }
-          }
-        }
-      }
-
-      float zeldaAlpha = INACTIVE_ALPHA;
-      float sheikAlpha = INACTIVE_ALPHA;
-
-      if (zeldaHovered) {
-        zeldaAlpha = HOVER_ALPHA;
-      }
-      if (sheikHovered) {
-        sheikAlpha = HOVER_ALPHA;
-      }
-
-      if (zeldaSelected) {
-        zeldaAlpha = ACTIVE_ALPHA;
-      }
-      if (sheikSelected) {
-        sheikAlpha = ACTIVE_ALPHA;
-      }
-
-      JOBJ_SetAllAlpha(zeldaIcon, zeldaAlpha);
-      JOBJ_SetAllAlpha(sheikIcon, sheikAlpha);
-    }
-  } else {
+  // If sheik / zelda not selected, hide selector UI
+  if (selectedChar != CKIND_SHEIK && selectedChar != CKIND_ZELDA) {
     // Hide selector UI
     JOBJ_SetAllAlpha(selectorJobj, 0.f);
+    return;
   }
+
+  // Show selector UI
+  JOBJ_SetAllAlpha(selectorJobj, 1.f);
+
+  JOBJ *zeldaIcon = selectorJobj->child;
+  JOBJ *sheikIcon = selectorJobj->child->sibling;
+
+  bool sheikSelected = selectedChar == CKIND_SHEIK;
+  bool zeldaSelected = selectedChar == CKIND_ZELDA;
+
+  bool sheikHovered = false;
+  bool zeldaHovered = false;
+
+  JOBJ *buttons[2] = {zeldaIcon, sheikIcon};
+  for (int i = 0; i < 2; i++) {
+    bool isSheik = i == 1;
+    const float BUTTON_BOTTOM = BUTTON_TOP - BUTTON_HEIGHT;
+    // Check if cursor is at the height of the selector
+    if (cursorPos.Y < BUTTON_TOP && cursorPos.Y >= BUTTON_BOTTOM) {
+      float buttonLeft = BUTTON_CONTAINER_START_X + i * BUTTON_WIDTH;
+      float buttonRight = buttonLeft + BUTTON_WIDTH;
+      // Check if cursor is within the bounds of this button
+      if (cursorPos.X > buttonLeft && cursorPos.X < buttonRight) {
+        sheikHovered = isSheik;
+        zeldaHovered = !isSheik;
+
+        if (downInputs & HSD_BUTTON_A) {
+          // Change character
+          if (isSheik) {
+            SetSelectedChar(CKIND_SHEIK);
+          } else {
+            SetSelectedChar(CKIND_ZELDA);
+          }
+          sheikSelected = isSheik;
+          zeldaSelected = !isSheik;
+        }
+      }
+    }
+  }
+
+  float zeldaAlpha = INACTIVE_ALPHA;
+  float sheikAlpha = INACTIVE_ALPHA;
+
+  if (zeldaHovered) {
+    zeldaAlpha = HOVER_ALPHA;
+  }
+  if (sheikHovered) {
+    sheikAlpha = HOVER_ALPHA;
+  }
+
+  if (zeldaSelected) {
+    zeldaAlpha = ACTIVE_ALPHA;
+  }
+  if (sheikSelected) {
+    sheikAlpha = ACTIVE_ALPHA;
+  }
+
+  JOBJ_SetAllAlpha(zeldaIcon, zeldaAlpha);
+  JOBJ_SetAllAlpha(sheikIcon, sheikAlpha);
 }
