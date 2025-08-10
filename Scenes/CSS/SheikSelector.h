@@ -192,7 +192,7 @@ JOBJ *selectorJobj;
 
 Vec2 GetCursorPos();
 u8 GetPlayerIndex();
-CSSData *GetPlayerSelections(u8 playerIndex);
+CSSData *GetCSSData();
 u8 GetSelectedChar();
 void SetSelectedChar(u8 ckind);
 

@@ -7,13 +7,13 @@ u8 GetPlayerIndex() {
   return R13_U8(PLAYER_IDX_R13_OFFSET);
 }
 
-CSSData *GetPlayerSelections(u8 playerIndex) {
-  return (CSSData *)(R13_PTR(CSS_DATA_R13_OFFSET + playerIndex * 0x24));
+CSSData *GetCSSData() {
+  return (CSSData *)(R13_PTR(CSS_DATA_R13_OFFSET));
 }
 
 void SetSelectedChar(u8 ckind) {
   u8 playerIndex = GetPlayerIndex();
-  CSSData *CssData = GetPlayerSelections(playerIndex);
+  CSSData *CssData = GetCSSData();
   CssData->data.data.players[playerIndex].c_kind = ckind;
 
   // Change nametag to say Sheik or Zelda
