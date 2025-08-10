@@ -84,6 +84,8 @@ int ratingSubtextId;
 int rankLabelSubtextId;
 int lastRatingTextLen;  // Used to offset loader
 
+bool isMenuTransition = true;  // true if we came from the menu. false if we came from in-game
+bool allowRankChanges = true;
 u8 lastExecutedStatus = LAST_EXECUTED_STATUS_NONE;
 
 const float HIGH_RATING_THRESHOLD = 35.f;

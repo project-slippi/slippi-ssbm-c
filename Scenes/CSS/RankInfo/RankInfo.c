@@ -39,14 +39,9 @@ void InitRankInfo() {
 
   // Load byte from address 0x80479D34. Stores previous minor scene index.
   u8 previousMinor = *(u8*)0x80479D34;
+  isMenuTransition = previousMinor == 0;
 
-  // Send dolphin command to pull rank data. Only request a fetch when we transition from in-game / game setup.
-  // Previous minor version will be 0 only when transitioning from the menus, I think.
-  if (previousMinor != 0) {
-    FetchRankInfo();
-  }
-
-  // Get rank info after fetching so that the status is up to date
+  // Get rank info before fetching, this is the previous game's state
   GetRankInfo(rankInfoResp);
 
   bool localRankVisible = rankInfoResp->visibility & (1 << VISIBILITY_LOCAL);
@@ -55,22 +50,23 @@ void InitRankInfo() {
     return;
   }
 
-  // DEBUG
-  // rankInfoResp->status = RankInfo_ResponseStatus_UNREPORTED;
-  // rankInfoResp->rank = RANK_MASTER_3;
-  // rankInfoResp->ratingOrdinal = 1345.4f;
-  // rankInfoResp->global = 0;
-  // rankInfoResp->regional = 0;
-  // rankInfoResp->ratingUpdateCount = 100;
-  // rankInfoResp->rankChange = 0;
-  // rankInfoResp->ratingChange = 0.f;
+  // Send dolphin command to pull rank data. Only request a fetch when we transition from in-game / game setup.
+  // Previous minor version will be 0 only when transitioning from the menus, I think.
+  if (!isMenuTransition) {
+    FetchRankInfo();
+  }
 
   SlippiCSSDataTable* dt = GetSlpCSSDT();
 
-  s8 rank = rankInfoResp->rank;
+  // If we are coming from CSS, always show current rank with no animations.
+  // We will also allow the rank to change if when we load the CSS initially we are currently fetching or in error
+  allowRankChanges = !isMenuTransition || rankInfoResp->status != RankInfo_FetchStatus_FETCHED;
+
+  // If we are coming from in-game, we should show the current rank in the data at the start because we haven't
+  // loaded the new rank data yet. We only show prev rank at the start once we've loaded the new data.
   InitRankIcon(dt->SlpCSSDatAddress, rankInfoResp->rank);
   InitRankInfoText(
-      rank < 0 ? rank + 1 : rank,  // Show pending if rank is empty
+      rankInfoResp->rank,
       rankInfoResp->ratingOrdinal,
       rankInfoResp->ratingUpdateCount,
       rankInfoResp->status);
@@ -204,6 +200,11 @@ void UpdateRankInfo() {
     return;
   }
 
+  // See where this is set for more info about when this happens.
+  if (!allowRankChanges) {
+    return;
+  }
+
   // Make sure the rank info is up to date
   GetRankInfo(rankInfoResp);
 
@@ -228,12 +229,12 @@ void UpdateRankInfo() {
       }
 
       SlippiCSSDataTable* dt = GetSlpCSSDT();
-      // Update rank information
-      u8 rank = rankInfoResp->rank;
-      float rating = rankInfoResp->ratingOrdinal;
+      // Here we load the "previous" values because we are about to transition from those to the current.
       uint matchesPlayed = rankInfoResp->ratingUpdateCount;
-      SetRankIcon(rank);
-      SetRankText(rank, rating - rankInfoResp->ratingChange, matchesPlayed, responseStatus);
+      u8 prevRank = rankInfoResp->rank - rankInfoResp->rankChange;
+      float prevRating = rankInfoResp->ratingOrdinal - rankInfoResp->ratingChange;
+      SetRankIcon(prevRank);
+      SetRankText(prevRank, prevRating, matchesPlayed, responseStatus);
 
       // Clear loader
       Text_SetText(text, loaderSubtextId, "");
@@ -274,13 +275,11 @@ void UpdateRankInfo() {
   } else if (rankInfoResp->status == RankInfo_FetchStatus_FETCHING) {
     // Initialize fetching state
     if (lastExecutedStatus != LAST_EXECUTED_STATUS_FETCHING) {
-      // Set the rank icon and text values based on what data we previously had. If we transitioned from
-      // error this should set the rating to something more sensible while we load.
-      u8 rank = rankInfoResp->rank;
-      float rating = rankInfoResp->ratingOrdinal;
+      // Set the rank icon and text values based on what data we previously had. That means loading
+      // the "current" values because we haven't loaded the new stuff yet.
       uint matchesPlayed = rankInfoResp->ratingUpdateCount;
-      SetRankIcon(rank);
-      SetRankText(rank, rating - rankInfoResp->ratingChange, matchesPlayed, responseStatus);
+      SetRankIcon(rankInfoResp->rank);
+      SetRankText(rankInfoResp->rank, rankInfoResp->ratingOrdinal, matchesPlayed, responseStatus);
 
       // Set loader position
       float loaderPosX = -640.f + (lastRatingTextLen * 60.f);
@@ -435,13 +434,12 @@ void UpdateRatingChange() {
       // Set new rank icon and text
       if (rankInfoResp->rankChange != 0) {
         // Update rank icon
-        u8 newRank = (int)rankInfoResp->rank + rankInfoResp->rankChange;
+        u8 newRank = rankInfoResp->rank;
         SetRankIcon(newRank);
         // Update rank text
         float newRating = rankInfoResp->ratingOrdinal;
         u8 matchesPlayed = rankInfoResp->ratingUpdateCount;
-        bool unreported = false;
-        SetRankText(newRank, newRating, matchesPlayed, unreported);
+        SetRankText(newRank, newRating, matchesPlayed, RankInfo_FetchStatus_FETCHED);
       }
     }
 
