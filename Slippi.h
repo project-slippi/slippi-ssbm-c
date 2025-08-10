@@ -37,7 +37,7 @@
 //  EXI COMMAND Definitions
 // ###############################################################################
 //  For Slippi communication
-#define SLIPPI_CMD_GetFrame , 0x76
+#define SLIPPI_CMD_GetFrame 0x76
 #define SLIPPI_CMD_CheckForReplay 0x88
 #define SLIPPI_CMD_CheckForStockSteal 0x89
 #define SLIPPI_CMD_SendOnlineFrame 0xB0
@@ -56,6 +56,8 @@
 #define SLIPPI_CMD_ReportMatch 0xBD
 #define SLIPPI_CMD_SendNameEntryIndex 0xBE
 #define SLIPPI_CMD_NameEntryAutoComplete 0xBF
+#define SLIPPI_CMD_GetRankInfo 0xE3
+#define SLIPPI_CMD_FetchRankInfo 0xE4
 // For Slippi file loads
 #define SLIPPI_CMD_FileLength 0xD1
 #define SLIPPI_CMD_FileLoad 0xD2
@@ -91,13 +93,15 @@ typedef struct MatchStateResponseBuffer {
   bool isRemotePlayerReady;
   u8 localPlayerIndex;
   u8 remotePlayerIndex;
-  void *rngOffset;
+  void* rngOffset;
   u8 delayFrames;
   u8 userChatMsgId;
   u8 oppChatMsgId;
   u8 chatMsgPlayerIndex;
-  u32 *VSLeftPlayers;
-  u32 *VSRightPlayers;
+  u8 localRank;
+  u8 oppRank;
+  u32* VSLeftPlayers;
+  u32* VSRightPlayers;
   char localName[31];
   char p1Name[31];
   char p2Name[31];
@@ -123,9 +127,9 @@ typedef struct MatchStateResponseBuffer {
 #define CSS_DATA_TABLE_BUFFER_ADDRESS 0x80005614
 
 typedef struct SlippiCSSDataTable {
-  MatchStateResponseBuffer *msrb;
-  void *SlpCSSDatAddress;
-  Text *textStructAddress;
+  MatchStateResponseBuffer* msrb;
+  void* SlpCSSDatAddress;
+  Text* textStructAddress;
   u8 spinner1;
   u8 spinner2;
   u8 spinner3;
@@ -145,34 +149,33 @@ typedef struct SlippiCSSDataTable {
 #pragma pack()
 
 typedef struct SlippiCSSDataTableRef {
-  SlippiCSSDataTable *dt;
+  SlippiCSSDataTable* dt;
 } SlippiCSSDataTableRef;
 
-const SlippiCSSDataTableRef *SLIPPI_CSS_DATA_REF = (SlippiCSSDataTableRef *)CSS_DATA_TABLE_BUFFER_ADDRESS;
+const SlippiCSSDataTableRef* SLIPPI_CSS_DATA_REF = (SlippiCSSDataTableRef*)CSS_DATA_TABLE_BUFFER_ADDRESS;
 
 /** DAT Descriptors **/
 typedef struct ChatWindowDesc {
-  JOBJDesc *jobj;
+  JOBJDesc* jobj;
 } ChatWindowDesc;
 
 typedef struct SlpCSSDesc {
-  ChatWindowDesc *chatWindow;
-  JOBJSet *chatMessage;
-  MatAnimJointDesc *mode;  // This is not a desc but the struct is identical
-  JOBJ *connectHelp;
-  JOBJSet *rankIcons;
-  JOBJ *sheikSelector;
+  ChatWindowDesc* chatWindow;
+  JOBJSet* chatMessage;
+  MatAnimJointDesc* mode;  // This is not a desc but the struct is identical
+  JOBJ* connectHelp;
+  JOBJSet* rankIcons;
 } SlpCSSDesc;
 
 // Static Overloaded Text Functions, dont call these directly
-Text *_internal_createSlippiPremadeText(int playerIndex, int messageId, int textType, int gx_pri, float x, float y, float z, float scale);
-int _internal_createSubtext(Text *text, GXColor *color, int textType, int outlineColor, char **strArray, float scale, float x, float y, float innerTextY, float outlineSize);
+Text* _internal_createSlippiPremadeText(int playerIndex, int messageId, int textType, int gx_pri, float x, float y, float z, float scale);
+int _internal_createSubtext(Text* text, GXColor* color, int textType, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize);
 
 // These two functions actually both call the same function. When calling CreateSlippiPremadeText, textType MUST be 2
-Text *CreateSlippiPremadeText(int playerIndex, int messageId, int gx_pri, float x, float y, float z, float scale) {
+Text* CreateSlippiPremadeText(int playerIndex, int messageId, int gx_pri, float x, float y, float z, float scale) {
   _internal_createSlippiPremadeText(playerIndex, messageId, 2, gx_pri, x, y, z, scale);
 }
-int CreateSubtext(Text *text, GXColor *color, bool includeOutline, int outlineColor, char **strArray, float scale, float x, float y, float innerTextY, float outlineSize) {
+int CreateSubtext(Text* text, GXColor* color, bool includeOutline, int outlineColor, char** strArray, float scale, float x, float y, float innerTextY, float outlineSize) {
   if (includeOutline) {
     _internal_createSubtext(text, color, 1, outlineColor, strArray, scale, x, y, innerTextY, outlineSize);
   } else {
@@ -184,14 +187,14 @@ int CreateSubtext(Text *text, GXColor *color, bool includeOutline, int outlineCo
 /**
  * Gets Slippi CSS Data Table
  * */
-SlippiCSSDataTable *GetSlpCSSDT() {
+SlippiCSSDataTable* GetSlpCSSDT() {
   return SLIPPI_CSS_DATA_REF->dt;
 }
 
 /**
  * Gets Match State Response Buffer
  * */
-MatchStateResponseBuffer *MSRB() {
+MatchStateResponseBuffer* MSRB() {
   return GetSlpCSSDT()->msrb;
 }
 
@@ -201,14 +204,10 @@ MatchStateResponseBuffer *MSRB() {
  * */
 int GetRemotePlayerCount() {
   u8 i = 0;
-  if (strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0)
-    i++;
-  if (strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0)
-    i++;
-  if (strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0)
-    i++;
-  if (strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0)
-    i++;
+  if (strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0) i++;
   return i;
   // 	return MSRB()->remotePlayerCount;
 }
