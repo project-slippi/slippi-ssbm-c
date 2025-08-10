@@ -23,6 +23,7 @@ void UpdateOnlineCSS() {
   ListenForNotifications();
   ListenForChatInput();
   UpdateSheikSelector();
+
   if (IsRankedMode()) {
     UpdateRankInfo();
   }
