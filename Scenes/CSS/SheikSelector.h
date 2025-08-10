@@ -176,7 +176,8 @@ typedef struct CSSPlayerData {
   Vec2 position;
 } CSSPlayerData;
 
-int CSS_DATA_OFFSET = -0x49F0;
+int CSS_DATA_R13_OFFSET = -0x49F0;
+int PLAYER_IDX_R13_OFFSET = -0x49B0;
 
 const float BUTTON_TOP = -20.f;
 const float BUTTON_CONTAINER_START_X = -15.75f;

@@ -4,21 +4,19 @@ bool sheikSelected = true;
 bool zeldaSelected = false;
 
 u8 GetPlayerIndex() {
-  const u8 PLAYER_INDEX_OFFSET = 0x40;
-  u8 playerIndex = *((u8 *)(R13_PTR(CSS_DATA_OFFSET + PLAYER_INDEX_OFFSET)));
-  return playerIndex;
+  return R13_U8(PLAYER_IDX_R13_OFFSET);
 }
 
 CSSData *GetPlayerSelections(u8 playerIndex) {
-  return (CSSData *)(R13_PTR(CSS_DATA_OFFSET + playerIndex * 0x24));
+  return (CSSData *)(R13_PTR(CSS_DATA_R13_OFFSET + playerIndex * 0x24));
 }
 
 void SetSelectedChar(u8 ckind) {
   u8 playerIndex = GetPlayerIndex();
   CSSData *CssData = GetPlayerSelections(playerIndex);
-  u8 *selectedChar = &CssData->data.data.players[playerIndex].c_kind;
-  *selectedChar = ckind;
+  CssData->data.data.players[playerIndex].c_kind = ckind;
 
+  // Change nametag to say Sheik or Zelda
   CSSIcon *iconData = 0x803f0cc8;
   iconData->char_kind = ckind;
 
