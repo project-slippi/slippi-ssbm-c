@@ -38,7 +38,7 @@ void InitSheikSelector() {
   SlpCSSDesc *slpCss = dt->SlpCSSDatAddress;
 
   // Initialize local player rank icon
-  GOBJ *gobj = GObj_Create(0x4, 0x5, 0x80);
+  selectorGobj = GObj_Create(0x4, 0x5, 0x80);
   selectorJobj = JOBJ_LoadJoint(slpCss->sheikSelector);
 
   JOBJ *zeldaIcon = selectorJobj->child;
@@ -49,8 +49,8 @@ void InitSheikSelector() {
 
   JOBJ_SetMtxDirtySub(selectorJobj);
 
-  GObj_AddObject(gobj, 0x4, selectorJobj);
-  GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
+  GObj_AddObject(selectorGobj, 0x4, selectorJobj);
+  GObj_AddGXLink(selectorGobj, GXLink_Common, 1, 129);
 
   isInNameEntry = IsOnCSSNameEntryScreen();
 }
@@ -64,19 +64,14 @@ void UpdateSheikSelector() {
   }
 
   if (wasInNameEntry) {
-    OSReport("Attempt to reinitialize\n");
-    JOBJ_SetMtxDirtySub(selectorJobj);  // This doesn't work
-  }
-
-  if (!selectorJobj) {
-    return;  // Selector not initialized
+    GObj_FreeObject(selectorGobj);  // Is this sufficient to prevent leading memory?
+    InitSheikSelector();            // Reinitialize the selector
   }
 
   bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
   if (isLockedIn) {
     // Show selector but dont let it be interactable while we are locked in
-    // OSReport("Showing selector UI 2\n");
-    JOBJ_SetAllAlpha(selectorJobj, 1.f);
+    UpdateSelectorAlphas(false, false);
     return;
   }
 
@@ -96,16 +91,9 @@ void UpdateSheikSelector() {
   // Show selector UI
   JOBJ_SetAllAlpha(selectorJobj, 1.f);
 
-  JOBJ *zeldaIcon = selectorJobj->child;
-  JOBJ *sheikIcon = selectorJobj->child->sibling;
-
-  bool sheikSelected = selectedChar == CKIND_SHEIK;
-  bool zeldaSelected = selectedChar == CKIND_ZELDA;
-
   bool sheikHovered = false;
   bool zeldaHovered = false;
 
-  JOBJ *buttons[2] = {zeldaIcon, sheikIcon};
   for (int i = 0; i < 2; i++) {
     bool isSheik = i == 1;
     const float BUTTON_BOTTOM = BUTTON_TOP - BUTTON_HEIGHT;
@@ -125,12 +113,22 @@ void UpdateSheikSelector() {
           } else {
             SetSelectedChar(CKIND_ZELDA);
           }
-          sheikSelected = isSheik;
-          zeldaSelected = !isSheik;
         }
       }
     }
   }
+
+  UpdateSelectorAlphas(zeldaHovered, sheikHovered);
+}
+
+void UpdateSelectorAlphas(bool zeldaHovered, bool sheikHovered) {
+  JOBJ *zeldaIcon = selectorJobj->child;
+  JOBJ *sheikIcon = selectorJobj->child->sibling;
+
+  u8 selectedChar = GetSelectedChar();
+
+  bool sheikSelected = selectedChar == CKIND_SHEIK;
+  bool zeldaSelected = selectedChar == CKIND_ZELDA;
 
   float zeldaAlpha = INACTIVE_ALPHA;
   float sheikAlpha = INACTIVE_ALPHA;

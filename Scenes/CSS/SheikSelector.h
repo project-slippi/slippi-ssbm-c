@@ -188,6 +188,7 @@ const float ACTIVE_ALPHA = 1.0f;
 const float INACTIVE_ALPHA = 0.4f;
 const float HOVER_ALPHA = 0.75f;
 
+GOBJ *selectorGobj;
 JOBJ *selectorJobj;
 
 Vec2 GetCursorPos();
