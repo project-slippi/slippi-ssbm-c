@@ -22,6 +22,8 @@ void UpdateOnlineCSS() {
 
   ListenForNotifications();
   ListenForChatInput();
+  UpdateSheikSelector();
+
   if (IsRankedMode()) {
     UpdateRankInfo();
   }
@@ -31,6 +33,7 @@ void InitOnlineCSS() {
   if (!IsSlippiOnlineCSS()) return;
 
   InitChatMessages();
+  InitSheikSelector();
 
   // Only request rank info if this is ranked
   if (IsRankedMode()) {
