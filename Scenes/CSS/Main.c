@@ -17,12 +17,13 @@ void UpdateOnlineCSS() {
   if (!IsSlippiOnlineCSS()) return;
   // bp();
 
+  UpdateSheikSelector();
+
   // Do not handle notifications or chat input if on Name Entry Screen
   if (IsOnCSSNameEntryScreen()) return;
 
   ListenForNotifications();
   ListenForChatInput();
-  UpdateSheikSelector();
 
   if (IsRankedMode()) {
     UpdateRankInfo();

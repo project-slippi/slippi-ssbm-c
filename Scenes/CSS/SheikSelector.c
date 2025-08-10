@@ -1,5 +1,7 @@
 #include "SheikSelector.h"
 
+bool isInNameEntry = false;
+
 u8 GetPlayerIndex() {
   return R13_U8(PLAYER_IDX_R13_OFFSET);
 }
@@ -42,10 +44,6 @@ void InitSheikSelector() {
   JOBJ *zeldaIcon = selectorJobj->child;
   JOBJ *sheikIcon = selectorJobj->child->sibling;
 
-  JOBJ_SetAllAlpha(zeldaIcon, INACTIVE_ALPHA);
-  // Set sheik to highlighted by default
-  JOBJ_SetAllAlpha(sheikIcon, ACTIVE_ALPHA);
-
   selectorJobj->trans.X = -8.f;
   selectorJobj->trans.Y = -22.5f;
 
@@ -53,18 +51,33 @@ void InitSheikSelector() {
 
   GObj_AddObject(gobj, 0x4, selectorJobj);
   GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
+
+  isInNameEntry = IsOnCSSNameEntryScreen();
 }
 
 void UpdateSheikSelector() {
-  bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
-  if (isLockedIn) {
-    // Exit if player has locked their character selection
-    // TODO :: Does this hide the selector?
+  bool wasInNameEntry = isInNameEntry;
+  isInNameEntry = IsOnCSSNameEntryScreen();
+
+  if (isInNameEntry) {
     return;
+  }
+
+  if (wasInNameEntry) {
+    OSReport("Attempt to reinitialize\n");
+    JOBJ_SetMtxDirtySub(selectorJobj);  // This doesn't work
   }
 
   if (!selectorJobj) {
     return;  // Selector not initialized
+  }
+
+  bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
+  if (isLockedIn) {
+    // Show selector but dont let it be interactable while we are locked in
+    // OSReport("Showing selector UI 2\n");
+    JOBJ_SetAllAlpha(selectorJobj, 1.f);
+    return;
   }
 
   u8 port = GetPlayerIndex();
