@@ -77,7 +77,6 @@ static char *RANK_STRINGS[] = {
 
 Text *text;
 int loaderSubtextId;
-int changeSignSubtextId;
 int ratingChangeSubtextId;
 int rankSubtextId;
 int ratingSubtextId;
