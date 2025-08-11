@@ -68,6 +68,14 @@ void UpdateSheikSelector() {
     InitSheikSelector();
   }
 
+  // If sheik / zelda not selected, hide selector UI
+  u8 selectedChar = GetSelectedChar();
+  if (selectedChar != CKIND_SHEIK && selectedChar != CKIND_ZELDA) {
+    // Hide selector UI
+    JOBJ_SetAllAlpha(selectorJobj, 0.f);
+    return;
+  }
+
   bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
   if (isLockedIn) {
     // Show selector but dont let it be interactable while we are locked in.
@@ -78,21 +86,13 @@ void UpdateSheikSelector() {
     return;
   }
 
-  u8 port = GetPlayerIndex();
-  u64 downInputs = Pad_GetDown(port);
-
-  Vec2 cursorPos = GetCursorPos();
-  u8 selectedChar = GetSelectedChar();
-
-  // If sheik / zelda not selected, hide selector UI
-  if (selectedChar != CKIND_SHEIK && selectedChar != CKIND_ZELDA) {
-    // Hide selector UI
-    JOBJ_SetAllAlpha(selectorJobj, 0.f);
-    return;
-  }
-
   // Show selector UI
   JOBJ_SetAllAlpha(selectorJobj, 1.f);
+
+  // Get inputs and cursor pos
+  u8 port = GetPlayerIndex();
+  u64 downInputs = Pad_GetDown(port);
+  Vec2 cursorPos = GetCursorPos();
 
   bool sheikHovered = false;
   bool zeldaHovered = false;
