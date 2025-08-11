@@ -6,6 +6,7 @@
 #include "../../Core/Notifications/Notifications.c"
 #include "Chat/Chat.c"
 #include "RankInfo/RankInfo.c"
+#include "SheikSelector.c"
 
 bool IsRankedMode() {
   u8 onlineMode = R13_U8(R13_OFFSET_ONLINE_MODE);
@@ -16,11 +17,14 @@ void UpdateOnlineCSS() {
   if (!IsSlippiOnlineCSS()) return;
   // bp();
 
+  UpdateSheikSelector();
+
   // Do not handle notifications or chat input if on Name Entry Screen
   if (IsOnCSSNameEntryScreen()) return;
 
   ListenForNotifications();
   ListenForChatInput();
+
   if (IsRankedMode()) {
     UpdateRankInfo();
   }
@@ -30,6 +34,7 @@ void InitOnlineCSS() {
   if (!IsSlippiOnlineCSS()) return;
 
   InitChatMessages();
+  InitSheikSelector();
 
   // Only request rank info if this is ranked
   if (IsRankedMode()) {

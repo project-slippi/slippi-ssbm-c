@@ -165,6 +165,7 @@ typedef struct SlpCSSDesc {
   MatAnimJointDesc* mode;  // This is not a desc but the struct is identical
   JOBJ* connectHelp;
   JOBJSet* rankIcons;
+  JOBJ* sheikSelector;
 } SlpCSSDesc;
 
 // Static Overloaded Text Functions, dont call these directly
