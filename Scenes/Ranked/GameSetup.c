@@ -1312,6 +1312,9 @@ void ShowDisconnectedMessage() {
   // Update selector state to make sure hover states don't linger (such as on timeout)
   UpdateHoverDisplays();
 
+  // Reset the OK / REDO buttons to hide them
+  ResetButtonState(false);
+
   // Display disconnected message
   data->disconnect_msg = FlatTexture_Init(gui_assets);
   FlatTexture_SetColor(data->disconnect_msg, (GXColor){255, 0, 0, 255});
