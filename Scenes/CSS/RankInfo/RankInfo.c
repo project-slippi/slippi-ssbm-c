@@ -214,7 +214,7 @@ void UpdateRankInfo() {
   if (responseStatus == RankInfo_FetchStatus_FETCHED) {
     // bool error = rankInfoResp->status == RankInfo_ResponseStatus_ERROR;
     bool hasChanged = rankInfoResp->ratingChange != 0 || rankInfoResp->rankChange != 0;
-    bool isPlaced = rankInfoResp->ratingUpdateCount > PLACEMENT_THRESHOLD;
+    bool isPlaced = rankInfoResp->ratingUpdateCount >= PLACEMENT_THRESHOLD;
 
     // Only initialize the fetched status if we didn't previously process a fetched response status
     if (lastExecutedStatus != LAST_EXECUTED_STATUS_FETCHED) {
