@@ -1,12 +1,14 @@
 #include "GameSetup.h"
 
+#include "../../../Slippi.h"
 #include "../../Components/Button.h"
 #include "../../Components/CharStageBoxSelector.h"
 #include "../../Components/CharStageIcon.h"
 #include "../../Components/StockIcon.h"
+#include "../../Files.h"
 #include "../../Game/Characters.h"
 #include "../../Game/Sounds.h"
-#include "../../Files.h"
+#include "../CSS/RankInfo/RankInfo.h"
 
 static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
@@ -37,6 +39,12 @@ void minor_load(GameSetup_SceneData *minor_data) {
   } else {
     data->process_type = GameSetup_Process_Type_COUNTERPICKING;
   }
+
+  // Execute a match status report asynchronously
+  ExiSlippi_ReportMatchStatus_Query *rmsq = calloc(sizeof(ExiSlippi_ReportMatchStatus_Query));
+  rmsq->command = ExiSlippi_Command_REPORT_MATCH_STATUS;
+  rmsq->statusIdx = 10 + (minor_data->cur_game - 1);  // 10 is the offset for game_setup_1
+  ExiSlippi_Transfer(rmsq, sizeof(ExiSlippi_ReportMatchStatus_Query), ExiSlippi_TransferMode_WRITE);
 
   // Allocate some memory used throughout
   data->match_state = ExiSlippi_LoadMatchState(0);  // Fetch initial match state
@@ -122,6 +130,9 @@ void minor_load(GameSetup_SceneData *minor_data) {
   InitState();
   PrepareCurrentStep();
   UpdateTimeline();
+
+  // Start music. Will play one of the two tournament mode themes
+  BGM_Play(93 + HSD_Randi(2));
 }
 
 void minor_think() {
@@ -381,9 +392,22 @@ void InitHeader() {
   data->timer_subtext_id = Text_AddSubtext(data->text, 0, -1880, "0:30");
   Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
 
+  // Get rank data through EXI to check visibility of rank icons
+  ExiSlippi_GetRank_Query *q = calloc(sizeof(ExiSlippi_GetRank_Query));
+  q->command = ExiSlippi_Command_GET_RANK;
+  ExiSlippi_GetRank_Response *resp = calloc(sizeof(ExiSlippi_GetRank_Response));
+  ExiSlippi_Transfer(q, sizeof(ExiSlippi_GetRank_Query), ExiSlippi_TransferMode_WRITE);
+  ExiSlippi_Transfer(resp, sizeof(ExiSlippi_GetRank_Response), ExiSlippi_TransferMode_READ);
+
+  bool localRankVisible = resp->visibility & (1 << VISIBILITY_LOCAL);
+  bool oppRankVisible = resp->visibility & (1 << VISIBILITY_OPPONENT);
+
+  float LOCAL_PLAYER_INFO_POS_X = localRankVisible ? -2445.f : -2800.f;
+  float OPP_PLAYER_INFO_POS_X = oppRankVisible ? 2445.f : 2800.f;
+
   // Init character name subtexts
-  InitPlayerInfo(0, -2800, data->match_state->p1_name, data->match_state->p1_connect_code);
-  InitPlayerInfo(2, 2800, data->match_state->p2_name, data->match_state->p2_connect_code);
+  InitPlayerInfo(0, LOCAL_PLAYER_INFO_POS_X, data->match_state->p1_name, data->match_state->p1_connect_code);
+  InitPlayerInfo(2, OPP_PLAYER_INFO_POS_X, data->match_state->p2_name, data->match_state->p2_connect_code);
 
   // Init arrows
   data->turn_indicators[0] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_LEFT);
@@ -417,6 +441,59 @@ void InitHeader() {
 
     data->game_results[i] = gr;
     xPos += gap;
+  }
+
+  const float RANK_ICON_SCALE_X = 1.85f;
+  const float RANK_ICON_SCALE_Y = 1.75f;
+  const float RANK_ICON_HEIGHT = 17.85f;
+  const float RANK_ICON_POS_X = 27.5f;
+
+  SlippiCSSDataTable *dt = GetSlpCSSDT();
+  SlpCSSDesc *slpCss = dt->SlpCSSDatAddress;
+  if (localRankVisible) {
+    // Initialize local player rank icon
+    GOBJ *gobj = GObj_Create(0x4, 0x5, 0x80);
+    JOBJ *rankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+
+    rankIconJobj->trans.X = -RANK_ICON_POS_X;
+    rankIconJobj->trans.Y = RANK_ICON_HEIGHT;
+
+    rankIconJobj->scale.X = RANK_ICON_SCALE_X;
+    rankIconJobj->scale.Y = RANK_ICON_SCALE_Y;
+    rankIconJobj->scale.Z = 1.f;
+    JOBJ_SetMtxDirtySub(rankIconJobj);
+
+    // Set rank icon
+    JOBJ_AddSetAnim(rankIconJobj, slpCss->rankIcons, 0);
+    JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float)data->match_state->local_rank);  // HSD_TypeMask::TOBJ 0x400
+    JOBJ_AnimAll(rankIconJobj);
+    JOBJ_ForEachAnim(rankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+
+    GObj_AddObject(gobj, 0x4, rankIconJobj);
+    GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
+  }
+
+  if (oppRankVisible) {
+    // Initialize oppoent rank icon
+    GOBJ *right_gobj = GObj_Create(0x4, 0x5, 0x80);
+    JOBJ *rightRankIconJobj = JOBJ_LoadJoint(slpCss->rankIcons->jobj);
+
+    rightRankIconJobj->trans.X = RANK_ICON_POS_X;
+    rightRankIconJobj->trans.Y = RANK_ICON_HEIGHT;
+
+    rightRankIconJobj->scale.X = RANK_ICON_SCALE_X;
+    rightRankIconJobj->scale.Y = RANK_ICON_SCALE_Y;
+    rightRankIconJobj->scale.Z = 1.f;
+    JOBJ_SetMtxDirtySub(rightRankIconJobj);
+
+    // Set rank icon
+    JOBJ_AddSetAnim(rightRankIconJobj, slpCss->rankIcons, 0);
+    JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_ReqAnim, 1, (float)data->match_state->opp_rank);  // HSD_TypeMask::TOBJ 0x400
+    JOBJ_AnimAll(rightRankIconJobj);
+    JOBJ_ForEachAnim(rightRankIconJobj, 6, 0x400, AOBJ_StopAnim, 6, 0, 0);
+
+    GObj_AddObject(right_gobj, 0x4, rightRankIconJobj);
+    GObj_AddGXLink(right_gobj, GXLink_Common, 1, 129);
   }
 }
 
@@ -453,7 +530,7 @@ void InitAllSelectorJobjs() {
         CSIcon_Material_Fountain,
         CSIcon_Material_Dreamland,
         CSIcon_Material_Yoshis,
-        CSIcon_Material_Pokemon,
+        CSIcon_Material_FinalDestination,
         CSIcon_Material_Battlefield,
     };
     InitSelectorJobjs(stageStrikeMats, data->stage_strike_selectors, STRIKE_STAGE_SELECTOR_COUNT);
@@ -464,9 +541,9 @@ void InitAllSelectorJobjs() {
         CSIcon_Material_Fountain,
         CSIcon_Material_Dreamland,
         CSIcon_Material_Yoshis,
-        CSIcon_Material_Pokemon,
         CSIcon_Material_Battlefield,
         CSIcon_Material_FinalDestination,
+        CSIcon_Material_Pokemon,
     };
     InitSelectorJobjs(stageCpMats, data->stage_cp_selectors, CP_STAGE_SELECTOR_COUNT);
   }
@@ -564,7 +641,7 @@ void HandleDisconnectInputs() {
 
   if (downInputs & HSD_BUTTON_A || downInputs & HSD_BUTTON_START) {
     data->state.should_terminate = true;
-  }  
+  }
 }
 
 void HandleStageInputs(GameSetup_Step *step) {
@@ -925,34 +1002,39 @@ void CompleteCurrentStep(int committed_count) {
 void CompleteGamePrep() {
   ExiSlippi_OverwriteSelections_Query *osq = calloc(sizeof(ExiSlippi_OverwriteSelections_Query));
 
-  int stages[] = {
-      GRKINDEXT_IZUMI,
-      GRKINDEXT_OLDPU,
-      GRKINDEXT_STORY,
-      GRKINDEXT_PSTAD,
-      GRKINDEXT_BATTLE,
-  };
+  // Init empty stages array to populate with stage ids
+  int stages[STRIKE_STAGE_SELECTOR_COUNT] = {0};
+
+  // Iterate through stage_strike_selectors and convert the mats to stage ids into new array
+  for (int i = 0; i < STRIKE_STAGE_SELECTOR_COUNT; i++) {
+    CSBoxSelector *selector = data->stage_strike_selectors[i];
+    stages[i] = CSIcon_ConvertMatToStage(selector->icon->state.material);
+  }
 
   u8 localCharId;
   u8 localCharColor;
 
+  // Handle stage striking. Remove stages that were struck by setting them to -1
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
     if (step->type != GameSetup_Step_Type_REMOVE_STAGE) {
       continue;
     }
 
-    for (int j = 0; j < 5; j++) {
+    // Go through all stages available for striking and remove the ones that were selected
+    // while tracking the last one remaining
+    for (int j = 0; j < STRIKE_STAGE_SELECTOR_COUNT; j++) {
       if (step->stage_selections[0] == stages[j]) {
-        stages[j] = -1;
+        stages[j] = -1;  // If first selection, remove stage
       } else if (step->required_selection_count > 1 && step->stage_selections[1] == stages[j]) {
-        stages[j] = -1;
+        stages[j] = -1;  // If second selection, remove stage
       } else if (stages[j] >= 0) {
         osq->stage_id = (u16)stages[j];
       }
     }
   }
 
+  // Handle stage selection
   for (int i = 0; i < data->step_count; i++) {
     GameSetup_Step *step = &data->steps[i];
     if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
@@ -1351,7 +1433,7 @@ u8 GetNextColor(u8 charId, u8 colorId, int incr) {
 
   int newCol = colorId + incr;
 
-  int maxColor = CSS_GetCostumeNum(charId);
+  int maxColor = GetVanilaMaxColors(charId);
   newCol = newCol % maxColor;
   if (newCol < 0) {
     newCol += maxColor;
@@ -1364,6 +1446,45 @@ u8 GetNextColor(u8 charId, u8 colorId, int incr) {
   }
 
   return newCol;
+}
+
+u8 GetVanilaMaxColors(u8 charId) {
+  // Returns the maximum number of colors for a character in vanilla Melee. We do this because since we display icons
+  // for a selected color on the opponent's side, we have to show a color they actually have. Additionally giving one side
+  // more colors sort of messes up the "force only one player per color" rule
+  switch (charId) {
+    case CKIND_FALCON:
+    case CKIND_KIRBY:
+    case CKIND_YOSHI:
+      return 6;
+    case CKIND_DK:
+    case CKIND_LINK:
+    case CKIND_MARIO:
+    case CKIND_MARTH:
+    case CKIND_PEACH:
+    case CKIND_JIGGLYPUFF:
+    case CKIND_SAMUS:
+    case CKIND_ZELDA:
+    case CKIND_SHEIK:
+    case CKIND_YOUNGLINK:
+    case CKIND_DRMARIO:
+    case CKIND_ROY:
+    case CKIND_GANONDORF:
+      return 5;
+    case CKIND_FOX:
+    case CKIND_GAW:
+    case CKIND_BOWSER:
+    case CKIND_LUIGI:
+    case CKIND_MEWTWO:
+    case CKIND_NESS:
+    case CKIND_PIKACHU:
+    case CKIND_ICECLIMBERS:
+    case CKIND_FALCO:
+    case CKIND_PICHU:
+      return 4;
+    default:
+      return 1;  // All other characters have only one color
+  }
 }
 
 u8 IsColorAllowed(u8 charId, u8 colorId, u8 playerIdx) {
