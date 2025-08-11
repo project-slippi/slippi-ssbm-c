@@ -99,17 +99,18 @@ void UpdateSheikSelector() {
 
   for (int i = 0; i < 2; i++) {
     bool isSheik = i == 1;
-    const float BUTTON_BOTTOM = BUTTON_TOP - BUTTON_HEIGHT;
 
     // Check if cursor is at the height of the selector
+    const float BUTTON_TOP = SELECTOR_CENTER_Y + (TAP_TARGET_HEIGHT / 2.0f);
+    const float BUTTON_BOTTOM = SELECTOR_CENTER_Y - (TAP_TARGET_HEIGHT / 2.0f);
     if (cursorPos.Y > BUTTON_TOP || cursorPos.Y < BUTTON_BOTTOM) {
       continue;
     }
 
     // Check if cursor is within the bounds of this button
-    float buttonLeft = BUTTON_CONTAINER_START_X + i * BUTTON_WIDTH;
-    float buttonRight = buttonLeft + BUTTON_WIDTH;
-    if (cursorPos.X < buttonLeft || cursorPos.X > buttonRight) {
+    const float BUTTON_LEFT = SELECTOR_CENTER_X - (!isSheik ? TAP_TARGET_WIDTH : 0);
+    const float BUTTON_RIGHT = SELECTOR_CENTER_X + (isSheik ? TAP_TARGET_WIDTH : 0);
+    if (cursorPos.X < BUTTON_LEFT || cursorPos.X > BUTTON_RIGHT) {
       continue;
     }
 

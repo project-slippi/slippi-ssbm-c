@@ -179,10 +179,11 @@ typedef struct CSSPlayerData {
 int CSS_DATA_R13_OFFSET = -0x49F0;
 int PLAYER_IDX_R13_OFFSET = -0x49B0;
 
-const float BUTTON_TOP = -20.f;
-const float BUTTON_CONTAINER_START_X = -15.75f;
-const float BUTTON_HEIGHT = 3.f;
-const float BUTTON_WIDTH = 3.25f;
+const float SELECTOR_CENTER_X = -13.f;
+const float SELECTOR_CENTER_Y = -21.25f;
+
+const float TAP_TARGET_WIDTH = 3.5f;
+const float TAP_TARGET_HEIGHT = 3.0f;
 
 const float ACTIVE_ALPHA = 1.0f;
 const float INACTIVE_ALPHA = 0.4f;
