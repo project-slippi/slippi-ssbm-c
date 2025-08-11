@@ -34,8 +34,10 @@ static void _InputsThink(GOBJ *gobj) {
 
   if (downInputs & HSD_BUTTON_A) {
     SFX_PlayCommon(CommonSound_ACCEPT);  // Play "accept" sound
-    if (cpd->state.char_selection_idx == CKIND_RANDOM) { // Select random
+    if (cpd->state.char_selection_idx == CKIND_RANDOM) {
+      // Select random char and reset color
       SelectRandomChar(cpd);
+      cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, 0, 0);
     }
     CharPickerDialog_CloseDialog(cpd);
     cpd->on_close(cpd, true);
@@ -68,7 +70,7 @@ static void _InputsThink(GOBJ *gobj) {
     }
 
     // Reset color
-    cpd->state.char_color_idx = 0;
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, 0, 0);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_LEFT | HSD_BUTTON_DPAD_LEFT)) {
     // Handle a left input
@@ -81,7 +83,7 @@ static void _InputsThink(GOBJ *gobj) {
     }
 
     // Reset color
-    cpd->state.char_color_idx = 0;
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, 0, 0);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_DOWN | HSD_BUTTON_DPAD_DOWN)) {
     // Handle a down input
@@ -94,7 +96,7 @@ static void _InputsThink(GOBJ *gobj) {
     }
 
     // Reset color
-    cpd->state.char_color_idx = 0;
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, 0, 0);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   } else if (scrollInputs & (HSD_BUTTON_UP | HSD_BUTTON_DPAD_UP)) {
     // Handle a up input
@@ -107,7 +109,7 @@ static void _InputsThink(GOBJ *gobj) {
     }
 
     // Reset color
-    cpd->state.char_color_idx = 0;
+    cpd->state.char_color_idx = cpd->get_next_color(cpd->state.char_selection_idx, 0, 0);
     SFX_PlayCommon(CommonSound_NEXT);  // Play "next" sound
   }
 
