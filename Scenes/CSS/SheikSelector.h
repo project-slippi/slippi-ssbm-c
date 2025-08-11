@@ -188,6 +188,8 @@ const float ACTIVE_ALPHA = 1.0f;
 const float INACTIVE_ALPHA = 0.4f;
 const float HOVER_ALPHA = 0.75f;
 
+bool isInNameEntry = false;
+
 GOBJ *selectorGobj;
 JOBJ *selectorJobj;
 

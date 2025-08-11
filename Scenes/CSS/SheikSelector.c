@@ -1,13 +1,11 @@
 #include "SheikSelector.h"
 
-bool isInNameEntry = false;
-
 u8 GetPlayerIndex() {
   return R13_U8(PLAYER_IDX_R13_OFFSET);
 }
 
 CSSData *GetCSSData() {
-  return (CSSData *)(R13_PTR(CSS_DATA_R13_OFFSET));
+  return R13_PTR(CSS_DATA_R13_OFFSET);
 }
 
 void SetSelectedChar(u8 ckind) {
@@ -24,12 +22,12 @@ void SetSelectedChar(u8 ckind) {
 }
 
 u8 GetSelectedChar() {
-  u8 selectedChar = *((u8 *)0x8043208f);
+  u8 selectedChar = ACCESS_U8(0x8043208f);
   return selectedChar;
 }
 
 Vec2 GetCursorPos() {
-  CSSPlayerData *cssPlayerData = *((unsigned int *)0x804A0BC0);
+  CSSPlayerData *cssPlayerData = ACCESS_PTR(0x804A0BC0);
   return cssPlayerData->position;
 }
 
@@ -64,13 +62,18 @@ void UpdateSheikSelector() {
   }
 
   if (wasInNameEntry) {
-    GObj_FreeObject(selectorGobj);  // Is this sufficient to prevent leading memory?
-    InitSheikSelector();            // Reinitialize the selector
+    // When we come back from name entry, we need to re-init our gobj.
+    // All Gobj's get destroyed by fn 8022f138 when entering name entry so we shouldn't be
+    // leaking memory by re-initializing here
+    InitSheikSelector();
   }
 
   bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
   if (isLockedIn) {
-    // Show selector but dont let it be interactable while we are locked in
+    // Show selector but dont let it be interactable while we are locked in.
+    // We still need to update the alphas cause if we just game from name entry
+    // both would show up as selected if we didn't run this logic. By passing false
+    // twice though we avoid any potential hover states from showing.
     UpdateSelectorAlphas(false, false);
     return;
   }
@@ -97,25 +100,31 @@ void UpdateSheikSelector() {
   for (int i = 0; i < 2; i++) {
     bool isSheik = i == 1;
     const float BUTTON_BOTTOM = BUTTON_TOP - BUTTON_HEIGHT;
-    // Check if cursor is at the height of the selector
-    if (cursorPos.Y < BUTTON_TOP && cursorPos.Y >= BUTTON_BOTTOM) {
-      float buttonLeft = BUTTON_CONTAINER_START_X + i * BUTTON_WIDTH;
-      float buttonRight = buttonLeft + BUTTON_WIDTH;
-      // Check if cursor is within the bounds of this button
-      if (cursorPos.X > buttonLeft && cursorPos.X < buttonRight) {
-        sheikHovered = isSheik;
-        zeldaHovered = !isSheik;
 
-        if (downInputs & HSD_BUTTON_A) {
-          // Change character
-          if (isSheik) {
-            SetSelectedChar(CKIND_SHEIK);
-          } else {
-            SetSelectedChar(CKIND_ZELDA);
-          }
-        }
-      }
+    // Check if cursor is at the height of the selector
+    if (cursorPos.Y > BUTTON_TOP || cursorPos.Y < BUTTON_BOTTOM) {
+      continue;
     }
+
+    // Check if cursor is within the bounds of this button
+    float buttonLeft = BUTTON_CONTAINER_START_X + i * BUTTON_WIDTH;
+    float buttonRight = buttonLeft + BUTTON_WIDTH;
+    if (cursorPos.X < buttonLeft || cursorPos.X > buttonRight) {
+      continue;
+    }
+
+    // Manage hovered flags
+    sheikHovered = isSheik;
+    zeldaHovered = !isSheik;
+
+    // Now check for button press to see if we should change characters
+    bool aButtonPressed = downInputs & HSD_BUTTON_A;
+    if (!aButtonPressed) {
+      continue;
+    }
+
+    // A was pressed, change character
+    SetSelectedChar(isSheik ? CKIND_SHEIK : CKIND_ZELDA);
   }
 
   UpdateSelectorAlphas(zeldaHovered, sheikHovered);
