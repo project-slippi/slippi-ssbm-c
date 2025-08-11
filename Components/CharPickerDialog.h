@@ -7,6 +7,9 @@
 
 // How to style code: https://stackoverflow.com/a/50489812/1249024
 
+#define CPD_LAST_INDEX 26   // Last index in char picker dialog JObj set
+#define CKIND_RANDOM 26     // Index of Random in char picker dialog
+
 typedef struct CharPickerDialog_State {
   Vec3 pos;
   u8 is_open;
@@ -19,12 +22,14 @@ typedef struct CharPickerDialog {
   GOBJ *gobj;
   JOBJ *root_jobj;
   JOBJSet *jobj_set;
-  CSIcon *char_icons[CKIND_GANONDORF + 1];
+  CSIcon *char_icons[CPD_LAST_INDEX + 1];
   CharPickerDialog_State state;
 
   void (*on_close)();
   u8 (*get_next_color)();
 } CharPickerDialog;
+
+void SelectRandomChar();
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color);
 void CharPickerDialog_Free(CharPickerDialog *cpd);
