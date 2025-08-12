@@ -210,6 +210,10 @@ void InitStrikingSteps() {
   u8 char2 = match_state->game_info_block[0x60 + 0x24];
   u8 charCol2 = match_state->game_info_block[0x63 + 0x24];
 
+  // Prevent out of bounds colors
+  charCol1 = GetVanilaMaxColors(char1) <= charCol1 ? 0 : charCol1;
+  charCol2 = GetVanilaMaxColors(char2) <= charCol2 ? 0 : charCol2;
+
   u8 isColorMatch = IsMatchingSelection(char1, charCol1, char2, charCol2);
   if (isColorMatch) {
     // Add this ban to scene data, this color will be banned for the duration of the set
