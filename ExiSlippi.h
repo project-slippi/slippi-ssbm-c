@@ -95,8 +95,8 @@ typedef struct ExiSlippi_MatchState_Response {
   u8 usr_chat_msg_id;
   u8 opp_chat_msg_id;
   u8 chat_msg_player_idx;
-  u8 local_rank;
-  u8 opp_rank;
+  s8 p1_rank;
+  s8 p2_rank;
   u32 vs_left_players;
   u32 vs_right_players;
   char local_name[31];
