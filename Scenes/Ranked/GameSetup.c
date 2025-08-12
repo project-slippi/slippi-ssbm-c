@@ -557,6 +557,7 @@ void InitAllSelectorJobjs() {
 
   u8 charId = match_state->game_info_block[0x60 + match_state->local_player_idx * 0x24];
   u8 colorId = match_state->game_info_block[0x63 + match_state->local_player_idx * 0x24];
+  colorId = GetVanilaMaxColors(charId) <= colorId ? 0 : colorId;
   CSIcon_Material playerCharMats[] = {CSIcon_ConvertCharToMat(charId)};
   InitSelectorJobjs(playerCharMats, data->char_selectors, 1);
   CSIcon_SetStockIconVisibility(data->char_selectors[0]->icon, true);
