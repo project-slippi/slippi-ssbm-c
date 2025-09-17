@@ -15,12 +15,7 @@ uint ratingChangeLen;  // Rating change sequence length
 uint loaderCount = 0;
 uint loadTimer = 0;
 
-const GXColor white = {255, 255, 255, 255};
-const GXColor gray = {142, 145, 150, 255};
-const GXColor red = {255, 0, 0, 255};
-const GXColor yellow = {255, 200, 0, 255};
-const GXColor green = {3, 252, 28, 255};
-const GXColor lightGray = {170, 173, 178, 255};
+static char BUFFER[24] = {0};
 
 void GetRankInfo(ExiSlippi_GetRank_Response* resp) {
   // Get cached rank info from rust
@@ -88,14 +83,12 @@ void SetRankIcon(u8 rank) {
   }
 }
 
+
 // Returns length of the rating string
 void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status) {
   // Set rank name string
-  char* rankString[15];
-  sprintf(rankString, RANK_STRINGS[rank]);
-
-  Text_SetText(text, rankSubtextId, rankString);
-  Text_SetColor(text, rankSubtextId, &white);
+  Text_SetText(text, rankSubtextId, RANK_STRINGS[rank]);
+  Text_SetColor(text, rankSubtextId, &GX_COLORS.WHITE);
 
   // OSReport("Rank / rating text being set. Status: %d\n", status);
 
@@ -104,33 +97,27 @@ void SetRankText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatu
   bool isFetching = status == RankInfo_FetchStatus_FETCHING;
   if (isFetching && rank == 0) {
     // Show question mark if match data is unreported
-    char* questionMarks = "\x81\x48\x81\x48\x81\x48\x81\x48";  // "????"
-
+    Text_SetText(text, ratingSubtextId, QUESTION_MARKS);
     // Gray out rating text if elo is pending
-    Text_SetText(text, ratingSubtextId, questionMarks);
-    Text_SetColor(text, ratingSubtextId, &gray);
-
+    Text_SetColor(text, ratingSubtextId, &GX_COLORS.GRAY);
     // Indicate the string is longer because the question marks are wide
     lastRatingTextLen = 6;
     return;
   }
 
   // Check if the user has completed their placement matches
-  bool isPlaced = matches_played >= PLACEMENT_THRESHOLD;
-  char* ratingString[20];
-  // Check if the user has completed their placement matches
-  if (isPlaced) {
+  if (matches_played >= PLACEMENT_THRESHOLD) {
     // Show rating if placed
-    sprintf(ratingString, "%0.1f", rating);
+    sprintf(BUFFER, "%0.1f", rating);
   } else {
     // Show remaining number of sets if not placed
-    sprintf(ratingString, "%d SETS REQUIRED", 5 - matches_played);
+    sprintf(BUFFER, "%d SETS REQUIRED", 5 - matches_played);
   }
 
-  Text_SetText(text, ratingSubtextId, ratingString);
-  Text_SetColor(text, ratingSubtextId, &lightGray);
+  Text_SetText(text, ratingSubtextId, BUFFER);
+  Text_SetColor(text, ratingSubtextId, &GX_COLORS.LIGHT_GRAY);
 
-  lastRatingTextLen = strlen(ratingString);
+  lastRatingTextLen = strlen(BUFFER);
 }
 
 void InitRankIcon(SlpCSSDesc* slpCss, u8 rank) {
@@ -170,7 +157,7 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
   // Create rank label text
   rankLabelSubtextId = Text_AddSubtext(text, -1110, 850, "Rank");
   Text_SetScale(text, rankLabelSubtextId, 4, 4);
-  Text_SetColor(text, rankLabelSubtextId, &gray);
+  Text_SetColor(text, rankLabelSubtextId, &GX_COLORS.GRAY);
 
   // Create rank text
   rankSubtextId = Text_AddSubtext(text, -640, 1100, "");
@@ -184,7 +171,17 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
   // Initialize rank loader
   loaderSubtextId = Text_AddSubtext(text, -640, 1224, "");
   Text_SetScale(text, loaderSubtextId, 4.25, 4.25);
-  Text_SetColor(text, loaderSubtextId, &yellow);
+  Text_SetColor(text, loaderSubtextId, &GX_COLORS.YELLOW);
+}
+
+void UpdateRankChangeAnim() {
+  if (ratingUpdateTimer >= ratingChangeLen) {
+    const int rankAnimFrame = ratingUpdateTimer - ratingChangeLen;
+    if (rankAnimFrame > 0 && rankAnimFrame < RANK_CHANGE_LEN) {
+      JOBJ_ForEachAnim(rankIconJobj, 6, 0x20, AOBJ_ReqAnim, 1, (float)rankAnimFrame);  // HSD_TypeMask::JOBJ 0x20
+      JOBJ_AnimAll(rankIconJobj);
+    }
+  }
 }
 
 void UpdateRankInfo() {
@@ -213,9 +210,9 @@ void UpdateRankInfo() {
     if (lastExecutedStatus != LAST_EXECUTED_STATUS_FETCHED) {
       // Determine the duration of the rating increase / decrease
       float change = rankInfoResp->ratingChange;
-      if (abs(change) < LOW_RATING_THRESHOLD) {
+      if (fabs(change) < LOW_RATING_THRESHOLD) {
         ratingChangeLen = RATING_CHANGE_LEN * 0.25f;
-      } else if (abs(change) < MED_RATING_THRESHOLD) {
+      } else if (fabs(change) < MED_RATING_THRESHOLD) {
         ratingChangeLen = RATING_CHANGE_LEN * 0.5f;
       } else {
         ratingChangeLen = RATING_CHANGE_LEN;
@@ -248,17 +245,10 @@ void UpdateRankInfo() {
       Text_SetText(text, loaderSubtextId, "");
 
       // Dislay rank fetch error
-      char* errorString[6];
-      char* errorMsgString[19];
-
-      sprintf(errorString, "Error");
-      sprintf(errorMsgString, "Failed to get rank");
-
-      Text_SetText(text, rankSubtextId, errorString);
-      Text_SetColor(text, rankSubtextId, &white);
-
-      Text_SetText(text, ratingSubtextId, errorMsgString);
-      Text_SetColor(text, ratingSubtextId, &red);
+      Text_SetText(text, rankSubtextId, "Error");
+      Text_SetColor(text, rankSubtextId, &GX_COLORS.WHITE);
+      Text_SetText(text, ratingSubtextId, "Failed to get rank");
+      Text_SetColor(text, ratingSubtextId, &GX_COLORS.RED);
     }
 
     // Prevent error logic from looping, allow rank initialization again
@@ -281,23 +271,19 @@ void UpdateRankInfo() {
     if (loadTimer % 15 == 0) {
       switch (loaderCount) {
         case 0: {
-          char* dotString = ".";
-          Text_SetText(text, loaderSubtextId, dotString);
+          Text_SetText(text, loaderSubtextId, ".");
           break;
         }
         case 1: {
-          char* dotString = "..";
-          Text_SetText(text, loaderSubtextId, dotString);
+          Text_SetText(text, loaderSubtextId, "..");
           break;
         }
         case 2: {
-          char* dotString = "...";
-          Text_SetText(text, loaderSubtextId, dotString);
+          Text_SetText(text, loaderSubtextId, "...");
           break;
         }
       }
-      loaderCount++;
-      loaderCount = loaderCount % 3;
+      loaderCount = (loaderCount + 1) % 3;
     }
 
     loadTimer++;
@@ -334,16 +320,6 @@ int GetRankChangeSFX() {
   }
 }
 
-void UpdateRankChangeAnim() {
-  if (ratingUpdateTimer >= ratingChangeLen) {
-    const int rankAnimFrame = ratingUpdateTimer - ratingChangeLen;
-    if (rankAnimFrame > 0 && rankAnimFrame < RANK_CHANGE_LEN) {
-      JOBJ_ForEachAnim(rankIconJobj, 6, 0x20, AOBJ_ReqAnim, 1, (float)rankAnimFrame);  // HSD_TypeMask::JOBJ 0x20
-      JOBJ_AnimAll(rankIconJobj);
-    }
-  }
-}
-
 void UpdateRatingChange() {
   // Increment rating ordinal text
   if (ratingUpdateTimer % 2 == 1 && ratingUpdateTimer < ratingChangeLen) {
@@ -351,10 +327,10 @@ void UpdateRatingChange() {
     float displayRating = InterpRating(
         rankInfoResp->ratingOrdinal,
         rankInfoResp->ratingChange);
-    char* ratingString[6];
 
-    sprintf(ratingString, "%0.1f", displayRating);
-    Text_SetText(text, ratingSubtextId, ratingString);
+
+    sprintf(BUFFER, "%0.1f", displayRating);
+    Text_SetText(text, ratingSubtextId, BUFFER);
 
     u8 tickVolume = 0;
     if (rankInfoResp->ratingChange > 0) {
@@ -371,9 +347,8 @@ void UpdateRatingChange() {
         64, 0, 0);
   } else if (ratingUpdateTimer == ratingChangeLen) {
     // Set rating text to exact amount to prevent interp inaccuracies
-    char* ratingString[6];
-    sprintf(ratingString, "%0.1f", rankInfoResp->ratingOrdinal);
-    Text_SetText(text, ratingSubtextId, ratingString);
+    sprintf(BUFFER, "%0.1f", rankInfoResp->ratingOrdinal);
+    Text_SetText(text, ratingSubtextId, BUFFER);
   }
 
   if (ratingUpdateTimer == ratingChangeLen + RANK_CHANGE_LEN) {
@@ -386,22 +361,21 @@ void UpdateRatingChange() {
       // Handle rank-up SFX and show rating change notification
       if (rankInfoResp->ratingChange != 0) {
         // Create rating change text
-        char* changeString[10];
         char* signString = rankInfoResp->ratingChange > 0 ? "\x81\x7B" : "\x81\x7C";
-        sprintf(changeString, "%s%0.1f", signString, fabs(rankInfoResp->ratingChange));
+        sprintf(BUFFER, "%s%0.1f", signString, fabs(rankInfoResp->ratingChange));
 
         // Create subtext for rating change
-        ratingChangeSubtextId = Text_AddSubtext(text, -225, 1260, changeString);
+        ratingChangeSubtextId = Text_AddSubtext(text, -225, 1260, BUFFER);
         Text_SetScale(text, ratingChangeSubtextId, 3.0, 3.0);
 
         // Determine text color
         if (rankInfoResp->ratingChange > 0) {
-          Text_SetColor(text, ratingChangeSubtextId, &green);
+          Text_SetColor(text, ratingChangeSubtextId, &GX_COLORS.GREEN);
           // Play sfx for end of counting
           SFX_PlayRaw(RATING_INCREASE, 255, 64, 0, 0);
         }
         if (rankInfoResp->ratingChange < 0) {
-          Text_SetColor(text, ratingChangeSubtextId, &red);
+          Text_SetColor(text, ratingChangeSubtextId, &GX_COLORS.RED);
           // Play sfx for end of counting
           SFX_PlayRaw(RATING_DECREASE, 255, 64, 0, 0);
         }
@@ -409,7 +383,7 @@ void UpdateRatingChange() {
         // In the case where there is no rating change, assume the result did not go through
         ratingChangeSubtextId = Text_AddSubtext(text, -225, 1260, "result pending");
         Text_SetScale(text, ratingChangeSubtextId, 3.0, 3.0);
-        Text_SetColor(text, ratingChangeSubtextId, &yellow);
+        Text_SetColor(text, ratingChangeSubtextId, &GX_COLORS.YELLOW);
       }
 
       // Set new rank icon and text

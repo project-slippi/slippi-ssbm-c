@@ -1,6 +1,7 @@
 #ifndef SLIPPI_CSS_RANK_INFO_H
 #define SLIPPI_CSS_RANK_INFO_H
 
+#include "../../../Slippi.h"
 #include "../../../Common.h"
 #include "../../../ExiSlippi.h"
 
@@ -52,7 +53,9 @@ enum LastExecutedStatus {
   LAST_EXECUTED_STATUS_ERROR
 };
 
-static char *RANK_STRINGS[] = {
+static const char QUESTION_MARKS[] = "\x81\x48\x81\x48\x81\x48\x81\x48";  // "????"
+
+static const char * RANK_STRINGS[] = {
     "PENDING",
     "BRONZE 1",
     "BRONZE 2",
@@ -120,5 +123,23 @@ void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_Fetch
 void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void UpdateRatingChange();
 void UpdateRankInfo();
+
+typedef struct GXColors {
+  GXColor WHITE;
+  GXColor GRAY;
+  GXColor RED;
+  GXColor YELLOW;
+  GXColor GREEN;
+  GXColor LIGHT_GRAY;
+} GXColors;
+
+static const GXColors GX_COLORS = {
+  /* WHITE      */ {255, 255, 255, 255},
+  /* GRAY       */ {142, 145, 150, 255},
+  /* RED        */ {255, 0, 0, 255},
+  /* YELLOW     */ {255, 200, 0, 255},
+  /* GREEN      */ {3, 252, 28, 255},
+  /* LIGHT_GRAY */ {170, 173, 178, 255}
+};
 
 #endif SLIPPI_CSS_RANK_INFO_H
