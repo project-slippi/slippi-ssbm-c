@@ -1,7 +1,7 @@
 #ifndef GAME_SYS_TEXT_H
 #define GAME_SYS_TEXT_H
 
-#include "../MexTK/mex.h"
+#include "../m-ex/MexTK/mex.h"
 #include <stdbool.h>
 #include "../Common.h"
 

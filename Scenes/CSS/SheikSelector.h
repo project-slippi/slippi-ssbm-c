@@ -1,4 +1,5 @@
 #include "../../Slippi.h"
+#include "../../Common.h"
 
 typedef struct CSSIcon {
   u8 ft_hudindex;  // 0x00 - used for getting combo count @ 8025C0C4

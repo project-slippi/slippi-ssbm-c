@@ -30,7 +30,7 @@ int GetGroupIndex(int groupId) {
     return groupIndex;
 }
 
-char *GetHeaderText(int groupId) {
+const char *GetHeaderText(int groupId) {
     int groupIndex = GetGroupIndex(groupId);
     return HEADER_STRINGS[groupIndex];
 }

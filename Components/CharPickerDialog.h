@@ -18,6 +18,8 @@ typedef struct CharPickerDialog_State {
   u32 open_frame_count;
 } CharPickerDialog_State;
 
+typedef struct CharPickerDialog CharPickerDialog;
+
 typedef struct CharPickerDialog {
   GOBJ *gobj;
   JOBJ *root_jobj;
@@ -25,11 +27,11 @@ typedef struct CharPickerDialog {
   CSIcon *char_icons[CPD_LAST_INDEX + 1];
   CharPickerDialog_State state;
 
-  void (*on_close)();
-  u8 (*get_next_color)();
+  void (*on_close)(CharPickerDialog *cpd, u8 is_selection);
+  u8 (*get_next_color)(u8 charId, u8 colorId, int incr);
 } CharPickerDialog;
 
-void SelectRandomChar();
+void SelectRandomChar(CharPickerDialog *cpd);
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color);
 void CharPickerDialog_Free(CharPickerDialog *cpd);

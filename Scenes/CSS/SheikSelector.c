@@ -14,7 +14,7 @@ void SetSelectedChar(u8 ckind) {
   CssData->data.data.players[playerIndex].c_kind = ckind;
 
   // Change nametag to say Sheik or Zelda
-  CSSIcon *iconData = 0x803f0cc8;
+  CSSIcon *iconData = (CSSIcon*)0x803f0cc8;
   iconData->char_kind = ckind;
 
   SFX_getCharacterNameAnnouncer(ckind);
@@ -51,6 +51,36 @@ void InitSheikSelector() {
   GObj_AddGXLink(selectorGobj, GXLink_Common, 1, 129);
 
   isInNameEntry = IsOnCSSNameEntryScreen();
+}
+
+void UpdateSelectorAlphas(bool zeldaHovered, bool sheikHovered) {
+  JOBJ *zeldaIcon = selectorJobj->child;
+  JOBJ *sheikIcon = selectorJobj->child->sibling;
+
+  u8 selectedChar = GetSelectedChar();
+
+  bool sheikSelected = selectedChar == CKIND_SHEIK;
+  bool zeldaSelected = selectedChar == CKIND_ZELDA;
+
+  float zeldaAlpha = INACTIVE_ALPHA;
+  float sheikAlpha = INACTIVE_ALPHA;
+
+  if (zeldaHovered) {
+    zeldaAlpha = HOVER_ALPHA;
+  }
+  if (sheikHovered) {
+    sheikAlpha = HOVER_ALPHA;
+  }
+
+  if (zeldaSelected) {
+    zeldaAlpha = ACTIVE_ALPHA;
+  }
+  if (sheikSelected) {
+    sheikAlpha = ACTIVE_ALPHA;
+  }
+
+  JOBJ_SetAllAlpha(zeldaIcon, zeldaAlpha);
+  JOBJ_SetAllAlpha(sheikIcon, sheikAlpha);
 }
 
 void UpdateSheikSelector() {
@@ -129,34 +159,4 @@ void UpdateSheikSelector() {
   }
 
   UpdateSelectorAlphas(zeldaHovered, sheikHovered);
-}
-
-void UpdateSelectorAlphas(bool zeldaHovered, bool sheikHovered) {
-  JOBJ *zeldaIcon = selectorJobj->child;
-  JOBJ *sheikIcon = selectorJobj->child->sibling;
-
-  u8 selectedChar = GetSelectedChar();
-
-  bool sheikSelected = selectedChar == CKIND_SHEIK;
-  bool zeldaSelected = selectedChar == CKIND_ZELDA;
-
-  float zeldaAlpha = INACTIVE_ALPHA;
-  float sheikAlpha = INACTIVE_ALPHA;
-
-  if (zeldaHovered) {
-    zeldaAlpha = HOVER_ALPHA;
-  }
-  if (sheikHovered) {
-    sheikAlpha = HOVER_ALPHA;
-  }
-
-  if (zeldaSelected) {
-    zeldaAlpha = ACTIVE_ALPHA;
-  }
-  if (sheikSelected) {
-    sheikAlpha = ACTIVE_ALPHA;
-  }
-
-  JOBJ_SetAllAlpha(zeldaIcon, zeldaAlpha);
-  JOBJ_SetAllAlpha(sheikIcon, sheikAlpha);
 }

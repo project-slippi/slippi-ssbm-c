@@ -31,7 +31,7 @@ static GXColor MSG_COLORS[] = {
     {201, 195, 135, 255},
 };
 
-static char* HEADER_STRINGS[] = {
+static const char* const HEADER_STRINGS[] = {
     "Page: Up",
     "Page: Left",
     "Page: Right",
