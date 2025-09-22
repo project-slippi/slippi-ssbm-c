@@ -3,18 +3,24 @@
 
 #include "Main.c"
 
-//Runs every frame during CSS
+// Sanity check gate
+static bool has_initialized = false;
+
+// Runs every frame during CSS
 void minor_think() {
     void (*CSS_think)() = (void *) 0x802669F4;
     CSS_think();
-    UpdateOnlineCSS();
+    if (has_initialized) {
+        UpdateOnlineCSS();
+    }
 }
 
-//Runs when CSS is loaded
+// Runs when CSS is loaded
 void minor_load() {
     void (*CSS_load)() = (void *) 0x8026688C;
     CSS_load();
     InitOnlineCSS();
+    has_initialized = true;
     // OSReport("CSS_load\n");
 }
 
@@ -22,6 +28,8 @@ void minor_load() {
 void minor_exit() {
     void (*CSS_exit)() = (void *) 0x80266D70;
     CSS_exit();
+    DeinitOnlineCSS();
+    has_initialized = false;
     // OSReport("CSS_exit\n");
 }
 

@@ -3,7 +3,7 @@
 
 #include <stdbool.h>
 
-#include "../MexTK/mex.h"
+#include "m-ex/MexTK/mex.h"
 
 #define PACK true
 #define ALIGN true

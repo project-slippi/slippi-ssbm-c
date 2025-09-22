@@ -42,4 +42,8 @@ void InitOnlineCSS() {
   }
 }
 
+void DeinitOnlineCSS() {
+  DeinitializeRankedPointers();
+}
+
 #endif SLIPPI_CSS_MAIN_C

@@ -1,7 +1,7 @@
 #ifndef SLIPPI_COMMON_H
 #define SLIPPI_COMMON_H
 #include <stdbool.h>
-#include "../MexTK/mex.h"
+#include "m-ex/MexTK/mex.h"
 
 //#define LOCAL_TESTING
 

@@ -5,6 +5,34 @@
 #include "../../../Common.h"
 #include "../../../ExiSlippi.h"
 
+// RATING THRESHOLDS
+#define HIGH_RATING_THRESHOLD 35.f
+#define MED_RATING_THRESHOLD 20.f
+#define LOW_RATING_THRESHOLD 10.f
+#define PLACEMENT_THRESHOLD 5
+
+// SFX
+#define RANK_UP_SMALL 0xAA
+#define RANK_UP_BIG 0xAB
+#define RANK_DOWN_SMALL 0xBE
+#define RANK_DOWN_BIG 0xBF
+#define RATING_INCREASE 0x69
+#define RATING_DECREASE 0x19E
+#define TICK_UP_VOL 150
+#define TICK_DOWN_VOL 100
+#define TICK_UP 0xBB
+#define TICK_DOWN 0xEA
+
+// ANIMATION
+#define RATING_CHANGE_LEN 140
+#define RANK_CHANGE_LEN 10
+#define RATING_NOTIFICATION_LEN 200
+#define NARRATOR_LEN 140 /* 2 seconds of 'Choose your character!' */
+
+// RANK FETCH DURATIONS
+#define RETRY_FETCH_0_LEN 120
+#define RETRY_FETCH_1_LEN 420
+
 typedef struct RankInfo {
   u8 visibility;
   u8 status;
@@ -17,12 +45,29 @@ typedef struct RankInfo {
   s8 rankChange;
 } RankInfo;
 
+typedef struct GXColors {
+  GXColor WHITE;
+  GXColor GRAY;
+  GXColor RED;
+  GXColor YELLOW;
+  GXColor GREEN;
+  GXColor LIGHT_GRAY;
+} GXColors;
+
+typedef struct SubtextIDs {
+  int loader;
+  int ratingChange;
+  int rank;
+  int rating;
+  int rankLabel;
+} SubtextIDs;
+
 enum RankVisibility {
   VISIBILITY_LOCAL,
   VISIBILITY_OPPONENT
 };
 
-enum SlippiRank {
+typedef enum SlippiRank {
   RANK_UNRANKED,
   RANK_BRONZE_1,
   RANK_BRONZE_2,
@@ -44,7 +89,7 @@ enum SlippiRank {
   RANK_MASTER_3,
   RANK_GRANDMASTER,
   RANK_COUNT
-};
+} SlippiRank;
 
 enum LastExecutedStatus {
   LAST_EXECUTED_STATUS_NONE,
@@ -53,93 +98,9 @@ enum LastExecutedStatus {
   LAST_EXECUTED_STATUS_ERROR
 };
 
-static const char QUESTION_MARKS[] = "\x81\x48\x81\x48\x81\x48\x81\x48";  // "????"
-
-static const char * RANK_STRINGS[] = {
-    "PENDING",
-    "BRONZE 1",
-    "BRONZE 2",
-    "BRONZE 3",
-    "SILVER 1",
-    "SILVER 2",
-    "SILVER 3",
-    "GOLD 1",
-    "GOLD 2",
-    "GOLD 3",
-    "PLATINUM 1",
-    "PLATINUM 2",
-    "PLATINUM 3",
-    "DIAMOND 1",
-    "DIAMOND 2",
-    "DIAMOND 3",
-    "MASTER 1",
-    "MASTER 2",
-    "MASTER 3",
-    "GRANDMASTER",
-};
-
-Text *text;
-int loaderSubtextId;
-int ratingChangeSubtextId;
-int rankSubtextId;
-int ratingSubtextId;
-int rankLabelSubtextId;
-int lastRatingTextLen;  // Used to offset loader
-
-bool isMenuTransition = true;  // true if we came from the menu. false if we came from in-game
-bool allowRankChanges = true;
-u8 lastExecutedStatus = LAST_EXECUTED_STATUS_NONE;
-
-const float HIGH_RATING_THRESHOLD = 35.f;
-const float MED_RATING_THRESHOLD = 20.f;
-const float LOW_RATING_THRESHOLD = 10.f;
-const u8 PLACEMENT_THRESHOLD = 5;
-
-// SFX
-const int RANK_UP_SMALL = 0xAA;
-const int RANK_UP_BIG = 0xAB;
-const int RANK_DOWN_SMALL = 0xBE;
-const int RANK_DOWN_BIG = 0xBF;
-
-const int RATING_INCREASE = 0x69;
-const int RATING_DECREASE = 0x19E;
-
-const int TICK_UP_VOL = 150;
-const int TICK_DOWN_VOL = 100;
-const int TICK_UP = 0xBB;
-const int TICK_DOWN = 0xEA;
-
-// ANIMATION
-const int RATING_CHANGE_LEN = 140;
-const int RANK_CHANGE_LEN = 10;
-const int RATING_NOTIFICATION_LEN = 200;
-const int NARRATOR_LEN = 140;  // 2 seconds of 'Choose your character!'
-
-// RANK FETCH DURATIONS
-const int RETRY_FETCH_0_LEN = 120;
-const int RETRY_FETCH_1_LEN = 420;
-
-void InitRankInfoText(u8 rank, float rating, uint matches_played, RankInfo_FetchStatus status);
-void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
+void InitRankInfoText(SlippiRank rank, float rating, uint matches_played, RankInfo_FetchStatus status);
+void InitRankIcon(SlpCSSDesc *slpCss, SlippiRank rank);
 void UpdateRatingChange();
 void UpdateRankInfo();
-
-typedef struct GXColors {
-  GXColor WHITE;
-  GXColor GRAY;
-  GXColor RED;
-  GXColor YELLOW;
-  GXColor GREEN;
-  GXColor LIGHT_GRAY;
-} GXColors;
-
-static const GXColors GX_COLORS = {
-  /* WHITE      */ {255, 255, 255, 255},
-  /* GRAY       */ {142, 145, 150, 255},
-  /* RED        */ {255, 0, 0, 255},
-  /* YELLOW     */ {255, 200, 0, 255},
-  /* GREEN      */ {3, 252, 28, 255},
-  /* LIGHT_GRAY */ {170, 173, 178, 255}
-};
 
 #endif SLIPPI_CSS_RANK_INFO_H
