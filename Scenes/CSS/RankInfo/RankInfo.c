@@ -419,7 +419,7 @@ void UpdateRatingChange() {
         SetRankIcon(newRank);
         // Update rank text
         float newRating = rankInfoResp->ratingOrdinal;
-        u8 matchesPlayed = rankInfoResp->ratingUpdateCount;
+        uint matchesPlayed = rankInfoResp->ratingUpdateCount;
         SetRankText(newRank, newRating, matchesPlayed, RankInfo_FetchStatus_FETCHED);
       }
     }
