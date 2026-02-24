@@ -100,8 +100,6 @@ typedef struct MatchStateResponseBuffer {
   u8 chatMsgPlayerIndex;
   u8 localRank;
   u8 oppRank;
-  u32* VSLeftPlayers;
-  u32* VSRightPlayers;
   char localName[31];
   char p1Name[31];
   char p2Name[31];
