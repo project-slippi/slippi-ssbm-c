@@ -34,7 +34,7 @@ void UpdateChatNotifications();
 
 void FreeChatNotifications(void *ptr);
 
-void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb, int playerIndex, int messageId);
+void CreateAndAddChatMessage(SlpCSSDesc *slpCss, ExiSlippi_MatchState_Response *msrb, int playerIndex, int messageId);
 
 void UpdateChatMessage(GOBJ *gobj);
 

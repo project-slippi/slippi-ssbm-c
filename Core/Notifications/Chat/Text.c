@@ -69,8 +69,8 @@ char *GetChatText(int groupId, int messageId, int playerIdx, bool useMessageInde
 };
 
 Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
-    MatchStateResponseBuffer *msrb = MSRB();
-    // OSReport("Idx: %d\n", msrb->localPlayerIndex);
+    ExiSlippi_MatchState_Response *msrb = MSRB();
+    // OSReport("Idx: %d\n", msrb->local_player_idx);
 
     Text *text = Text_CreateText(0, 0);
     // OSReport("text.gxLink: %i gxPri: %i", text->gobj->gx_link, text->gobj->gx_pri);
@@ -96,7 +96,7 @@ Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
     for (int i = CHAT_STR_UP; i <= CHAT_STR_DOWN; i++) {
         float margin = 25.0f * (i + 1); // starts with 2 lines from header
         float yPos = 79.0f + margin;
-        char *label = GetChatText(groupId, i, msrb->localPlayerIndex, true);
+        char *label = GetChatText(groupId, i, msrb->local_player_idx, true);
 
         CreateSubtext(text, &MSG_COLORS[MSG_COLOR_WHITE], false, 0, (char **) {label}, 0.45f, labelX + offset, yPos, 0.0f,
                       0.0f);

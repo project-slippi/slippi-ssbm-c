@@ -76,7 +76,7 @@ void UpdateSheikSelector() {
     return;
   }
 
-  bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->isLocalPlayerReady;
+  bool isLockedIn = SLIPPI_CSS_DATA_REF->dt->msrb->is_local_player_ready;
   if (isLockedIn) {
     // Show selector but dont let it be interactable while we are locked in.
     // We still need to update the alphas cause if we just game from name entry
