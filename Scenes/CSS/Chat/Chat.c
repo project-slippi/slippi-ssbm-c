@@ -243,4 +243,4 @@ void SendOutgoingChatCommand(int messageId) {
 #endif
 }
 
-#endif SLIPPI_CSS_CHAT_C
+#endif // SLIPPI_CSS_CHAT_C

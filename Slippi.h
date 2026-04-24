@@ -241,4 +241,4 @@ bool isWidescreen() {
   return res;
 }
 
-#endif SLIPPI_H
+#endif // SLIPPI_H

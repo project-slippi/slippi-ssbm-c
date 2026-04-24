@@ -297,4 +297,4 @@ bool IsValidChatMessageId(int messageId) {
     return IsValidChatGroupId(messageId);
 }
 
-#endif SLIPPI_CORE_CHAT_NOTIFICATION_C
+#endif // SLIPPI_CORE_CHAT_NOTIFICATION_C

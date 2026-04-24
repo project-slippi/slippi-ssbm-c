@@ -74,4 +74,4 @@ NotificationMessage *CreateChatMessage(int playerIndex, int messageId) {
     return msg;
 }
 
-#endif SLIPPI_CORE_CHAT_NOTIFICATION_H
+#endif // SLIPPI_CORE_CHAT_NOTIFICATION_H

@@ -38,4 +38,4 @@ static char* HEADER_STRINGS[] = {
     "Page: Down",
 };
 
-#endif SLIPPI_CSS_CHAT_TEXT_H
+#endif // SLIPPI_CSS_CHAT_TEXT_H

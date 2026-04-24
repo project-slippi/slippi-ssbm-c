@@ -25,11 +25,11 @@ typedef struct CharPickerDialog {
   CSIcon *char_icons[CPD_LAST_INDEX + 1];
   CharPickerDialog_State state;
 
-  void (*on_close)();
-  u8 (*get_next_color)();
+  void (*on_close)(struct CharPickerDialog *, bool);
+  u8 (*get_next_color)(u8, u8, int);
 } CharPickerDialog;
 
-void SelectRandomChar();
+void SelectRandomChar(CharPickerDialog *cpd);
 
 CharPickerDialog *CharPickerDialog_Init(GUI_GameSetup *gui, void *on_close, void *get_next_color);
 void CharPickerDialog_Free(CharPickerDialog *cpd);

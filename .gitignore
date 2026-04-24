@@ -14,3 +14,5 @@ build/*
 
 # Ignore Test Dolphin dir
 Dolphin/*
+
+.claude

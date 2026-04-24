@@ -434,4 +434,4 @@ void UpdateRatingChange() {
   ratingUpdateTimer++;
 }
 
-#endif SLIPPI_CSS_RANK_INFO_C
+#endif // SLIPPI_CSS_RANK_INFO_C

@@ -105,4 +105,4 @@ Text *CreateChatWindowText(GOBJ *gobj, int groupId) {
     return text;
 }
 
-#endif SLIPPI_CSS_CHAT_TEXT_C
+#endif // SLIPPI_CSS_CHAT_TEXT_C

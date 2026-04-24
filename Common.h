@@ -121,4 +121,4 @@ void Text_UpdateColor2(Text* text, u8 colorOffset, u32 color){
 }
 
 
-#endif SLIPPI_COMMON_H
+#endif // SLIPPI_COMMON_H
