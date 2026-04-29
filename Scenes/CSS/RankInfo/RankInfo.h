@@ -121,4 +121,4 @@ void InitRankIcon(SlpCSSDesc *slpCss, u8 rank);
 void UpdateRatingChange();
 void UpdateRankInfo();
 
-#endif SLIPPI_CSS_RANK_INFO_H
+#endif // SLIPPI_CSS_RANK_INFO_H

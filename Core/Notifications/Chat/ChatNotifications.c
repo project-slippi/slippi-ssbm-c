@@ -35,17 +35,17 @@ void ListenForChatNotifications() {
 
 void UpdateChatNotifications() {
     SlippiCSSDataTable *dt = GetSlpCSSDT();
-    MatchStateResponseBuffer *msrb = dt->msrb;
+    ExiSlippi_MatchState_Response *msrb = dt->msrb;
 
     int messageId = 0;
-    int playerIndex = msrb->chatMsgPlayerIndex;
+    int playerIndex = msrb->chat_msg_player_idx;
 
     if (playerIndex >= 0) {
 
-        if (msrb->userChatMsgId) {
-            messageId = msrb->userChatMsgId;
-        } else if (msrb->oppChatMsgId) {
-            messageId = msrb->oppChatMsgId;
+        if (msrb->usr_chat_msg_id) {
+            messageId = msrb->usr_chat_msg_id;
+        } else if (msrb->opp_chat_msg_id) {
+            messageId = msrb->opp_chat_msg_id;
         }
     }
 
@@ -67,7 +67,7 @@ void FreeChatMessage(void *ptr) {
     if (!ptr) return;
 
     NotificationMessage *chatMessage = (NotificationMessage *) ptr;
-    bool isLocalMessage = chatMessage->playerIndex == MSRB()->localPlayerIndex;
+    bool isLocalMessage = chatMessage->playerIndex == MSRB()->local_player_idx;
 
     if (isLocalMessage) {
         ChatMessagesLocalCount--;
@@ -78,8 +78,8 @@ void FreeChatMessage(void *ptr) {
     DestroyNotificationMessage(chatMessage);
 }
 
-void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb, int playerIndex, int messageId) {
-    bool isLocalMessage = playerIndex == msrb->localPlayerIndex;
+void CreateAndAddChatMessage(SlpCSSDesc *slpCss, ExiSlippi_MatchState_Response *msrb, int playerIndex, int messageId) {
+    bool isLocalMessage = playerIndex == msrb->local_player_idx;
     // Prevent going over the limit
     if ((ChatMessagesRemoteCount + ChatMessagesLocalCount) >= NOTIFICATION_MESSAGE_SET_LENGTH)
         return;
@@ -165,8 +165,8 @@ Text *CreateChatMessageText(NotificationMessage *msg) {
 }
 
 Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
-    MatchStateResponseBuffer *msrb = MSRB();
-    bool isLocalMessage = msg->playerIndex == msrb->localPlayerIndex;
+    ExiSlippi_MatchState_Response *msrb = MSRB();
+    bool isLocalMessage = msg->playerIndex == msrb->local_player_idx;
 
     Text *text = Text_CreateTextWithGX(0, 0, 3, 129);
     text->kerning = 1;
@@ -182,13 +182,13 @@ Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
     // Dolphin returns the group and message id joined together so we need to split them
     int groupId = msg->messageId >> 4;
     int messageId = (groupId << 4) ^ msg->messageId;
-    char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
+    char *playerName = isLocalMessage ? msrb->local_name : msrb->p1_name + (msg->playerIndex * 31);
 
     char *name = strcat(playerName, ": ");
     char *message = GetChatText(groupId, messageId, msg->playerIndex, false);
     float xPos = isWidescreen() ? -446.0f : -296.0f;
     float yPos = -252.0f + ((msg->id) * 32.0f);
-    int colorIndex = msrb->localPlayerIndex + 1;
+    int colorIndex = msrb->local_player_idx + 1;
     float scale = 0.4f;
 
     CreateSubtext(text, &MSG_COLORS[colorIndex], false, 0, (char **) {name}, scale, xPos, yPos, 0.0f, 0.0f);
@@ -198,8 +198,8 @@ Text *CreateChatMessageTextFromSubText(NotificationMessage *msg) {
 }
 
 Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
-    MatchStateResponseBuffer *msrb = MSRB();
-    bool isLocalMessage = msg->playerIndex == msrb->localPlayerIndex;
+    ExiSlippi_MatchState_Response *msrb = MSRB();
+    bool isLocalMessage = msg->playerIndex == msrb->local_player_idx;
 
     // Dolphin returns the group and message id joined together so we need to split them
     int groupId = msg->messageId >> 4;
@@ -210,7 +210,7 @@ Text *CreateChatMessageTextFromLocalSysText(NotificationMessage *msg) {
     if (IsSpecialChatMessageId(msg->messageId))
         messageId = msg->messageId;
 
-    char *playerName = isLocalMessage ? msrb->localName : msrb->p1Name + (msg->playerIndex * 31);
+    char *playerName = isLocalMessage ? msrb->local_name : msrb->p1_name + (msg->playerIndex * 31);
 #ifdef LOCAL_TESTING
     if(!playerName || strlen(playerName) == 0) {
         playerName = "Player";
@@ -297,4 +297,4 @@ bool IsValidChatMessageId(int messageId) {
     return IsValidChatGroupId(messageId);
 }
 
-#endif SLIPPI_CORE_CHAT_NOTIFICATION_C
+#endif // SLIPPI_CORE_CHAT_NOTIFICATION_C

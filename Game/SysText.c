@@ -253,4 +253,4 @@ SysText *st_build(int componentsCount, ...) {
     return sysText;
 }
 
-#endif GAME_SYS_TEXT_C
+#endif // GAME_SYS_TEXT_C

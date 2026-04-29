@@ -42,4 +42,4 @@ void InitOnlineCSS() {
   }
 }
 
-#endif SLIPPI_CSS_MAIN_C
+#endif // SLIPPI_CSS_MAIN_C

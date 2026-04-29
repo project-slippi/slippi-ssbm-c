@@ -153,4 +153,4 @@ bool CanAddNewMessage() {
 }
 
 
-#endif SLIPPI_CORE_NOTIFICATION_C
+#endif // SLIPPI_CORE_NOTIFICATION_C

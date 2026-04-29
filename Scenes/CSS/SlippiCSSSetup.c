@@ -25,4 +25,4 @@ void minor_exit() {
     // OSReport("CSS_exit\n");
 }
 
-#endif SLIPPI_CSS_SETUP_C
+#endif // SLIPPI_CSS_SETUP_C

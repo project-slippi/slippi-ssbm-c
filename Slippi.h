@@ -4,6 +4,7 @@
 #include <stdbool.h>
 
 #include "../MexTK/mex.h"
+#include "ExiSlippi.h"
 
 #define PACK true
 #define ALIGN true
@@ -87,47 +88,13 @@ typedef enum MatchmakingConnectionState {
 
 #pragma pack(1)
 
-typedef struct MatchStateResponseBuffer {
-  u8 connectionState;  // Matchmaking State defined above
-  bool isLocalPlayerReady;
-  bool isRemotePlayerReady;
-  u8 localPlayerIndex;
-  u8 remotePlayerIndex;
-  void* rngOffset;
-  u8 delayFrames;
-  u8 userChatMsgId;
-  u8 oppChatMsgId;
-  u8 chatMsgPlayerIndex;
-  u8 localRank;
-  u8 oppRank;
-  u32* VSLeftPlayers;
-  u32* VSRightPlayers;
-  char localName[31];
-  char p1Name[31];
-  char p2Name[31];
-  char p3Name[31];
-  char p4Name[31];
-  char oppName[31];
-  char p1ConnectCode[10];
-  char p2ConnectCode[10];
-  char p3ConnectCode[10];
-  char p4ConnectCode[10];
-  char p1UID[29];
-  char p2UID[29];
-  char p3UID[29];
-  char p4UID[29];
-  char errorMessage[241];
-  MatchInit gameInfoBlock;
-  char matchmakeID[51];
-} MatchStateResponseBuffer;
-
 // ################################################################################
 // # CSS Data Table
 // ################################################################################
 #define CSS_DATA_TABLE_BUFFER_ADDRESS 0x80005614
 
 typedef struct SlippiCSSDataTable {
-  MatchStateResponseBuffer* msrb;
+  ExiSlippi_MatchState_Response* msrb;
   void* SlpCSSDatAddress;
   Text* textStructAddress;
   u8 spinner1;
@@ -195,7 +162,7 @@ SlippiCSSDataTable* GetSlpCSSDT() {
 /**
  * Gets Match State Response Buffer
  * */
-MatchStateResponseBuffer* MSRB() {
+ExiSlippi_MatchState_Response* MSRB() {
   return GetSlpCSSDT()->msrb;
 }
 
@@ -205,10 +172,10 @@ MatchStateResponseBuffer* MSRB() {
  * */
 int GetRemotePlayerCount() {
   u8 i = 0;
-  if (strlen(MSRB()->p1Name) > 0 && strcmp(MSRB()->p1Name, MSRB()->localName) != 0) i++;
-  if (strlen(MSRB()->p2Name) > 0 && strcmp(MSRB()->p2Name, MSRB()->localName) != 0) i++;
-  if (strlen(MSRB()->p3Name) > 0 && strcmp(MSRB()->p3Name, MSRB()->localName) != 0) i++;
-  if (strlen(MSRB()->p4Name) > 0 && strcmp(MSRB()->p4Name, MSRB()->localName) != 0) i++;
+  if (strlen(MSRB()->p1_name) > 0 && strcmp(MSRB()->p1_name, MSRB()->local_name) != 0) i++;
+  if (strlen(MSRB()->p2_name) > 0 && strcmp(MSRB()->p2_name, MSRB()->local_name) != 0) i++;
+  if (strlen(MSRB()->p3_name) > 0 && strcmp(MSRB()->p3_name, MSRB()->local_name) != 0) i++;
+  if (strlen(MSRB()->p4_name) > 0 && strcmp(MSRB()->p4_name, MSRB()->local_name) != 0) i++;
   return i;
   // 	return MSRB()->remotePlayerCount;
 }
@@ -232,7 +199,7 @@ bool IsOnCSSNameEntryScreen() {
  * @return
  */
 bool isConnected() {
-  return MSRB()->connectionState == MM_STATE_CONNECTION_SUCCESS;
+  return MSRB()->mm_state == MM_STATE_CONNECTION_SUCCESS;
 }
 
 /**
@@ -243,4 +210,4 @@ bool isWidescreen() {
   return res;
 }
 
-#endif SLIPPI_H
+#endif // SLIPPI_H

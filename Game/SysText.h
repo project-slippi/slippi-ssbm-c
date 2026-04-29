@@ -109,4 +109,4 @@ typedef struct SysText  {
 SysText *st_create();
 void st_destroy(SysText* component);
 
-#endif GAME_SYS_TEXT_H
+#endif // GAME_SYS_TEXT_H

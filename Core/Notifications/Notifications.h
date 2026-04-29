@@ -79,6 +79,6 @@ int GetNextNotificationMessageID();
 
 bool CanAddNewMessage();
 
-void UpdateNotificationMessage();
+void UpdateNotificationMessage(GOBJ *gobj);
 
-#endif SLIPPI_CORE_NOTIFICATION_H
+#endif // SLIPPI_CORE_NOTIFICATION_H

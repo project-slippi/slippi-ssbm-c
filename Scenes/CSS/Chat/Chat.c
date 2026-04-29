@@ -238,9 +238,9 @@ void SendOutgoingChatCommand(int messageId) {
 
 #ifdef LOCAL_TESTING
     SlippiCSSDataTable *dt = GetSlpCSSDT();
-    MatchStateResponseBuffer *msrb = dt->msrb;
+    ExiSlippi_MatchState_Response *msrb = dt->msrb;
     CreateAndAddChatMessage(dt->SlpCSSDatAddress, msrb, 0, messageId);
 #endif
 }
 
-#endif SLIPPI_CSS_CHAT_C
+#endif // SLIPPI_CSS_CHAT_C

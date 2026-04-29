@@ -34,7 +34,7 @@ void UpdateChatNotifications();
 
 void FreeChatNotifications(void *ptr);
 
-void CreateAndAddChatMessage(SlpCSSDesc *slpCss, MatchStateResponseBuffer *msrb, int playerIndex, int messageId);
+void CreateAndAddChatMessage(SlpCSSDesc *slpCss, ExiSlippi_MatchState_Response *msrb, int playerIndex, int messageId);
 
 void UpdateChatMessage(GOBJ *gobj);
 
@@ -74,4 +74,4 @@ NotificationMessage *CreateChatMessage(int playerIndex, int messageId) {
     return msg;
 }
 
-#endif SLIPPI_CORE_CHAT_NOTIFICATION_H
+#endif // SLIPPI_CORE_CHAT_NOTIFICATION_H

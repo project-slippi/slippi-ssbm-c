@@ -65,4 +65,4 @@ ChatInput *PadGetChatInput(bool checkForCommands);
 int PadGetChatEffectiveInput(bool checkForCommands);
 
 
-#endif SLIPPI_CSS_CHAT_H
+#endif // SLIPPI_CSS_CHAT_H
