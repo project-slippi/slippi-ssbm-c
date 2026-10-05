@@ -11,3 +11,15 @@ if not exist output mkdir output
 -o "output/SlippiCSS.dat" ^
 -t "m-ex/MexTK/mnFunction.txt" ^
 -q -ow -c -l "melee.link"
+
+"m-ex/MexTK/MexTK.exe" -ff -i "Scenes/Rooms/Rooms.c" ^
+-s mnFunction ^
+-o "output/Rooms.dat" ^
+-t "m-ex/MexTK/mnFunction.txt" ^
+-q -ow -c -l "melee.link"
+
+"m-ex/MexTK/MexTK.exe" -ff -i "Scenes/Rooms/Room.c" "Components/CharStageBoxSelector.c" "Components/CharStageIcon.c" "Components/StockIcon.c" "Components/CharPickerDialog.c" ^
+-s mnFunction ^
+-o "output/Room.dat" ^
+-t "m-ex/MexTK/mnFunction.txt" ^
+-q -ow -c -l "melee.link"
