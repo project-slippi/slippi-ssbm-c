@@ -84,6 +84,15 @@ typedef struct ExiSlippi_FetchStep_Response {
   u8 stage_selections[2];
 } ExiSlippi_FetchStep_Response;
 
+// The values a player's rank is worked out from, plus their ranked mmr
+typedef struct ExiSlippi_RankedPlayerInfo {
+  float rating_ordinal;
+  u32 rating_update_count;
+  u16 global_placement;    // 0 = not placed
+  u16 regional_placement;  // 0 = not placed
+  float mmr;
+} ExiSlippi_RankedPlayerInfo;
+
 typedef struct ExiSlippi_MatchState_Response {
   u8 mm_state;
   u8 is_local_player_ready;
@@ -114,6 +123,9 @@ typedef struct ExiSlippi_MatchState_Response {
   char err_msg[241];
   u8 game_info_block[0x138];
   char matchmake_id[51];
+  u8 alt_stage_mode;
+  ExiSlippi_RankedPlayerInfo ranked_player_info[4];  // Indexed by port
+  u8 is_bot[4];                                      // Indexed by port. Set for registered bot accounts
 } ExiSlippi_MatchState_Response;
 
 typedef struct ExiSlippi_CleanupConnection_Query {

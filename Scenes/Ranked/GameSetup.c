@@ -380,7 +380,43 @@ void InitSteps() {
   }
 }
 
-void InitPlayerInfo(u8 align, float xPos, char *name, char *code, s8 rank) {
+// The color everything that marks a bot match is drawn in
+static GXColor bot_color = {70, 140, 255, 255};
+
+// The bookkeeping the game keeps for the subtexts of a Text, as Text_AddSubtext (803A6B98) uses it. It is what
+// Text.allocInfo points to. MexTK's TextAllocInfo labels these fields differently
+typedef struct SubtextBuffer {
+  u8 *write_pos;      // Where the next subtext gets written
+  u8 *start;          // Start of the subtext data
+  int capacity;
+  int subtext_count;  // The id the next subtext gets
+} SubtextBuffer;
+
+// Adds text that carries on from the end of the last subtext, so a line can have parts in different colors.
+// A subtext is stored as a position command (0x07 and two shorts), a color, a scale and then its characters. The
+// position command is replaced here with five 0x0B commands, which do nothing between subtexts. The game then
+// draws and aligns both parts as a single line. The part has no id afterwards, which is why scale and color are
+// set here
+static void AppendToLastSubtext(Text *text, char *string, float scale, GXColor *color) {
+  SubtextBuffer *buf = (SubtextBuffer *)text->allocInfo;
+  int offset = buf->write_pos - buf->start;  // Adding can move the buffer, the offset stays valid
+
+  int subtextId = Text_AddSubtext(text, 0, 0, string);
+  Text_SetScale(text, subtextId, scale, scale);
+  Text_SetColor(text, subtextId, color);
+
+  u8 *subtext = buf->start + offset;
+  if (subtext[0] != 0x07) {
+    return;
+  }
+
+  for (int i = 0; i < 5; i++) {
+    subtext[i] = 0x0B;
+  }
+  buf->subtext_count--;  // Ids are found by counting position commands, so this part no longer has one
+}
+
+void InitPlayerInfo(u8 align, float xPos, char *name, char *code, s8 rank, u8 is_bot) {
   const float RANK_TEXT_OFFSET = 355.f;
 
   float offsetXPos = xPos;
@@ -399,10 +435,24 @@ void InitPlayerInfo(u8 align, float xPos, char *name, char *code, s8 rank) {
   text->aspect.X *= 2.5;
   int nameSubtextId = Text_AddSubtext(text, offsetXPos, -1940, name);
   Text_SetScale(text, nameSubtextId, 5, 5);
-  int codeSubtextId = Text_AddSubtext(text, offsetXPos, -1740, code);
-  Text_SetScale(text, codeSubtextId, 3, 3);
   GXColor col = (GXColor){128, 128, 128, 255};
-  Text_SetColor(text, codeSubtextId, &col);
+
+  // A bot account gets a colored BOT tag on its connect code line, on the side away from the rank icon. The code
+  // stays where it is without the tag. The line is anchored on the rank icon's side, so for a right aligned line
+  // the tag has to come first
+  if (is_bot && align == 2) {
+    int tagSubtextId = Text_AddSubtext(text, offsetXPos, -1740, "BOT  ");
+    Text_SetScale(text, tagSubtextId, 3, 3);
+    Text_SetColor(text, tagSubtextId, &bot_color);
+    AppendToLastSubtext(text, code, 3, &col);
+  } else {
+    int codeSubtextId = Text_AddSubtext(text, offsetXPos, -1740, code);
+    Text_SetScale(text, codeSubtextId, 3, 3);
+    Text_SetColor(text, codeSubtextId, &col);
+    if (is_bot) {
+      AppendToLastSubtext(text, "  BOT", 3, &bot_color);
+    }
+  }
 
   // Return if rank is not visible
   if (rank < 0) {
@@ -439,6 +489,30 @@ void InitPlayerInfo(u8 align, float xPos, char *name, char *code, s8 rank) {
   GObj_AddGXLink(gobj, GXLink_Common, 1, 129);
 }
 
+// Tells a human playing a bot what that means for their rating. Shown above the selectors for the whole screen
+void InitBotMatchNotice() {
+  ExiSlippi_MatchState_Response *ms = data->match_state;
+  u8 is_local_bot = ms->is_bot[ms->local_player_idx];
+  u8 is_opp_bot = ms->is_bot[ms->remote_player_idx];
+  if (is_local_bot || !is_opp_bot) {
+    return;
+  }
+
+  Text *text = Text_CreateText(0, 0);
+  text->kerning = 1;
+  text->align = 1;  // align center
+  text->use_aspect = 1;
+  text->scale = (Vec2){0.01, 0.01};
+  text->aspect.X *= 6;  // Room for the whole line without it being squeezed
+  // The line is added in two parts because it is too long for one subtext. Text_AddSubtext converts its string
+  // into a 128 byte buffer, at 3 bytes a letter and 7 for a space that follows a letter, and what doesn't fit is
+  // cut off
+  int subtextId = Text_AddSubtext(text, 0, -990, "Playing a community-run bot: ");
+  Text_SetScale(text, subtextId, 3.5, 3.5);
+  Text_SetColor(text, subtextId, &bot_color);
+  AppendToLastSubtext(text, "you cannot lose rating", 3.5, &bot_color);
+}
+
 void InitHeader() {
   GameSetup_SceneData *minor_data = data->scene_data;
 
@@ -447,8 +521,10 @@ void InitHeader() {
   Text_SetScale(data->text, data->timer_subtext_id, 6, 6);
 
   // Init character name subtexts
-  InitPlayerInfo(0, -2800.f, data->match_state->p1_name, data->match_state->p1_connect_code, data->match_state->p1_rank);
-  InitPlayerInfo(2, 2800.f, data->match_state->p2_name, data->match_state->p2_connect_code, data->match_state->p2_rank);
+  ExiSlippi_MatchState_Response *ms = data->match_state;
+  InitPlayerInfo(0, -2800.f, ms->p1_name, ms->p1_connect_code, ms->p1_rank, ms->is_bot[0]);
+  InitPlayerInfo(2, 2800.f, ms->p2_name, ms->p2_connect_code, ms->p2_rank, ms->is_bot[1]);
+  InitBotMatchNotice();
 
   // Init arrows
   data->turn_indicators[0] = TurnIndicator_Init(gui_assets, TurnIndicator_Direction_LEFT);
