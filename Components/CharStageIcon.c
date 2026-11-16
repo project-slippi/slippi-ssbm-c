@@ -3,6 +3,37 @@
 #include "../Files.h"
 #include "../m-ex/MexTK/mex.h"
 
+// HSD recomputes a texture object's coordinate matrix when this flag is set (TEX_MTX_DIRTY)
+#define TOBJ_MTX_DIRTY (1u << 31)
+
+// The character portraits are the character select screen's own 64x56 tile icons, which carry
+// a 2 px frame. Show the same 60x51 window the old pre-cropped textures did by transforming the
+// texture coordinates of the foreground texture: uv' = (uv - translate) / scale.
+#define TILE_W 64
+#define TILE_H 56
+#define CROP_W 60
+#define CROP_H 51
+#define CROP_X 2
+#define CROP_Y 2
+
+static void _SetPortraitCrop(CSIcon *icon, CSIcon_Material matIdx) {
+  TOBJ *tobj = icon->root_jobj->child->dobj->next->mobj->tobj;
+  _HSD_ImageDesc *image = tobj->imagedesc;  // the frame just selected by CSIcon_SetMaterial
+
+  // Stage icons are 64x56 too, so only character frames at the tile size are cropped. A
+  // character image already at the cropped size (Sheik, who has no tile) is shown as it is.
+  u8 is_tile_icon = matIdx > CSIcon_LAST_STAGE_MAT_IDX && image && image->width == TILE_W && image->height == TILE_H;
+
+  if (is_tile_icon) {
+    tobj->scale = (Vec3){(float)TILE_W / CROP_W, (float)TILE_H / CROP_H, 1};
+    tobj->translate = (Vec3){-(float)CROP_X / CROP_W, -(float)CROP_Y / CROP_H, 0};
+  } else {
+    tobj->scale = (Vec3){1, 1, 1};
+    tobj->translate = (Vec3){0, 0, 0};
+  }
+  tobj->flags |= TOBJ_MTX_DIRTY;
+}
+
 static void _SetSelectState(CSIcon *icon, CSIcon_Select_State state) {
   JOBJ_RemoveAnimAll(icon->root_jobj);
 
@@ -96,6 +127,8 @@ void CSIcon_SetMaterial(CSIcon *icon, CSIcon_Material matIdx) {
   // set the material upon initializing and don't worry about it again. But without restoring,
   // setting the material will cause the animation to end
   JOBJ_RemoveAnimAll(icon->root_jobj);
+
+  _SetPortraitCrop(icon, matIdx);
 
   icon->state.material = matIdx;
 }

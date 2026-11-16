@@ -14,6 +14,10 @@ static HSD_Archive *gui_archive;
 static GUI_GameSetup *gui_assets;
 static GameSetup_Data *data;
 
+static void LoopAnim(AOBJ *aobj) {
+  AOBJ_SetFlags(aobj, AOBJ_LOOP);
+}
+
 void minor_load(GameSetup_SceneData *minor_data) {
   // OSReport("minor load\n");
 
@@ -86,8 +90,10 @@ void minor_load(GameSetup_SceneData *minor_data) {
   GObj_AddObject(light_gobj, 2, lobj);
   GObj_AddGXLink(light_gobj, GXLink_LObj, 0, 128);
 
-  // create background
-  JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
+  // create background. Its model and animations are the vanilla tournament scene's, which play
+  // once, so loop them here to keep the dome turning
+  GOBJ *bg_gobj = JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Background], 0, 0, 3, 1, 1, GObj_Anim);
+  JOBJ_ForEachAnim(bg_gobj->hsd_object, 6, 0xFFFF, LoopAnim, 6, 0, 0);
 
   // Load panel and frame
   JOBJ_LoadSet(0, gui_assets->jobjs[GUI_GameSetup_JOBJ_Panels], 0, 0, 3, 1, 1, GObj_Anim);
