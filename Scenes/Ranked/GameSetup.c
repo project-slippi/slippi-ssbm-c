@@ -153,9 +153,7 @@ void minor_think() {
     // 2. We have already played 5 games (4 tiebreaks) and still have no conclusion. This could
     //    happen if both players are just AFK or if the clients always desync
     if (data->state.terminate_counter > 15 * 60 || data->scene_data->tiebreak_game_num >= 5) {
-      ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
-      ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
-      ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
+      TerminateConnection();
     }
 
     data->match_state = ExiSlippi_LoadMatchState(data->match_state);
@@ -847,15 +845,74 @@ void InputsThink(GOBJ *gobj) {
   }
 }
 
+// Drops the connection to the opponent. InputsThink sees the disconnect in the match state and
+// handles it from there
+void TerminateConnection() {
+  ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
+  ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
+  ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
+}
+
+// Returns whether the stage is one of this step's stages and is still available, meaning it has not
+// been struck, banned or removed by Dave's stupid rule
+static u8 IsStageAvailable(GameSetup_Step *step, int stageId) {
+  for (int i = 0; i < step->selector_count; i++) {
+    CSBoxSelector *bs = step->selectors[i];
+    if (CSIcon_ConvertMatToStage(bs->icon->state.material) == stageId) {
+      return !bs->state.is_disabled;
+    }
+  }
+
+  return false;
+}
+
+// The opponent's client could be modified to send selections the rules don't allow, so check them
+// against the same rules this client follows when making them. Must run before the response is
+// copied into the step, the color check compares against the step's original character
+static u8 IsOpponentStepLegal(GameSetup_Step *step, ExiSlippi_FetchStep_Response *resp) {
+  switch (step->type) {
+    case GameSetup_Step_Type_REMOVE_STAGE:
+    case GameSetup_Step_Type_CHOOSE_STAGE:
+      for (int i = 0; i < step->required_selection_count; i++) {
+        if (!IsStageAvailable(step, resp->stage_selections[i])) {
+          return false;
+        }
+      }
+
+      // Striking the same stage twice would leave an extra stage in the pool
+      if (step->required_selection_count > 1 && resp->stage_selections[0] == resp->stage_selections[1]) {
+        return false;
+      }
+
+      return true;
+    case GameSetup_Step_Type_CHOOSE_CHAR:
+    case GameSetup_Step_Type_CHOOSE_COLOR:
+      // The color step only resolves a color clash, the character can't change
+      if (step->type == GameSetup_Step_Type_CHOOSE_COLOR && resp->char_selection != step->char_selection) {
+        return false;
+      }
+
+      if (resp->char_selection >= CKIND_MASTERHAND) {
+        return false;
+      }
+
+      if (resp->char_color_selection >= GetVanilaMaxColors(resp->char_selection)) {
+        return false;
+      }
+
+      return IsColorAllowed(resp->char_selection, resp->char_color_selection, step->player_idx);
+    default:
+      return false;
+  }
+}
+
 void HandleOpponentStep() {
   GameSetup_Step *step = &data->steps[data->state.step_idx];
 
   // Check if we've timed out waiting for opponent
   if (data->timer_frames > 60 * (step->timer_seconds + GRACE_SECONDS + WAIT_TIMEOUT_SECONDS)) {
     // Stop match by disconnecting from opponent
-    ExiSlippi_CleanupConnection_Query *ccq = calloc(sizeof(ExiSlippi_CleanupConnection_Query));
-    ccq->command = ExiSlippi_Command_CLEANUP_CONNECTION;
-    ExiSlippi_Transfer(ccq, sizeof(ExiSlippi_CleanupConnection_Query), ExiSlippi_TransferMode_WRITE);
+    TerminateConnection();
     return;
   }
 
@@ -869,26 +926,24 @@ void HandleOpponentStep() {
     return;
   }
 
+  // A skip (local testing only) carries no selections, the step gets filled in as if it timed out
+  u8 is_skip = data->fetch_resp->is_skip;
+
+  // End the set if the opponent made a selection the rules don't allow
+  if (!is_skip && !IsOpponentStepLegal(step, data->fetch_resp)) {
+    // OSReport("GameSetup: illegal opponent selection on step %d (type %d, char %d, color %d, stages %d %d), disconnecting\n",
+    //          data->state.step_idx, step->type, data->fetch_resp->char_selection, data->fetch_resp->char_color_selection,
+    //          data->fetch_resp->stage_selections[0], data->fetch_resp->stage_selections[1]);
+    TerminateConnection();
+    return;
+  }
+
   // If we receive a response from opponent, populate the step values
   step->char_selection = data->fetch_resp->char_selection;
   step->char_color_selection = data->fetch_resp->char_color_selection;
   memcpy(step->stage_selections, data->fetch_resp->stage_selections, 2);
 
-  int selection_count = data->fetch_resp->is_skip ? 0 : step->required_selection_count;
-
-  // Check to make sure opponent didn't select a stage that is disabled
-  if (step->type == GameSetup_Step_Type_CHOOSE_STAGE) {
-    for (int i = 0; i < step->selector_count; i++) {
-      CSBoxSelector *bs = step->selectors[i];
-      int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
-
-      // If the stage selected is disabled, act as if stage was not selected, will end up
-      // causing a desync (on purpose)
-      if (bs->state.is_disabled && stageId == step->stage_selections[0]) {
-        selection_count = 0;
-      }
-    }
-  }
+  int selection_count = is_skip ? 0 : step->required_selection_count;
 
   // Complete the step. Indicate that all selections are already made
   SFX_PlayCommon(CommonSound_ACCEPT);
@@ -919,8 +974,9 @@ void CompleteCurrentStep(int committed_count) {
       }
     }
 
-    // In the case of a timeout, the selections may not have been made. Select non-disabled
-    // stages
+    // In the case of a timeout, the selections may not have been made. Fill the rest with stages
+    // that are not disabled and were not already committed above, otherwise timing out after one
+    // of two strikes could strike the same stage twice
     for (int i = 0; i < step->selector_count; i++) {
       if (commit_index >= step->required_selection_count) {
         break;  // If enough selections have been made, exit loop
@@ -928,8 +984,8 @@ void CompleteCurrentStep(int committed_count) {
 
       CSBoxSelector *bs = step->selectors[i];
 
-      // If this selector is selected, indicate that stage as the one selected
-      if (!bs->state.is_disabled) {
+      // If this stage is still available, use it
+      if (!bs->state.is_disabled && !bs->state.is_selected) {
         int stageId = CSIcon_ConvertMatToStage(bs->icon->state.material);
         step->stage_selections[commit_index] = stageId;
         commit_index++;
